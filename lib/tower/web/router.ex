@@ -11,6 +11,7 @@ defmodule Tower.Web.Router do
 
   defp render(%{status: status} = conn, template, assigns \\ []) do
     conn
+    |> put_resp_content_type("text/html")
     |> send_resp(
       status || 200,
       # TODO: Refactor to make it work for self-contained releases
