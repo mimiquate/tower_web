@@ -10,7 +10,7 @@
     <th>Reason</th>
   </tr>
 
-  <%= for event <- Tower.SaaS.Persistence.get() do %>
+  <%= for event <- Tower.Web.Persistence.get() do %>
     <tr>
       <td><%= DateTime.from_unix!(event.timestamp) %></td>
       <td><%= inspect(event.severity) %></td>
