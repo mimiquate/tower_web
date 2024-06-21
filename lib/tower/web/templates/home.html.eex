@@ -1,1 +1,21 @@
-Hey
+<h2>
+  Events
+</h2>
+
+<table>
+  <tr>
+    <th>Time</th>
+    <th>Severity</th>
+    <th>Kind</th>
+    <th>Reason</th>
+  </tr>
+
+  <%= for event <- Tower.SaaS.Persistence.get() do %>
+    <tr>
+      <td><%= DateTime.from_unix!(event.timestamp) %></td>
+      <td><%= inspect(event.severity) %></td>
+      <td><%= inspect(event.kind) %></td>
+      <td><%= event.message %></td>
+    </tr>
+  <% end %>
+</table>
