@@ -21,7 +21,8 @@ defmodule TowerWeb.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug, "~> 1.16"}
+      {:tower, github: "mimiquate/tower"},
+      {:plug, "~> 1.16"},
     ]
   end
 end
