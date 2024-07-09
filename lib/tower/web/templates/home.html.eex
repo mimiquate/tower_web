@@ -1,1 +1,29 @@
-Hey
+<html lang="en">
+  <head>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="dark:bg-slate-800 dark:text-white">
+    <h2 class="my-2 text-2xl">
+      Events
+    </h2>
+
+    <table class="border-separate border-spacing-4 border border-slate-500">
+      <tr>
+        <th>Time</th>
+        <th>Severity</th>
+        <th>Kind</th>
+        <th>Reason</th>
+      </tr>
+
+      <%= for event <- Tower.Web.Persistence.get() do %>
+        <tr>
+          <td><%= DateTime.from_unix!(event.timestamp) %></td>
+          <td><%= inspect(event.severity) %></td>
+          <td><%= inspect(event.kind) %></td>
+          <td><%= event.message %></td>
+        </tr>
+      <% end %>
+    </table>
+  </body>
+</html>
