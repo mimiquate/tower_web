@@ -29,25 +29,30 @@ defmodule TowerWeb.Layouts do
   def sidebar(assigns) do
     ~H"""
     <aside class="fixed top-0 left-0 z-40 w-64 h-screen">
-      <div class="h-full px-3 py-4 overflow-y-auto bg-gray-900 flex flex-col">
+      <div class="h-full px-3 py-4 overflow-y-auto bg-tower-bg flex flex-col">
         <div class="mb-8 px-2">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center">
+            <div class="w-10 h-10 bg-gray-700 flex items-center justify-center">
               <span class="text-xl text-white">T</span>
             </div>
             <div>
-              <p class="font-semibold text-white">Project Name</p>
-              <p class="text-xs text-gray-400">Tower Monitoring</p>
+              <p class="font-thin font-tower-arvo text-white text-lg">ProjectName</p>
+              <p class="font-thin font-tower-arvo text-gray-400 text-sm">Tower Monitoring</p>
             </div>
           </div>
         </div>
 
-        <nav class="flex-1">
+        <nav class="py-2">
           <ul class="space-y-2">
             <.sidebar_item href="." active={true}>
               <.occurrences_icon />
               <span class="ml-3">Occurrences</span>
             </.sidebar_item>
+          </ul>
+        </nav>
+
+        <nav class="flex-1 py-2">
+          <ul class="space-y-2">
             <.sidebar_item href="#" active={false} disabled={true}>
               <.settings_icon />
               <span class="ml-3">Settings</span>
@@ -74,8 +79,8 @@ defmodule TowerWeb.Layouts do
       <a
         href={unless @disabled, do: @href, else: "#"}
         class={[
-          "flex items-center p-2 rounded-lg transition-colors",
-          @active && "bg-gray-700 text-white",
+          "flex items-center p-2 transition-colors",
+          @active && "bg-tower-active text-white",
           !@active && !@disabled && "text-gray-400 hover:bg-gray-700 hover:text-white",
           @disabled && "text-gray-600 cursor-not-allowed"
         ]}
@@ -89,13 +94,10 @@ defmodule TowerWeb.Layouts do
 
   defp occurrences_icon(assigns) do
     ~H"""
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
+    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l4 2" />
     </svg>
     """
   end

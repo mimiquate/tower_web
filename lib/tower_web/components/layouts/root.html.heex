@@ -10,14 +10,36 @@
 
     <title>Tower Dashboard</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'tower': {
+                'bg': '#2C2C2C',
+                'active': '#4B5878',
+                'line-color': '#444444'
+              }
+            },
+            fontFamily: {
+              'tower-arvo': ['"Arvo"', 'serif'],
+            }
+          }
+        }
+      }
+    </script>
 
     <script>
       <%= raw get_content(:js) %>
     </script>
   </head>
 
-  <body class="bg-gray-800 text-white">
+  <body class="bg-tower-bg text-white font-tower-arvo font-thin text-sm">
     {@inner_content}
   </body>
 </html>
