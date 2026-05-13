@@ -36,8 +36,8 @@ defmodule TowerWeb.Layouts do
               <span class="text-xl text-white">T</span>
             </div>
             <div>
-              <p class="font-thin font-tower-arvo text-white text-lg">ProjectName</p>
-              <p class="font-thin font-tower-arvo text-gray-400 text-sm">Tower Monitoring</p>
+              <p class="font-light font-tower text-white text-lg">Project Name</p>
+              <p class="font-light font-tower text-white text-sm">Tower Monitoring</p>
             </div>
           </div>
         </div>
@@ -46,23 +46,10 @@ defmodule TowerWeb.Layouts do
           <ul class="space-y-2">
             <.sidebar_item href="." active={true}>
               <.occurrences_icon />
-              <span class="ml-3">Occurrences</span>
+              <span class="ml-3 text-sm">Occurrences</span>
             </.sidebar_item>
           </ul>
         </nav>
-
-        <nav class="flex-1 py-2">
-          <ul class="space-y-2">
-            <.sidebar_item href="#" active={false} disabled={true}>
-              <.settings_icon />
-              <span class="ml-3">Settings</span>
-            </.sidebar_item>
-          </ul>
-        </nav>
-
-        <div class="mt-auto px-2 py-4 border-t border-gray-700">
-          <p class="text-xs text-gray-500">TowerWeb v0.1.0</p>
-        </div>
       </div>
     </aside>
     """
