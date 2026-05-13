@@ -1,9 +1,12 @@
 defmodule TowerWeb.Live.Occurrences do
   use TowerWeb.Web, :live_view
 
+  alias TowerDB.Events
+
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    events = Events.list_events()
+    {:ok, assign(socket, events: events)}
   end
 
   @impl Phoenix.LiveView
@@ -11,9 +14,70 @@ defmodule TowerWeb.Live.Occurrences do
     ~H"""
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
-    <div class="text-gray-400">
+    <div :if={@events == []} class="text-gray-400">
       No occurrences recorded yet.
     </div>
+
+    <table :if={@events != []} class="w-full text-left">
+      <thead class="text-gray-400 border-b border-tower-line-color">
+        <tr>
+          <th class="pb-3 font-normal">Timestamp</th>
+          <th class="pb-3 font-normal">Related Occurrence</th>
+          <th class="pb-3 font-normal">Item Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr :for={event <- @events} class="border-b border-tower-line-color">
+          <td class="py-3">
+            <div class="flex flex-col">
+              <span class="text-sm text-white">{format_date(event.datetime)}</span>
+              <span class="text-xs text-tower-reason">{format_time(event.datetime)}</span>
+            </div>
+          </td>
+          <td class="py-3">
+            <div class="flex flex-col">
+              <span class="text-tower-id">#{event.id}</span>
+              <span class="text-tower-reason">{format_reason(event.reason)}</span>
+            </div>
+          </td>
+          <td class="py-3">
+            <span class={["bg-tower-level-bg w-[132px] h-[28px] px-2 py-1 text-sm inline-flex items-center justify-center", level_class(event.level)]}>{event.level}</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     """
+  end
+
+  defp format_date(datetime) do
+    Calendar.strftime(datetime, "%d/%m/%Y")
+  end
+
+  defp format_time(datetime) do
+    Calendar.strftime(datetime, "%I:%M:%S %p GMT")
+  end
+
+  defp format_reason(reason) when is_exception(reason) do
+    Exception.message(reason)
+  end
+
+  defp format_reason(reason) when is_binary(reason) do
+    reason
+  end
+
+  defp format_reason(reason) do
+    inspect(reason)
+  end
+
+  defp level_class(level) when level in [:error, :critical, :alert, :emergency] do
+    "text-red-400"
+  end
+
+  defp level_class(level) when level in [:warning, :notice] do
+    "text-yellow-400"
+  end
+
+  defp level_class(_level) do
+    "text-gray-400"
   end
 end
