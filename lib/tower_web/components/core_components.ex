@@ -10,7 +10,7 @@ defmodule TowerWeb.CoreComponents do
     ~H"""
     <div class="mb-8">
       <h1 class="text-2xl font-tower font-light text-white">{@title}</h1>
-      <p :if={@subtitle} class="font-tower font-light  text-gray-400 mt-1">{@subtitle}</p>
+      <p :if={@subtitle} class="font-tower font-light  text-white mt-1">{@subtitle}</p>
     </div>
     """
   end

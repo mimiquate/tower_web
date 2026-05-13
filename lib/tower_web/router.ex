@@ -2,7 +2,12 @@ defmodule TowerWeb.Router do
   @moduledoc false
 
   defmacro tower_dashboard(path, opts \\ []) do
-    quote bind_quoted: [path: path, opts: opts] do
+    caller_module = __CALLER__.module
+    app_name = extract_app_name(caller_module)
+
+    quote bind_quoted: [path: path, opts: opts, app_name: app_name] do
+      Application.put_env(:tower_web, :app_name, app_name)
+
       scope path, alias: false, as: false do
         import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
 
@@ -16,5 +21,13 @@ defmodule TowerWeb.Router do
         end
       end
     end
+  end
+
+  defp extract_app_name(module) do
+    module
+    |> Module.split()
+    |> List.first()
+    |> String.replace(~r/Web$/, "")
+    |> String.replace(~r/([a-z])([A-Z])/, "\\1 \\2")
   end
 end
