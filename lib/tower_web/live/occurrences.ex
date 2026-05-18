@@ -54,7 +54,7 @@ defmodule TowerWeb.Live.Occurrences do
   end
 
   defp format_time(datetime) do
-    Calendar.strftime(datetime, "%I:%M:%S %p GMT")
+    Calendar.strftime(datetime, "%I:%M:%S %p %Z")
   end
 
   defp format_reason(reason) when is_exception(reason) do
