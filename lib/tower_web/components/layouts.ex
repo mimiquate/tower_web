@@ -30,22 +30,20 @@ defmodule TowerWeb.Layouts do
     assigns = assign(assigns, :app_name, get_app_name())
 
     ~H"""
-    <aside class="fixed top-0 left-0 z-40 w-64 h-screen">
-      <div class="h-full px-3 py-4 overflow-y-auto bg-tower-bg flex flex-col gap-3">
-        <div class="px-2 pb-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gray-700 flex items-center justify-center">
-              <span class="text-xl text-white">T</span>
-            </div>
-            <div>
-              <p class="font-light font-tower text-white text-lg">{@app_name}</p>
-              <p class="font-light font-tower text-white text-sm">Tower Monitoring</p>
-            </div>
+    <div class="fixed top-0 left-0 z-40 w-[233px] h-screen px-3 py-6">
+      <div class="bg-tower-bg">
+        <div class="flex items-center justify-center gap-3 pb-6">
+          <svg class="w-12 h-12" viewBox="0 0 1080 1064" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M616 760.005H768V912.006H312V760.005H464V608.004H616V760.005ZM312 304.001H464V152H616V304.001H768V152H920V456.002H160V152H312V304.001Z" fill="white"/>
+          </svg>
+          <div style="width: 149px; height: 48px;">
+            <p class="font-light font-tower text-white text-lg">{@app_name}</p>
+            <p class="font-light font-tower text-white text-xs">Tower Monitoring</p>
           </div>
         </div>
 
-        <nav class="py-4 border-t border-b border-tower-line-color">
-          <ul class="space-y-2">
+        <nav class="pt-6 pb-4 border-t border-b border-tower-line-color">
+          <ul>
             <.sidebar_item href="." active={true}>
               <.occurrences_icon />
               <span class="ml-3 text-sm">Occurrences</span>
@@ -53,29 +51,26 @@ defmodule TowerWeb.Layouts do
           </ul>
         </nav>
       </div>
-    </aside>
+    </div>
     """
   end
 
   attr :href, :string, required: true
   attr :active, :boolean, default: false
-  attr :disabled, :boolean, default: false
   slot :inner_block, required: true
 
   def sidebar_item(assigns) do
     ~H"""
     <li>
       <a
-        href={unless @disabled || @active, do: @href, else: "#"}
+        href={unless @active, do: @href}
+        onclick={if @active, do: "return false"}
         class={[
-          "flex items-center p-2 transition-colors",
-          @active && "bg-tower-active text-white cursor-default",
-          !@active && !@disabled && "text-gray-400 hover:bg-gray-700 hover:text-white",
-          @disabled && "text-gray-600 cursor-not-allowed"
+          "flex items-center w-[209px] h-[36px] py-2 px-3 text-white font-tower font-light text-sm",
+          @active && "bg-tower-active"
         ]}
       >
         {render_slot(@inner_block)}
-        <span :if={@disabled} class="ml-auto text-xs text-gray-600">Soon</span>
       </a>
     </li>
     """

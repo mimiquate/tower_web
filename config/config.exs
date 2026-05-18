@@ -6,9 +6,6 @@ config :tower_web, TowerWeb.TestRepo,
   url: System.get_env("POSTGRES_URL") || "postgres://localhost:5432/tower_web_test",
   log: false
 
-config :tower_web,
-  ecto_repos: [TowerWeb.TestRepo]
-
 config :tower_db,
   repo: TowerWeb.TestRepo
 

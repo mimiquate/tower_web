@@ -19,25 +19,25 @@ defmodule TowerWeb.Live.Occurrences do
     </div>
 
     <table :if={@events != []} class="w-full text-left">
-      <thead class="text-gray-400 border-b border-tower-line-color">
+      <thead class="text-tower-id font-tower border-b border-tower-line-color">
         <tr>
-          <th class="pb-3 font-normal">Timestamp</th>
-          <th class="pb-3 font-normal">Related Occurrence</th>
-          <th class="pb-3 font-normal">Item Level</th>
+          <th class="py-2 text-base font-light w-[132px]">Timestamp</th>
+          <th class="py-2 text-base font-light">Related Occurrence</th>
+          <th class="py-2 text-base font-light w-[132px]">Item Level</th>
         </tr>
       </thead>
-      <tbody>
-        <tr :for={event <- @events} class="border-b border-tower-line-color">
+      <tbody class="font-inter">
+        <tr :for={event <- @events} class="border-b border-tower-line-color h-[96px] overflow-hidden">
           <td class="py-3">
             <div class="flex flex-col">
               <span class="text-sm text-white">{format_date(event.datetime)}</span>
               <span class="text-xs text-tower-reason">{format_time(event.datetime)}</span>
             </div>
           </td>
-          <td class="py-3">
-            <div class="flex flex-col">
-              <span class="text-tower-id">#{event.id}</span>
-              <span class="text-tower-reason">{format_reason(event.reason)}</span>
+          <td class="py-3 max-w-0">
+            <div class="flex flex-col overflow-hidden">
+              <span class="text-sm text-tower-id">#{event.id}</span>
+              <span class="text-sm text-tower-reason line-clamp-2">{format_reason(event.reason)}</span>
             </div>
           </td>
           <td class="py-3">
@@ -69,8 +69,8 @@ defmodule TowerWeb.Live.Occurrences do
     inspect(reason)
   end
 
-  defp level_class(level) when level in [:error, :critical, :alert, :emergency] do
-    "text-red-400"
+  defp level_class(level) when level in [:error, :alert, :emergency] do
+    "text-red-600"
   end
 
   defp level_class(level) when level in [:warning, :notice] do
@@ -78,6 +78,6 @@ defmodule TowerWeb.Live.Occurrences do
   end
 
   defp level_class(_level) do
-    "text-gray-400"
+    "text-orange-400"
   end
 end

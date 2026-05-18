@@ -9,8 +9,8 @@ defmodule TowerWeb.CoreComponents do
   def page_header(assigns) do
     ~H"""
     <div class="mb-8">
-      <h1 class="text-2xl font-tower font-light text-white">{@title}</h1>
-      <p :if={@subtitle} class="font-tower font-light  text-white mt-1">{@subtitle}</p>
+      <h1 class="text-lg font-tower font-light text-white">{@title}</h1>
+      <p :if={@subtitle} class="font-tower font-light text-white mt-1 text-sm">{@subtitle}</p>
     </div>
     """
   end
