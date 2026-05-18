@@ -27,7 +27,12 @@ defmodule TowerWeb.MixProject do
     [
       {:tower_db, path: "../tower_db"},
       {:phoenix_live_view, "~> 1.1"},
-      {:postgrex, ">= 0.0.0", only: :test}
+      {:postgrex, ">= 0.0.0", only: :test},
+      {:tower, "~> 0.8"},
+      {:plug, "~> 1.16"},
+      {:phoenix, "~> 1.7", optional: true},
+      {:phoenix_html, "~> 4.0", optional: true},
+      {:phoenix_live_view, "~> 1.0", optional: true}
     ]
   end
 
