@@ -80,7 +80,7 @@ defmodule TowerWeb.Live.OccurrencesTest do
       html = render_component(&Occurrences.render/1, %{events: events})
 
       assert html =~ "15/03/2024"
-      assert html =~ "02:30:45 PM GMT"
+      assert html =~ "02:30:45 PM UTC"
     end
   end
 end

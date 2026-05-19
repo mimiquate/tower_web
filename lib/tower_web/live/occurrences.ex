@@ -70,7 +70,7 @@ defmodule TowerWeb.Live.Occurrences do
   end
 
   defp level_class(level) when level in [:error, :alert, :emergency] do
-    "text-red-600"
+    "text-red-400"
   end
 
   defp level_class(level) when level in [:warning, :notice] do
@@ -78,6 +78,6 @@ defmodule TowerWeb.Live.Occurrences do
   end
 
   defp level_class(_level) do
-    "text-orange-400"
+    "text-gray-400"
   end
 end

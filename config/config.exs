@@ -1,5 +1,7 @@
 import Config
 
+config :tower_web, ecto_repos: [TowerWeb.TestRepo]
+
 config :tower_web, TowerWeb.TestRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
   priv: "test/support/test_repo",
