@@ -9,7 +9,7 @@ defmodule TowerWeb.Router do
       Application.put_env(:tower_web, :app_name, app_name)
 
       scope path, alias: false, as: false do
-        import Phoenix.LiveView.Router, only: [live: 4, live_session: 3]
+        import Phoenix.LiveView.Router, only: [live: 3, live_session: 3]
 
         session_name = Keyword.get(opts, :as, :tower_dashboard)
         on_mount = Keyword.get(opts, :on_mount, [])
