@@ -17,7 +17,7 @@ defmodule TowerWeb.Router do
         live_session session_name,
           on_mount: on_mount,
           root_layout: {TowerWeb.Layouts, :root} do
-          live "/", TowerWeb.Live.Occurrences, :index, as: session_name
+          live "/", TowerWeb.Live.Occurrences.Index, :index, as: session_name
         end
       end
     end

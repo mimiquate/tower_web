@@ -1,4 +1,4 @@
-defmodule TowerWeb.Live.Occurrences do
+defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
