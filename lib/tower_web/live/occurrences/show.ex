@@ -12,26 +12,26 @@ defmodule TowerWeb.Live.Occurrences.Show do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <div class="pt-[24px] px-[40px] pb-[40px]">
+    <div class="pt-6 px-10 pb-10">
       <.back_button navigate="/tower" />
 
-      <div class="text-[18px] font-mono text-tower-id mb-6">
+      <div class="text-lg font-mono text-white mb-6">
         #{@event.id}
       </div>
 
-      <div class="text-[18px] font-mono text-tower-id mb-8">
+      <div class="text-lg font-mono text-white mb-8">
         {format_reason(@event.reason)}
       </div>
 
       <div>
         <div class="mb-8 border border-tower-line-color p-4">
           <h2 class="text-lg font-tower text-white mb-4 font-light">Stack Trace</h2>
-          <pre class="text-sm font-mono text-tower-reason whitespace-pre-wrap">{format_stacktrace(@event.stacktrace)}</pre>
+          <pre class="text-sm font-mono text-tower-text-secondary whitespace-pre-wrap">{format_stacktrace(@event.stacktrace)}</pre>
         </div>
 
         <div class="mb-8 border border-tower-line-color p-4">
           <h2 class="text-lg font-tower text-white mb-4 font-light">Metadata</h2>
-          <pre class="text-sm font-inter text-tower-reason whitespace-pre-wrap">{format_metadata(@event.metadata)}</pre>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_metadata(@event.metadata)}</pre>
         </div>
       </div>
     </div>
@@ -62,7 +62,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
   defp format_metadata(nil), do: "No metadata available"
-  defp format_metadata(metadata) when metadata == %{}, do: "No metadata available"
+  defp format_metadata(%{}), do: "No metadata available"
 
   defp format_metadata(metadata) when is_map(metadata) do
     metadata
