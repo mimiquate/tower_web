@@ -1,10 +1,10 @@
-defmodule TowerWeb.Live.OccurrencesTest do
+defmodule TowerWeb.Live.Occurrences.IndexTest do
   use TowerWeb.DataCase
 
   import Phoenix.LiveViewTest
 
   alias TowerDB.Events
-  alias TowerWeb.Live.Occurrences
+  alias TowerWeb.Live.Occurrences.Index, as: Occurrences
 
   describe "render/1" do
     test "shows empty message when no events" do
