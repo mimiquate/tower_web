@@ -36,7 +36,7 @@ defmodule TowerWeb.Layouts do
           <svg class="w-12 h-12" viewBox="0 0 1080 1064" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M616 760.005H768V912.006H312V760.005H464V608.004H616V760.005ZM312 304.001H464V152H616V304.001H768V152H920V456.002H160V152H312V304.001Z" fill="white"/>
           </svg>
-          <div style="width: 149px; height: 48px;">
+          <div class="w-[149px] h-12">
             <p class="font-light font-roboto-slab text-white text-lg">{@app_name}</p>
             <p class="font-light font-roboto-slab text-white text-xs">Tower Monitoring</p>
           </div>
