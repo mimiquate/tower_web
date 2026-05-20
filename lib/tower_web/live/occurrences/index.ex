@@ -36,7 +36,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <span class="text-sm text-tower-text-primary">#{event.id}</span>
+              <.link navigate={"/tower/#{event.id}"} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+                #{event.id}
+              </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
             </div>
           </td>
