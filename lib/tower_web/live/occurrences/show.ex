@@ -62,7 +62,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
   defp format_metadata(nil), do: "No metadata available"
-  defp format_metadata(%{}), do: "No metadata available"
+  defp format_metadata(metadata) when metadata == %{}, do: "No metadata available"
 
   defp format_metadata(metadata) when is_map(metadata) do
     metadata
