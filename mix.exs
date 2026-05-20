@@ -26,7 +26,7 @@ defmodule TowerWeb.MixProject do
   defp deps do
     [
       {:tower_db, path: "../tower_db"},
-      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_live_view, "~> 1.1"},
       {:postgrex, ">= 0.0.0", only: :test}
     ]
   end
