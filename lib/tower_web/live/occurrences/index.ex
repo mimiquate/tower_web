@@ -19,7 +19,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     </div>
 
     <table :if={@events != []} class="w-full text-left">
-      <thead class="text-tower-id font-tower border-b border-tower-line-color">
+      <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
           <th class="py-2 text-base font-light w-[132px]">Timestamp</th>
           <th class="py-2 text-base font-light">Related Occurrence</th>
@@ -31,13 +31,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
           <td class="py-3">
             <div class="flex flex-col">
               <span class="text-sm text-white">{format_date(event.datetime)}</span>
-              <span class="text-xs text-tower-reason">{format_time(event.datetime)}</span>
+              <span class="text-xs text-tower-text-secondary">{format_time(event.datetime)}</span>
             </div>
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <span class="text-sm text-tower-id">#{event.id}</span>
-              <span class="text-sm text-tower-reason line-clamp-2">{format_reason(event.reason)}</span>
+              <span class="text-sm text-tower-text-primary">#{event.id}</span>
+              <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
             </div>
           </td>
           <td class="py-3">
