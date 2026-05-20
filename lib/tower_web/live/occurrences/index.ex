@@ -27,7 +27,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={event <- @events} class="border-b border-tower-line-color h-[96px] overflow-hidden">
+        <tr :for={event <- @events} class="border-b border-tower-line-color h-24 overflow-hidden">
           <td class="py-3">
             <div class="flex flex-col">
               <span class="text-sm text-white">{format_date(event.datetime)}</span>
@@ -41,7 +41,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             </div>
           </td>
           <td class="py-3">
-            <span class={["bg-tower-level-bg w-[132px] h-[28px] px-2 py-1 text-sm inline-flex items-center justify-center", level_class(event.level)]}>{event.level}</span>
+            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", level_class(event.level)]}>{event.level}</span>
           </td>
         </tr>
       </tbody>
