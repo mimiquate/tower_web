@@ -9,7 +9,8 @@ defmodule TowerWeb.MixProject do
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      package: package()
     ]
   end
 
@@ -25,7 +26,7 @@ defmodule TowerWeb.MixProject do
 
   defp deps do
     [
-      {:tower_db, path: "../tower_db"},
+      {:tower_db, "~> 0.1.0", organization: "mimiquate"},
       {:phoenix_live_view, "~> 1.1"},
       {:postgrex, ">= 0.0.0", only: :test}
     ]
@@ -34,6 +35,14 @@ defmodule TowerWeb.MixProject do
   defp aliases do
     [
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]
+    ]
+  end
+
+  defp package do
+    [
+      organization: "mimiquate",
+      licenses: ["Apache-2.0"],
+      links: %{}
     ]
   end
 end
