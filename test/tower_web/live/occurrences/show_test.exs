@@ -1,0 +1,56 @@
+defmodule TowerWeb.Live.Occurrences.ShowTest do
+  use TowerWeb.DataCase
+
+  import Phoenix.LiveViewTest
+
+  alias TowerDB.Events
+  alias TowerWeb.Live.Occurrences.Index
+  alias TowerWeb.Live.Occurrences.Show
+
+  describe "index to show navigation" do
+    test "index page has link to correct occurrence" do
+      {:ok, event} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:30:00Z],
+        level: :error,
+        reason: "Test error"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      html = render_component(&Index.render/1, %{events: events})
+
+      assert html =~ ~s(href="/tower/#{event.id}")
+    end
+
+    test "show page displays the correct occurrence info" do
+      {:ok, event1} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:30:00Z],
+        level: :error,
+        reason: "First error message",
+        stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
+        metadata: %{user_id: 123, request_id: "abc"}
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _event2} = Events.create_event(%{
+        datetime: ~U[2024-03-14 09:00:00Z],
+        level: :warning,
+        reason: "Second error message"
+      }, repo: TowerWeb.TestRepo)
+
+      # Reload from database to ensure metadata is loaded properly
+      event1 = Events.get_event!(event1.id, repo: TowerWeb.TestRepo)
+
+      # Render show page with event1
+      html = render_component(&Show.render/1, %{event: event1})
+
+      # Verify correct occurrence is displayed
+      assert html =~ "##{event1.id}"
+      assert html =~ "First error message"
+      assert html =~ "app.ex"
+      assert html =~ "user_id"
+      assert html =~ "123"
+
+      # Verify other occurrence is NOT displayed
+      refute html =~ "Second error message"
+    end
+  end
+end

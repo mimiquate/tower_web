@@ -18,6 +18,7 @@ defmodule TowerWeb.Router do
           on_mount: on_mount,
           root_layout: {TowerWeb.Layouts, :root} do
           live "/", TowerWeb.Live.Occurrences.Index, :index
+          live "/:id", TowerWeb.Live.Occurrences.Show, :show
         end
       end
     end
