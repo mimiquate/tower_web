@@ -4,16 +4,16 @@ defmodule TowerWeb.Live.Occurrences.Show do
   alias TowerDB.Events
 
   @impl Phoenix.LiveView
-  def mount(%{"id" => id}, _session, socket) do
+  def mount(%{"id" => id}, session, socket) do
     event = Events.get_event!(id)
-    {:ok, assign(socket, event: event)}
+    {:ok, assign(socket, [event: event, base_path: session["base_path"]])}
   end
 
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
-      <.back_button navigate="/tower" />
+      <.back_button navigate={"#{@base_path}"} />
 
       <div class="text-lg font-mono text-white mb-6">
         #{@event.id}
