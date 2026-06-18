@@ -4,9 +4,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerDB.Events
 
   @impl Phoenix.LiveView
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     events = Events.list_events()
-    {:ok, assign(socket, events: events)}
+    {:ok, assign(socket, [events: events, base_path: session["base_path"]])}
   end
 
   @impl Phoenix.LiveView
@@ -36,7 +36,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={"/tower/#{event.id}"} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={"#{@base_path}/#{event.id}"} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>

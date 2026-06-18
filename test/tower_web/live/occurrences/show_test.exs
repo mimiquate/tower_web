@@ -37,7 +37,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       }, repo: TowerWeb.TestRepo)
 
       # Reload from database to ensure metadata is loaded properly
-      event1 = Events.get_event!(event1.id, repo: TowerWeb.TestRepo)
+      event1 = Enum.find(Events.list_events(), fn event -> event.id == event1.id end)
 
       # Render show page with event1
       html = render_component(&Show.render/1, %{event: event1})
