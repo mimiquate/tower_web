@@ -13,19 +13,23 @@ defmodule TowerWeb.Live.Occurrences.Index do
   @impl Phoenix.LiveView
   def handle_params(%{"page" => page_param}, _uri, socket) do
     page = parse_page(page_param)
-    offset = (page - 1) * @per_page
-
-    events = Events.list_events(limit: @per_page, offset: offset)
     total_count = Events.count_events()
     total_pages = max(ceil(total_count / @per_page), 1)
 
-    {:noreply,
-     assign(socket,
-       events: events,
-       page: page,
-       total_pages: total_pages,
-       total_count: total_count
-     )}
+    if page > total_pages do
+      {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}?page=#{total_pages}")}
+    else
+      offset = (page - 1) * @per_page
+      events = Events.list_events(limit: @per_page, offset: offset)
+
+      {:noreply,
+       assign(socket,
+         events: events,
+         page: page,
+         total_pages: total_pages,
+         total_count: total_count
+       )}
+    end
   end
 
   def handle_params(_params, _uri, socket) do
@@ -67,7 +71,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={"#{@base_path}/#{event.id}"} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={"#{@base_path}/#{event.id}?from_page=#{@page}"} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>

@@ -10,10 +10,16 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
   @impl Phoenix.LiveView
+  def handle_params(params, _uri, socket) do
+    from_page = params["from_page"] || "1"
+    {:noreply, assign(socket, :from_page, from_page)}
+  end
+
+  @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
-      <.back_button navigate={"#{@base_path}"} />
+      <.back_button navigate={"#{@base_path}?page=#{@from_page}"} />
 
       <div class="text-lg font-mono text-white mb-6">
         #{@event.id}
