@@ -5,7 +5,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
-    event = Enum.find(Events.list_events(), fn event -> event.id == String.to_integer(id) end)
+    event = Events.get_event(String.to_integer(id))
     {:ok, assign(socket, [event: event, base_path: session["base_path"]])}
   end
 
