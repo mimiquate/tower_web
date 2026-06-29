@@ -48,12 +48,16 @@
       <%= raw get_content(:js) %>
     </script>
     <script>
-      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-      let livePath = document.querySelector("meta[name='live-path']").getAttribute("content")
+      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content");
+      let livePath = document.querySelector("meta[name='live-path']").getAttribute("content");
+      let liveTransport = document.querySelector("meta[name='live-transport']").getAttribute("content");
+
       let liveSocket = new window.LiveView.LiveSocket(livePath, window.Phoenix.Socket, {
-        params: {_csrf_token: csrfToken}
-      })
-      liveSocket.connect()
+        params: { _csrf_token: csrfToken },
+        transport: liveTransport === "longpoll" ? window.Phoenix.LongPoll : window.Phoenix.WebSocket
+      });
+
+      liveSocket.connect();
     </script>
   </head>
 
