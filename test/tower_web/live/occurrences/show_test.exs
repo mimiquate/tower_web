@@ -25,12 +25,13 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       html =
         render_component(&Index.render/1, %{
-          events: events,
+          filtered_events: events,
+          search_query: "",
+          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 1,
-          base_path: "/tower",
-          flash: %{}
+            flash: %{}
         })
 
       assert html =~ ~s(href="/tower/#{event.id}?from_page=1")

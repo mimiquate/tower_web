@@ -15,9 +15,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_params(%{"page" => page_param}, _uri, socket) do
+  def handle_params(%{"page" => page_param} = params, _uri, socket) do
     search = Map.get(params, "search", "")
-    events = Events.list_events(filters: [search: search])
     page = parse_page(page_param)
     total_count = Events.count_events()
     total_pages = max(ceil(total_count / @per_page), 1)

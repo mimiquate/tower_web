@@ -10,12 +10,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     test "shows empty message when no events" do
       html =
         render_component(&Occurrences.render/1, %{
-          events: [],
+          filtered_events: [],
+          search_query: "",
+          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 0,
-          base_path: "/tower",
-          flash: %{}
+            flash: %{}
         })
 
       assert html =~ "No occurrences recorded yet."
@@ -54,12 +55,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       # Render with real events
       html =
         render_component(&Occurrences.render/1, %{
-          events: events,
+          filtered_events: events,
+          search_query: "",
+          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 2,
-          base_path: "/tower",
-          flash: %{}
+            flash: %{}
         })
 
       assert html =~ "<table"
@@ -110,12 +112,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
       html =
         render_component(&Occurrences.render/1, %{
-          events: events,
+          filtered_events: events,
+          search_query: "",
+          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 3,
-          base_path: "/tower",
-          flash: %{}
+            flash: %{}
         })
 
       # Error = red, Warning = yellow, Info = gray
@@ -141,16 +144,101 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
       html =
         render_component(&Occurrences.render/1, %{
-          events: events,
+          filtered_events: events,
+          search_query: "",
+          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 1,
-          base_path: "/tower",
-          flash: %{}
+            flash: %{}
         })
 
       assert html =~ "15/03/2024"
       assert html =~ "02:30:45 PM UTC"
     end
+  end
+
+  describe "handle_params search" do
+    test "filters events by reason and clears filter" do
+      {:ok, _} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "Database connection failed"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _} = Events.create_event(%{
+        datetime: ~U[2024-03-15 11:00:00Z],
+        level: :warning,
+        reason: "Memory usage high"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      # Filter by "database"
+      {:noreply, socket} = Occurrences.handle_params(%{"search" => "database"}, "/tower", socket)
+
+      # Verify socket assigns
+      assert length(socket.assigns.filtered_events) == 1
+      assert socket.assigns.search_query == "database"
+
+      # Verify rendered HTML shows only filtered event
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "Database connection failed"
+      refute html =~ "Memory usage high"
+
+      # Clear filter
+      {:noreply, socket} = Occurrences.handle_params(%{}, "/tower", socket)
+
+      # Verify all events are shown again
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "Database connection failed"
+      assert html =~ "Memory usage high"
+    end
+
+    test "search is case insensitive" do
+      {:ok, _} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "DATABASE ERROR"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} = Occurrences.handle_params(%{"search" => "database"}, "/tower", socket)
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "DATABASE ERROR"
+    end
+
+    test "returns empty list when no events match" do
+      {:ok, _} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "Database connection failed"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} = Occurrences.handle_params(%{"search" => "nonexistent"}, "/tower", socket)
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "No occurrences recorded yet."
+      refute html =~ "Database connection failed"
+    end
+  end
+
+  defp socket_with_events(events) do
+    %Phoenix.LiveView.Socket{
+      assigns: %{
+        __changed__: %{},
+        events: events,
+        filtered_events: events,
+        search_query: "",
+        base_path: "/tower"
+      }
+    }
   end
 end
