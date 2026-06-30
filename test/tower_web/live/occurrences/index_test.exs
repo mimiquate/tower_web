@@ -6,12 +6,16 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
   alias TowerDB.Events
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
 
+  @levels [:emergency, :alert, :critical, :error, :warning, :notice, :info]
+
   describe "render/1" do
     test "shows empty message when no events" do
       html = render_component(&Occurrences.render/1, %{
 
         filtered_events: [],
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         page: 1,
         total_pages: 1,
@@ -44,6 +48,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       html = render_component(&Occurrences.render/1, %{
         filtered_events: events,
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         page: 1,
         total_pages: 1,
@@ -81,6 +87,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       html = render_component(&Occurrences.render/1, %{
         filtered_events: events,
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         page: 1,
         total_pages: 1,
@@ -105,6 +113,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       html = render_component(&Occurrences.render/1, %{
         filtered_events: events,
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         page: 1,
         total_pages: 1,
@@ -196,6 +206,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         events: events,
         filtered_events: events,
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         flash: %{}
       }

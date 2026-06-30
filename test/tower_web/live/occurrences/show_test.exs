@@ -7,6 +7,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
   alias TowerWeb.Live.Occurrences.Index
   alias TowerWeb.Live.Occurrences.Show
 
+  @levels [:emergency, :alert, :critical, :error, :warning, :notice, :info]
+
   describe "index to show navigation" do
     test "index page has link to correct occurrence" do
       {:ok, event} = Events.create_event(%{
@@ -19,6 +21,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html = render_component(&Index.render/1, %{
         filtered_events: events,
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         page: 1,
         total_pages: 1,
