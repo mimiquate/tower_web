@@ -16,9 +16,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
     {:ok, assign(socket, base_path: base_path, occurrences_base_path: "#{base_path}/occurrences")}
   end
 
+  @levels [:emergency, :alert, :critical, :error, :warning, :notice, :info]
+
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
+    level = params |> Map.get("level", "") |> parse_level()
 
     case Map.get(params, "page") do
       nil ->
@@ -30,7 +33,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       page_param ->
         page = parse_page(page_param)
-        total_count = Events.count_events(filters: [search: search])
+        total_count = Events.count_events(filters: [search: search, level: level])
         total_pages = max(ceil(total_count / @per_page), 1)
 
         if page > total_pages do
@@ -40,7 +43,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
            )}
         else
           offset = (page - 1) * @per_page
-          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
+          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search, level: level])
 
           {:noreply,
            assign(socket,
@@ -48,7 +51,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
              page: page,
              total_pages: total_pages,
              total_count: total_count,
-             search_query: search
+             search_query: search,
+             selected_level: level,
+             levels: @levels
            )}
         end
     end
@@ -73,19 +78,39 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
-    <form phx-change="search" phx-submit="search" class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color mb-4">
-      <svg class="w-6 h-6 text-tower-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-      <input
-        type="text"
-        placeholder="Search items"
-        phx-debounce="300"
-        name="query"
-        value={@search_query}
-        class="flex-1 bg-transparent font-inter text-sm text-tower-text-secondary placeholder-tower-text-secondary outline-none"
-      />
-    </form>
+    <div class="flex flex-col gap-3 mb-4">
+      <form phx-change="search" phx-submit="search" class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color">
+        <svg class="w-6 h-6 text-tower-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search items"
+          phx-debounce="300"
+          name="query"
+          value={@search_query}
+          class="flex-1 bg-transparent font-inter text-sm text-tower-text-secondary placeholder-tower-text-secondary outline-none"
+        />
+      </form>
+
+      <div class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color rounded">
+        <span class="font-inter font-light text-sm text-white">Level:</span>
+        <div class="flex items-center gap-4">
+          <button
+            :for={level <- @levels}
+            type="button"
+            phx-click="filter_level"
+            phx-value-level={level}
+            class={[
+              "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
+              if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
+            ]}
+          >
+            {level}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div :if={@filtered_events == [] and @search_query == ""} class="text-gray-400">
       No occurrences recorded yet.
@@ -171,8 +196,30 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply,
-     push_patch(socket, to: "#{socket.assigns.occurrences_base_path}#{page_path(1, query)}")}
+    {:noreply, push_patch(socket, to: build_path(socket, search: query, level: socket.assigns.selected_level))}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_level", %{"level" => level}, socket) do
+    level = String.to_existing_atom(level)
+    new_level = if socket.assigns.selected_level == level, do: nil, else: level
+
+    {:noreply, push_patch(socket, to: build_path(socket, search: socket.assigns.search_query, level: new_level))}
+  end
+
+  defp build_path(socket, filters) do
+    params =
+      Enum.reduce(filters, %{}, fn
+        {_key, nil}, acc -> acc
+        {_key, ""}, acc -> acc
+        {key, value}, acc -> Map.put(acc, key, value)
+      end)
+
+    if params == %{} do
+      socket.assigns.base_path
+    else
+      "#{socket.assigns.base_path}?#{URI.encode_query(params)}"
+    end
   end
 
   defp format_date(datetime) do
