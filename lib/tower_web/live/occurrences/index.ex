@@ -93,21 +93,33 @@ defmodule TowerWeb.Live.Occurrences.Index do
         />
       </form>
 
-      <div class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color rounded">
-        <span class="font-inter font-light text-sm text-white">Level:</span>
-        <div class="flex items-center gap-4">
-          <button
-            :for={level <- @levels}
-            type="button"
-            phx-click="filter_level"
-            phx-value-level={level}
-            class={[
-              "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
-              if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
-            ]}
-          >
-            {level}
-          </button>
+      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
+        <div class="flex items-center gap-2">
+          <span class="font-inter font-light text-sm text-white">Level:</span>
+          <div class="flex items-center gap-4">
+            <button
+              :for={level <- @levels}
+              type="button"
+              phx-click="filter_level"
+              phx-value-level={level}
+              class={[
+                "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
+                if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
+              ]}
+            >
+              {level}
+            </button>
+          </div>
+        </div>
+
+        <div :if={@search_query != "" or @selected_level != nil} class="flex items-center gap-3 h-7">
+          <span class="font-inter font-light text-sm text-white">Active filters:</span>
+          <div class="border-l border-tower-line-color h-full"></div>
+          <div class="flex items-center gap-2">
+            <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
+            <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+          </div>
+          <div class="border-l border-tower-line-color h-full"></div>
         </div>
       </div>
     </div>
@@ -191,6 +203,32 @@ defmodule TowerWeb.Live.Occurrences.Index do
         Next
       </span>
     </div>
+    """
+  end
+
+  defp close_icon(assigns) do
+    ~H"""
+    <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    """
+  end
+
+  attr :value, :any, required: true
+  attr :type, :string, required: true
+  attr :class, :string, default: ""
+
+  defp active_filter_tag(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click="clear_filter"
+      phx-value-type={@type}
+      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
+    >
+      <span class="truncate">{@value}</span>
+      <.close_icon />
+    </button>
     """
   end
 
