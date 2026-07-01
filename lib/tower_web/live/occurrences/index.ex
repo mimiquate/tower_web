@@ -120,6 +120,15 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
           </div>
           <div class="border-l border-tower-line-color h-full"></div>
+          <button
+            type="button"
+            phx-click="clear_filter"
+            phx-value-type="all"
+            class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1"
+          >
+            Clear filter
+            <.close_icon />
+          </button>
         </div>
       </div>
     </div>
@@ -243,6 +252,18 @@ defmodule TowerWeb.Live.Occurrences.Index do
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
     {:noreply, push_patch(socket, to: build_path(socket, search: socket.assigns.search_query, level: new_level))}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("clear_filter", %{"type" => type}, socket) do
+    filters =
+      case type do
+        "all" -> [search: "", level: nil]
+        "search" -> [search: "", level: socket.assigns.selected_level]
+        "level" -> [search: socket.assigns.search_query, level: nil]
+      end
+
+    {:noreply, push_patch(socket, to: build_path(socket, filters))}
   end
 
   defp build_path(socket, filters) do
