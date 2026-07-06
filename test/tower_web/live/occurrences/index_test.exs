@@ -296,6 +296,97 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
   end
 
+  describe "handle_params id filter" do
+    test "filters events by id" do
+      {:ok, event1} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "First event"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _event2} = Events.create_event(%{
+        datetime: ~U[2024-03-15 11:00:00Z],
+        level: :warning,
+        reason: "Second event"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} = Occurrences.handle_params(%{"id" => "#{event1.id}"}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 1
+      assert socket.assigns.id_filter == "#{event1.id}"
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "First event"
+      refute html =~ "Second event"
+    end
+
+    test "clears id filter when no id param" do
+      {:ok, _} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "First event"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _} = Events.create_event(%{
+        datetime: ~U[2024-03-15 11:00:00Z],
+        level: :warning,
+        reason: "Second event"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} = Occurrences.handle_params(%{"id" => "999"}, "/tower", socket)
+      assert socket.assigns.id_filter == "999"
+
+      {:noreply, socket} = Occurrences.handle_params(%{}, "/tower", socket)
+      assert socket.assigns.id_filter == ""
+      assert length(socket.assigns.filtered_events) == 2
+    end
+
+    test "combines all filters" do
+      {:ok, event1} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "Database error"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _event2} = Events.create_event(%{
+        datetime: ~U[2024-03-15 11:00:00Z],
+        level: :error,
+        reason: "Network error"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _event3} = Events.create_event(%{
+        datetime: ~U[2024-03-15 12:00:00Z],
+        level: :warning,
+        reason: "Database warning"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} = Occurrences.handle_params(%{
+        "search" => "database",
+        "level" => "error",
+        "id" => "#{event1.id}"
+      }, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 1
+      assert socket.assigns.search_query == "database"
+      assert socket.assigns.selected_level == :error
+      assert socket.assigns.id_filter == "#{event1.id}"
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "Database error"
+      refute html =~ "Network error"
+      refute html =~ "Database warning"
+    end
+  end
+
   defp socket_with_events(events) do
     %Phoenix.LiveView.Socket{
       assigns: %{
