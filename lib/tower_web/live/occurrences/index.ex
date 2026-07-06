@@ -276,11 +276,21 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("filter_id", %{"id_filter" => id}, socket) do
-    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, id: id)))}
+  def handle_event("filter_id", %{"id_filter" => ""}, socket) do
+    {:noreply, socket}
   end
 
-  @impl Phoenix.LiveView
+  def handle_event("filter_id", %{"id_filter" => id}, socket) do
+    case Integer.parse(id) do
+      {_id_int, ""} ->
+        {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, id: id)))}
+
+      _ ->
+        Process.send_after(self(), :clear_flash, 3000)
+        {:noreply, put_flash(socket, :error, "Please enter a valid number")}
+    end
+  end
+
   def handle_event("clear_filter", %{"type" => type}, socket) do
     filters =
       case type do
