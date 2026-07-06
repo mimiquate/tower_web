@@ -20,10 +20,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> parse_level()
+    id_filter = Map.get(params, "id", "")
 
     case Map.get(params, "page") do
       nil ->
-        {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, search: search, level: level)}", replace: true)}
+        {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, search: search, level: level, id: id_filter)}", replace: true)}
 
       page_param ->
         page = parse_page(page_param)
@@ -34,7 +35,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search: search, level: level)}")}
         else
           offset = (page - 1) * @per_page
-          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search, level: level])
+          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search, level: level, id: id_filter])
 
           {:noreply,
            assign(socket,
@@ -44,7 +45,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
              total_count: total_count,
              search_query: search,
              selected_level: level,
-             levels: @levels
+             levels: @levels,
+             id_filter: id_filter
            )}
         end
     end
@@ -111,14 +113,30 @@ defmodule TowerWeb.Live.Occurrences.Index do
               {level}
             </button>
           </div>
+          <div class="border-l border-tower-line-color h-6"></div>
+          <form phx-submit="filter_id" class="flex items-center gap-2">
+            <span class="font-inter font-light text-sm text-white">ID:</span>
+            <input
+              type="text"
+              placeholder="Type ID and press Enter"
+              name="id_filter"
+              value=""
+              class="w-52 bg-transparent font-inter text-sm text-tower-text-secondary placeholder-tower-text-secondary outline-none border border-tower-line-color py-1 px-2"
+            />
+          </form>
         </div>
 
-        <div :if={@search_query != "" or @selected_level != nil} class="flex items-center gap-3 h-7">
+        <div :if={@search_query != "" or @selected_level != nil or @id_filter != ""} class="flex items-center gap-3 h-7">
           <span class="font-inter font-light text-sm text-white">Active filters:</span>
-          <div class="border-l border-tower-line-color h-full"></div>
-          <div class="flex items-center gap-2">
+          <div :if={@search_query != "" or @selected_level != nil} class="border-l border-tower-line-color h-full"></div>
+          <div :if={@search_query != "" or @selected_level != nil} class="flex items-center gap-2">
             <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
             <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+          </div>
+          <div :if={@id_filter != ""} class="border-l border-tower-line-color h-full"></div>
+          <div :if={@id_filter != ""} class="flex items-center gap-3">
+            <span class="font-inter font-light text-sm text-white">ID:</span>
+            <.active_filter_tag value={@id_filter} type="id" />
           </div>
           <div class="border-l border-tower-line-color h-full"></div>
           <button
@@ -227,21 +245,26 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp active_filter_tag(assigns) do
     ~H"""
-    <button
-      type="button"
-      phx-click="clear_filter"
-      phx-value-type={@type}
-      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
-    >
-      <span class="truncate">{@value}</span>
-      <.close_icon />
-    </button>
+    <div class="relative group">
+      <button
+        type="button"
+        phx-click="clear_filter"
+        phx-value-type={@type}
+        class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
+      >
+        <span class="truncate">{@value}</span>
+        <.close_icon />
+      </button>
+      <div class="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-zinc-800 text-white text-xs whitespace-nowrap z-10">
+        {@value}
+      </div>
+    </div>
     """
   end
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: build_path(socket, search: query, level: socket.assigns.selected_level))}
+    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, search: query)))}
   end
 
   @impl Phoenix.LiveView
@@ -249,22 +272,33 @@ defmodule TowerWeb.Live.Occurrences.Index do
     level = String.to_existing_atom(level)
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
-    {:noreply, push_patch(socket, to: build_path(socket, search: socket.assigns.search_query, level: new_level))}
+    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, level: new_level)))}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_id", %{"id_filter" => id}, socket) do
+    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, id: id)))}
   end
 
   @impl Phoenix.LiveView
   def handle_event("clear_filter", %{"type" => type}, socket) do
     filters =
       case type do
-        "all" -> [search: "", level: nil]
-        "search" -> [search: "", level: socket.assigns.selected_level]
-        "level" -> [search: socket.assigns.search_query, level: nil]
+        "all" -> [search: "", level: nil, id: ""]
+        "search" -> current_filters(socket, search: "")
+        "level" -> current_filters(socket, level: nil)
+        "id" -> current_filters(socket, id: "")
       end
 
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
   end
 
-  defp build_path(socket, filters) do
+  defp current_filters(socket, overrides) do
+    [search: socket.assigns.search_query, level: socket.assigns.selected_level, id: socket.assigns.id_filter]
+    |> Keyword.merge(overrides)
+  end
+
+  defp build_path(socket, filters) when is_list(filters) do
     params =
       filters
       |> Enum.reduce(%{page: 1}, fn
