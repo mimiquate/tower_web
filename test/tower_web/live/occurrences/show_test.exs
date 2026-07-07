@@ -22,7 +22,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         filtered_events: events,
         search_query: "",
         selected_level: nil,
-        id_filter: nil,
+        id_filters: [],
         levels: @levels,
         base_path: "/tower",
         page: 1,

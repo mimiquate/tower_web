@@ -392,8 +392,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
       Enum.reduce(filters, %{}, fn
         {_key, nil}, acc -> acc
         {_key, ""}, acc -> acc
-        {:id, []}, acc -> acc
-        {:id, ids}, acc -> Map.put(acc, :ids, Enum.join(ids, ","))
+        {:ids, []}, acc -> acc
+        {:ids, ids}, acc -> Map.put(acc, :ids, Enum.join(ids, ","))
         {key, value}, acc -> Map.put(acc, key, value)
       end)
 
@@ -410,6 +410,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
       |> Enum.reduce(%{page: page}, fn
         {_key, nil}, acc -> acc
         {_key, ""}, acc -> acc
+        {:ids, []}, acc -> acc
+        {:ids, ids}, acc -> Map.put(acc, :ids, Enum.join(ids, ","))
         {key, value}, acc -> Map.put(acc, key, value)
       end)
 

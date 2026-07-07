@@ -15,7 +15,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: [],
         search_query: "",
         selected_level: nil,
-        id_filter: nil,
+        id_filters: [],
         levels: @levels,
         base_path: "/tower",
         page: 1,
@@ -50,7 +50,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: events,
         search_query: "",
         selected_level: nil,
-        id_filter: nil,
+        id_filters: [],
         levels: @levels,
         base_path: "/tower",
         page: 1,
@@ -90,7 +90,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: events,
         search_query: "",
         selected_level: nil,
-        id_filter: nil,
+        id_filters: [],
         levels: @levels,
         base_path: "/tower",
         page: 1,
@@ -117,7 +117,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: events,
         search_query: "",
         selected_level: nil,
-        id_filter: nil,
+        id_filters: [],
         levels: @levels,
         base_path: "/tower",
         page: 1,
@@ -313,17 +313,50 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"id" => "#{event1.id}"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "ids" => "#{event1.id}"}, "/tower", socket)
 
       assert length(socket.assigns.filtered_events) == 1
-      assert socket.assigns.id_filter == "#{event1.id}"
+      assert socket.assigns.id_filters == ["#{event1.id}"]
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "First event"
       refute html =~ "Second event"
     end
 
-    test "clears id filter when no id param" do
+    test "filters events by multiple ids" do
+      {:ok, event1} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:00:00Z],
+        level: :error,
+        reason: "First event"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, event2} = Events.create_event(%{
+        datetime: ~U[2024-03-15 11:00:00Z],
+        level: :warning,
+        reason: "Second event"
+      }, repo: TowerWeb.TestRepo)
+
+      {:ok, _event3} = Events.create_event(%{
+        datetime: ~U[2024-03-15 12:00:00Z],
+        level: :info,
+        reason: "Third event"
+      }, repo: TowerWeb.TestRepo)
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "ids" => "#{event1.id},#{event2.id}"}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 2
+      assert socket.assigns.id_filters == ["#{event1.id}", "#{event2.id}"]
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "First event"
+      assert html =~ "Second event"
+      refute html =~ "Third event"
+    end
+
+    test "clears id filter when no ids param" do
       {:ok, _} = Events.create_event(%{
         datetime: ~U[2024-03-15 10:00:00Z],
         level: :error,
@@ -339,11 +372,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"id" => "999"}, "/tower", socket)
-      assert socket.assigns.id_filter == "999"
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "ids" => "999"}, "/tower", socket)
+      assert socket.assigns.id_filters == ["999"]
 
-      {:noreply, socket} = Occurrences.handle_params(%{}, "/tower", socket)
-      assert socket.assigns.id_filter == ""
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
+      assert socket.assigns.id_filters == []
       assert length(socket.assigns.filtered_events) == 2
     end
 
@@ -370,15 +403,16 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       socket = socket_with_events(events)
 
       {:noreply, socket} = Occurrences.handle_params(%{
+        "page" => "1",
         "search" => "database",
         "level" => "error",
-        "id" => "#{event1.id}"
+        "ids" => "#{event1.id}"
       }, "/tower", socket)
 
       assert length(socket.assigns.filtered_events) == 1
       assert socket.assigns.search_query == "database"
       assert socket.assigns.selected_level == :error
-      assert socket.assigns.id_filter == "#{event1.id}"
+      assert socket.assigns.id_filters == ["#{event1.id}"]
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "Database error"
@@ -395,7 +429,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: events,
         search_query: "",
         selected_level: nil,
-        id_filter: nil,
+        id_filters: [],
         levels: @levels,
         base_path: "/tower",
         flash: %{}
