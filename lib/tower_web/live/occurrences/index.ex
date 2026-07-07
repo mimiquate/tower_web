@@ -18,14 +18,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
   def handle_params(%{"page" => page_param} = params, _uri, socket) do
     search = Map.get(params, "search", "")
     page = parse_page(page_param)
-    total_count = Events.count_events()
+    total_count = Events.count_events(filters: [search: search])
     total_pages = max(ceil(total_count / @per_page), 1)
 
-    if page > total_pages do
+    if page > total_pages and total_pages > 0 do
       {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}?page=#{total_pages}")}
     else
       offset = (page - 1) * @per_page
-      events = Events.list_events(limit: @per_page, offset: offset)
+      events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
 
       {:noreply,
        assign(socket,
@@ -36,10 +36,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
          search_query: search
        )}
     end
-  end
-
-  def handle_params(_params, _uri, socket) do
-    {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}?page=1")}
   end
 
   defp parse_page(nil), do: 1
@@ -99,7 +95,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={"#{@base_path}/#{event.id}?from_page=#{@page}"} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={show_path(@base_path, event.id, @search_query, @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
@@ -115,7 +111,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <div :if={@total_pages > 1} class="flex items-center justify-start gap-2 mt-6 font-inter text-sm">
       <.link
         :if={@page > 1}
-        patch={"?page=#{@page - 1}"}
+        patch={page_path(@page - 1, @search_query)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Previous
@@ -130,7 +126,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
           <% else %>
             <.link
-              patch={"?page=#{item}"}
+              patch={page_path(item, @search_query)}
               class={[
                 "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
                 item == @page && "bg-tower-active"
@@ -144,7 +140,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       <.link
         :if={@page < @total_pages}
-        patch={"?page=#{@page + 1}"}
+        patch={page_path(@page + 1, @search_query)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Next
@@ -217,4 +213,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
           Enum.to_list((current_page - 1)..(current_page + 1)) ++ [:ellipsis, total_pages]
     end
   end
+
+  defp show_path(base_path, id, "", page), do: "#{base_path}/#{id}?from_page=#{page}"
+  defp show_path(base_path, id, search, page), do: "#{base_path}/#{id}?#{URI.encode_query(from_page: page, search: search)}"
+
+  defp page_path(page, ""), do: "?page=#{page}"
+  defp page_path(page, search), do: "?#{URI.encode_query(page: page, search: search)}"
 end
