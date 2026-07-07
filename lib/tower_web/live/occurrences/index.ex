@@ -88,7 +88,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       <.link
         :if={@page > 1}
         patch={"?page=#{@page - 1}"}
-        class="text-[#E4E4E7] hover:text-white transition-colors"
+        class="text-tower-text-primary hover:text-white transition-colors"
       >
         Previous
       </.link>
@@ -99,13 +99,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
       <div class="flex items-center gap-2">
         <%= for item <- page_items(@page, @total_pages) do %>
           <%= if item == :ellipsis do %>
-            <span class="min-w-7 h-7 px-2 flex items-center justify-center text-[#E4E4E7]">...</span>
+            <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
           <% else %>
             <.link
               patch={"?page=#{item}"}
               class={[
-                "min-w-7 h-7 px-2 flex items-center justify-center text-[#E4E4E7] hover:text-white transition-colors",
-                item == @page && "bg-[#4A5878]"
+                "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
+                item == @page && "bg-tower-active"
               ]}
             >
               {item}
@@ -117,7 +117,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       <.link
         :if={@page < @total_pages}
         patch={"?page=#{@page + 1}"}
-        class="text-[#E4E4E7] hover:text-white transition-colors"
+        class="text-tower-text-primary hover:text-white transition-colors"
       >
         Next
       </.link>
