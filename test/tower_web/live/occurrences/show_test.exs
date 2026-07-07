@@ -24,7 +24,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         base_path: "/tower"
       })
 
-      assert html =~ ~s(href="/tower/#{event.id}")
+      assert html =~ ~s(href="/tower/#{event.id}?from_page=1")
     end
 
     test "show page displays the correct occurrence info" do
@@ -46,7 +46,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       event1 = Events.get_event(event1.id, repo: TowerWeb.TestRepo)
 
       # Render show page with event1
-      html = render_component(&Show.render/1, %{event: event1, base_path: "/tower"})
+      html = render_component(&Show.render/1, %{event: event1, base_path: "/tower", from_page: "1"})
 
       # Verify correct occurrence is displayed
       assert html =~ "##{event1.id}"
