@@ -27,7 +27,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       nil ->
         {:noreply,
          push_patch(socket,
-           to: "#{socket.assigns.occurrences_base_path}#{page_path(1, search)}",
+           to: "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level)}",
            replace: true
          )}
 
@@ -39,11 +39,18 @@ defmodule TowerWeb.Live.Occurrences.Index do
         if page > total_pages do
           {:noreply,
            push_patch(socket,
-             to: "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search)}"
+             to:
+               "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search: search, level: level)}"
            )}
         else
           offset = (page - 1) * @per_page
-          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search, level: level])
+
+          events =
+            Events.list_events(
+              limit: @per_page,
+              offset: offset,
+              filters: [search: search, level: level]
+            )
 
           {:noreply,
            assign(socket,
@@ -64,6 +71,15 @@ defmodule TowerWeb.Live.Occurrences.Index do
       {num, _} when num > 0 -> num
       _ -> 1
     end
+  end
+
+  defp parse_level(""), do: nil
+
+  defp parse_level(level) when is_binary(level) do
+    level_atom = String.to_existing_atom(level)
+    if level_atom in @levels, do: level_atom, else: nil
+  rescue
+    ArgumentError -> nil
   end
 
   @impl Phoenix.LiveView
@@ -158,7 +174,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={show_path(@occurrences_base_path, event.id, @search_query, @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={show_path(@base_path, event.id, [search: @search_query, level: @selected_level], @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
@@ -174,7 +190,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <div :if={@total_pages > 1} class="flex items-center justify-start gap-2 mt-6 font-inter text-sm">
       <.link
         :if={@page > 1}
-        patch={page_path(@page - 1, @search_query)}
+        patch={page_path(@page - 1, search: @search_query, level: @selected_level)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Previous
@@ -189,7 +205,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
           <% else %>
             <.link
-              patch={page_path(item, @search_query)}
+              patch={page_path(item, search: @search_query, level: @selected_level)}
               class={[
                 "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
                 item == @page && "bg-tower-active"
@@ -203,7 +219,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       <.link
         :if={@page < @total_pages}
-        patch={page_path(@page + 1, @search_query)}
+        patch={page_path(@page + 1, search: @search_query, level: @selected_level)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Next
@@ -223,9 +239,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
     """
   end
 
-  attr :value, :any, required: true
-  attr :type, :string, required: true
-  attr :class, :string, default: ""
+  attr(:value, :any, required: true)
+  attr(:type, :string, required: true)
+  attr(:class, :string, default: "")
 
   defp active_filter_tag(assigns) do
     ~H"""
@@ -243,7 +259,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: build_path(socket, search: query, level: socket.assigns.selected_level))}
+    {:noreply,
+     push_patch(socket,
+       to: build_path(socket, search: query, level: socket.assigns.selected_level)
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -251,7 +270,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
     level = String.to_existing_atom(level)
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
-    {:noreply, push_patch(socket, to: build_path(socket, search: socket.assigns.search_query, level: new_level))}
+    {:noreply,
+     push_patch(socket,
+       to: build_path(socket, search: socket.assigns.search_query, level: new_level)
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -268,17 +290,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp build_path(socket, filters) do
     params =
-      Enum.reduce(filters, %{}, fn
+      filters
+      |> Enum.reduce(%{page: 1}, fn
         {_key, nil}, acc -> acc
         {_key, ""}, acc -> acc
         {key, value}, acc -> Map.put(acc, key, value)
       end)
 
-    if params == %{} do
-      socket.assigns.base_path
-    else
-      "#{socket.assigns.base_path}?#{URI.encode_query(params)}"
-    end
+    "#{socket.assigns.base_path}?#{URI.encode_query(params)}"
   end
 
   defp format_date(datetime) do
@@ -331,11 +350,30 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
   end
 
-  defp show_path(base_path, id, "", page), do: "#{base_path}/#{id}?from_page=#{page}"
+  defp show_path(base_path, event_id, filters, page) do
+    params =
+      Enum.reduce(filters, %{}, fn
+        {_key, nil}, acc -> acc
+        {_key, ""}, acc -> acc
+        {key, value}, acc -> Map.put(acc, key, value)
+      end)
 
-  defp show_path(base_path, id, search, page),
-    do: "#{base_path}/#{id}?#{URI.encode_query(from_page: page, search: search)}"
+    if params == %{} do
+      "#{base_path}/#{event_id}?from_page=#{page}"
+    else
+      "#{base_path}/#{event_id}?#{URI.encode_query(Map.put(params, :from_page, page))}"
+    end
+  end
 
-  defp page_path(page, ""), do: "?page=#{page}"
-  defp page_path(page, search), do: "?#{URI.encode_query(page: page, search: search)}"
+  defp page_path(page, filters) do
+    params =
+      filters
+      |> Enum.reduce(%{page: page}, fn
+        {_key, nil}, acc -> acc
+        {_key, ""}, acc -> acc
+        {key, value}, acc -> Map.put(acc, key, value)
+      end)
+
+    "?#{URI.encode_query(params)}"
+  end
 end
