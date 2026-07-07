@@ -16,9 +16,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       }, repo: TowerWeb.TestRepo)
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
-      html = render_component(&Index.render/1, %{events: events})
+      html = render_component(&Index.render/1, %{events: events, base_path: ""})
 
-      assert html =~ ~s(href="/tower/#{event.id}")
+      assert html =~ ~s(href="/#{event.id}")
     end
 
     test "show page displays the correct occurrence info" do
@@ -40,7 +40,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       event1 = Enum.find(Events.list_events(), fn event -> event.id == event1.id end)
 
       # Render show page with event1
-      html = render_component(&Show.render/1, %{event: event1})
+      html = render_component(&Show.render/1, %{event: event1, base_path: "", show_delete_modal: false})
 
       # Verify correct occurrence is displayed
       assert html =~ "##{event1.id}"
