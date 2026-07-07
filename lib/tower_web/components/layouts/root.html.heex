@@ -26,7 +26,9 @@
                 'line-color': '#444444',
                 'text-primary': '#E4E4E7',
                 'text-secondary': '#A1A1A1',
-                'level-bg': '#383838'
+                'level-bg': '#383838',
+                'success': '#008807',
+                'success-hover': '#006d05'
               }
             },
             fontFamily: {
@@ -41,6 +43,14 @@
 
     <script>
       <%= raw get_content(:js) %>
+    </script>
+    <script>
+      let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+      let livePath = document.querySelector("meta[name='live-path']").getAttribute("content")
+      let liveSocket = new window.LiveView.LiveSocket(livePath, window.Phoenix.Socket, {
+        params: {_csrf_token: csrfToken}
+      })
+      liveSocket.connect()
     </script>
   </head>
 
