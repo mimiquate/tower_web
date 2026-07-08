@@ -53,4 +53,27 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       refute html =~ "Second error message"
     end
   end
+
+  describe "delete event" do
+    test "deletes event and redirects to list page" do
+      {:ok, event} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:30:00Z],
+        level: :error,
+        reason: "Event to delete"
+      }, repo: TowerWeb.TestRepo)
+
+      assert length(Events.list_events(repo: TowerWeb.TestRepo)) == 1
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{event: event, base_path: "/", show_delete_modal: true},
+        redirected: nil
+      }
+
+      {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
+
+      assert Events.list_events(repo: TowerWeb.TestRepo) == []
+
+      assert updated_socket.redirected == {:live, :redirect, %{to: "/", kind: :push}}
+    end
+  end
 end
