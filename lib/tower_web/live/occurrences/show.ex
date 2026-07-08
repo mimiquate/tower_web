@@ -5,8 +5,20 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
-    event = Enum.find(Events.list_events(), fn event -> event.id == String.to_integer(id) end)
-    {:ok, assign(socket, event: event, base_path: session["base_path"], show_delete_modal: false)}
+    base_path = session["base_path"]
+
+    case Enum.find(Events.list_events(), fn event -> event.id == String.to_integer(id) end) do
+      nil ->
+        socket =
+          socket
+          |> put_flash(:error, "Event not found")
+          |> push_navigate(to: base_path)
+
+        {:ok, socket}
+
+      event ->
+        {:ok, assign(socket, event: event, base_path: base_path, show_delete_modal: false)}
+    end
   end
 
   @impl Phoenix.LiveView
