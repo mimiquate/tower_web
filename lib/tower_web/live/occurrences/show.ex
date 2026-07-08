@@ -32,7 +32,13 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
   def handle_event("confirm_delete", _params, socket) do
     {:ok, _} = Events.delete_event(socket.assigns.event)
-    {:noreply, push_navigate(socket, to: socket.assigns.base_path)}
+
+    socket =
+      socket
+      |> put_flash(:info, "Event deleted successfully")
+      |> push_navigate(to: socket.assigns.base_path)
+
+    {:noreply, socket}
   end
 
   @impl Phoenix.LiveView
