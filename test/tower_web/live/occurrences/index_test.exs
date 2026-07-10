@@ -13,7 +13,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         page: 1,
         total_pages: 1,
         total_count: 0,
-        base_path: "/tower"
+        base_path: "/tower",
+        flash: %{}
       })
 
       assert html =~ "No occurrences recorded yet."
@@ -43,7 +44,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         page: 1,
         total_pages: 1,
         total_count: 2,
-        base_path: "/tower"
+        base_path: "/tower",
+        flash: %{}
       })
 
       assert html =~ "<table"
@@ -78,7 +80,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         page: 1,
         total_pages: 1,
         total_count: 3,
-        base_path: "/tower"
+        base_path: "/tower",
+        flash: %{}
       })
 
       # Error = red, Warning = yellow, Info = gray
@@ -100,7 +103,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         page: 1,
         total_pages: 1,
         total_count: 1,
-        base_path: "/tower"
+        base_path: "/tower",
+        flash: %{}
       })
 
       assert html =~ "15/03/2024"

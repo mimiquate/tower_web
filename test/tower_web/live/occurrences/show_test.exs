@@ -21,7 +21,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         page: 1,
         total_pages: 1,
         total_count: 1,
-        base_path: "/tower"
+        base_path: "/tower",
+        flash: %{}
       })
 
       assert html =~ ~s(href="/tower/#{event.id}?from_page=1")
@@ -46,7 +47,12 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       event1 = Events.get_event(event1.id, repo: TowerWeb.TestRepo)
 
       # Render show page with event1
-      html = render_component(&Show.render/1, %{event: event1, base_path: "/tower", from_page: "1"})
+      html = render_component(&Show.render/1, %{
+        event: event1,
+        base_path: "/tower",
+        from_page: "1",
+        show_delete_modal: false
+      })
 
       # Verify correct occurrence is displayed
       assert html =~ "##{event1.id}"
@@ -57,6 +63,43 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       # Verify other occurrence is NOT displayed
       refute html =~ "Second error message"
+    end
+  end
+
+  describe "delete event" do
+    test "deletes event and redirects to list page with success flash" do
+      {:ok, event} = Events.create_event(%{
+        datetime: ~U[2024-03-15 10:30:00Z],
+        level: :error,
+        reason: "Event to delete"
+      }, repo: TowerWeb.TestRepo)
+
+      assert length(Events.list_events(repo: TowerWeb.TestRepo)) == 1
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{event: event, base_path: "/", show_delete_modal: true, flash: %{}, __changed__: %{}},
+        redirected: nil
+      }
+
+      {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
+
+      assert Events.list_events(repo: TowerWeb.TestRepo) == []
+      assert updated_socket.redirected == {:live, :redirect, %{to: "/", kind: :push}}
+      assert updated_socket.assigns.flash["info"] == "Event deleted successfully"
+    end
+  end
+
+  describe "event not found" do
+    test "redirects to list page with error flash when event does not exist" do
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{flash: %{}, __changed__: %{}},
+        redirected: nil
+      }
+
+      {:ok, updated_socket} = Show.mount(%{"id" => "99999"}, %{"base_path" => "/"}, socket)
+
+      assert updated_socket.redirected == {:live, :redirect, %{to: "/", kind: :push}}
+      assert updated_socket.assigns.flash["error"] == "Event not found"
     end
   end
 end
