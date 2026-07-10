@@ -5,13 +5,24 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
+    if connected?(socket) do
+      Process.send_after(self(), :clear_flash, 3000)
+    end
+
     events = Events.list_events()
     {:ok, assign(socket, [events: events, base_path: session["base_path"]])}
   end
 
   @impl Phoenix.LiveView
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
+  @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
+    <.flash_messages flash={@flash} />
+
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
     <div :if={@events == []} class="text-gray-400">
