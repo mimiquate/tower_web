@@ -16,9 +16,16 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       }, repo: TowerWeb.TestRepo)
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
-      html = render_component(&Index.render/1, %{events: events, base_path: "", flash: %{}})
+      html = render_component(&Index.render/1, %{
+        events: events,
+        page: 1,
+        total_pages: 1,
+        total_count: 1,
+        base_path: "/tower",
+        flash: %{}
+      })
 
-      assert html =~ ~s(href="/#{event.id}")
+      assert html =~ ~s(href="/tower/#{event.id}?from_page=1")
     end
 
     test "show page displays the correct occurrence info" do
@@ -37,10 +44,15 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       }, repo: TowerWeb.TestRepo)
 
       # Reload from database to ensure metadata is loaded properly
-      event1 = Enum.find(Events.list_events(), fn event -> event.id == event1.id end)
+      event1 = Events.get_event(event1.id, repo: TowerWeb.TestRepo)
 
       # Render show page with event1
-      html = render_component(&Show.render/1, %{event: event1, base_path: "", show_delete_modal: false})
+      html = render_component(&Show.render/1, %{
+        event: event1,
+        base_path: "/tower",
+        from_page: "1",
+        show_delete_modal: false
+      })
 
       # Verify correct occurrence is displayed
       assert html =~ "##{event1.id}"

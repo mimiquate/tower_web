@@ -7,7 +7,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   def mount(%{"id" => id}, session, socket) do
     base_path = session["base_path"]
 
-    case Enum.find(Events.list_events(), fn event -> event.id == String.to_integer(id) end) do
+    case Events.get_event(String.to_integer(id)) do
       nil ->
         socket =
           socket
@@ -42,11 +42,17 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
   @impl Phoenix.LiveView
+  def handle_params(params, _uri, socket) do
+    from_page = params["from_page"] || "1"
+    {:noreply, assign(socket, :from_page, from_page)}
+  end
+
+  @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between items-center mb-4">
-        <.back_button navigate={"#{@base_path}"} />
+        <.back_button navigate={"#{@base_path}?page=#{@from_page}"} />
         <button
           phx-click="show_delete_modal"
           class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium"
