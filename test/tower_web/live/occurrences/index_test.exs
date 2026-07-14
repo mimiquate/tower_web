@@ -135,7 +135,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       socket = socket_with_events(events)
 
       # Filter by "database"
-      {:noreply, socket} = Occurrences.handle_params(%{"search" => "database"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "search" => "database"}, "/tower", socket)
 
       # Verify socket assigns
       assert length(socket.assigns.filtered_events) == 1
@@ -147,7 +147,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       refute html =~ "Memory usage high"
 
       # Clear filter
-      {:noreply, socket} = Occurrences.handle_params(%{}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 
       # Verify all events are shown again
       html = render_component(&Occurrences.render/1, socket.assigns)
@@ -165,7 +165,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"search" => "database"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "search" => "database"}, "/tower", socket)
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "DATABASE ERROR"
@@ -181,7 +181,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"search" => "nonexistent"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "search" => "nonexistent"}, "/tower", socket)
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "No occurrences recorded yet."
@@ -196,7 +196,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         events: events,
         filtered_events: events,
         search_query: "",
-        base_path: "/tower"
+        base_path: "/tower",
+        flash: %{}
       }
     }
   end
