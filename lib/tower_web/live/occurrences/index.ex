@@ -28,11 +28,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       page_param ->
         page = parse_page(page_param)
-        total_count = Events.count_events(filters: [search: search, level: level])
+        total_count = Events.count_events(filters: [search: search, level: level, ids: id_filters])
         total_pages = max(ceil(total_count / @per_page), 1)
 
         if page > total_pages and total_pages > 0 do
-          {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search: search, level: level)}")}
+          {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search: search, level: level, ids: id_filters)}")}
         else
           offset = (page - 1) * @per_page
           events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search, level: level, ids: id_filters])
@@ -134,24 +134,20 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </form>
         </div>
 
-        <div :if={@search_query != "" or @selected_level != nil or @id_filters != []} class="flex items-center gap-3 h-7">
-          <span class="font-inter font-light text-sm text-white">Active filters:</span>
-          <div :if={@search_query != "" or @selected_level != nil} class="border-l border-tower-line-color h-full"></div>
-          <div :if={@search_query != "" or @selected_level != nil} class="flex items-center gap-2">
-            <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
-            <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
-          </div>
-          <div :if={@id_filters != []} class="border-l border-tower-line-color h-full"></div>
-          <div :if={@id_filters != []} class="flex items-center gap-3">
-            <span class="font-inter font-light text-sm text-white">ID:</span>
-            <.active_filter_tag :for={id <- @id_filters} value={id} type="id" id={id} />
-          </div>
-          <div class="border-l border-tower-line-color h-full"></div>
+        <div :if={@search_query != "" or @selected_level != nil or @id_filters != []} class="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <span class="font-inter font-light text-sm text-white h-7 flex items-center">Active filters:</span>
+          <div :if={@search_query != "" or @selected_level != nil} class="border-l border-tower-line-color h-7"></div>
+          <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
+          <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+          <div :if={@id_filters != []} class="border-l border-tower-line-color h-7"></div>
+          <span :if={@id_filters != []} class="font-inter font-light text-sm text-white h-7 flex items-center">ID:</span>
+          <.active_filter_tag :for={id <- @id_filters} value={id} type="id" id={id} />
+          <div class="border-l border-tower-line-color h-7"></div>
           <button
             type="button"
             phx-click="clear_filter"
             phx-value-type="all"
-            class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1"
+            class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1 h-7"
           >
             Clear filter
             <.close_icon />
@@ -198,7 +194,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <div :if={@total_pages > 1} class="flex items-center justify-start gap-2 mt-6 font-inter text-sm">
       <.link
         :if={@page > 1}
-        patch={page_path(@page - 1, search: @search_query, level: @selected_level)}
+        patch={page_path(@page - 1, search: @search_query, level: @selected_level, ids: @id_filters)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Previous
@@ -213,7 +209,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
           <% else %>
             <.link
-              patch={page_path(item, search: @search_query, level: @selected_level)}
+              patch={page_path(item, search: @search_query, level: @selected_level, ids: @id_filters)}
               class={[
                 "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
                 item == @page && "bg-tower-active"
@@ -227,7 +223,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       <.link
         :if={@page < @total_pages}
-        patch={page_path(@page + 1, search: @search_query, level: @selected_level)}
+        patch={page_path(@page + 1, search: @search_query, level: @selected_level, ids: @id_filters)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Next
