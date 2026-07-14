@@ -306,7 +306,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"level" => "error"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
 
       assert length(socket.assigns.filtered_events) == 1
       assert socket.assigns.selected_level == :error
@@ -333,10 +333,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"level" => "error"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
       assert length(socket.assigns.filtered_events) == 1
 
-      {:noreply, socket} = Occurrences.handle_params(%{}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
       assert length(socket.assigns.filtered_events) == 2
       assert socket.assigns.selected_level == nil
     end
@@ -363,7 +363,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"search" => "database", "level" => "error"}, "/tower", socket)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "search" => "database", "level" => "error"}, "/tower", socket)
 
       assert length(socket.assigns.filtered_events) == 1
       assert socket.assigns.search_query == "database"
