@@ -16,26 +16,32 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
-    page_param = Map.get(params, "page", "1")
     search = Map.get(params, "search", "")
-    page = parse_page(page_param)
-    total_count = Events.count_events(filters: [search: search])
-    total_pages = max(ceil(total_count / @per_page), 1)
 
-    if page > total_pages and total_pages > 0 do
-      {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}?page=#{total_pages}")}
-    else
-      offset = (page - 1) * @per_page
-      events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
+    case Map.get(params, "page") do
+      nil ->
+        {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, search)}", replace: true)}
 
-      {:noreply,
-       assign(socket,
-         filtered_events: events,
-         page: page,
-         total_pages: total_pages,
-         total_count: total_count,
-         search_query: search
-       )}
+      page_param ->
+        page = parse_page(page_param)
+        total_count = Events.count_events(filters: [search: search])
+        total_pages = max(ceil(total_count / @per_page), 1)
+
+        if page > total_pages and total_pages > 0 do
+          {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search)}")}
+        else
+          offset = (page - 1) * @per_page
+          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
+
+          {:noreply,
+           assign(socket,
+             filtered_events: events,
+             page: page,
+             total_pages: total_pages,
+             total_count: total_count,
+             search_query: search
+           )}
+        end
     end
   end
 
@@ -154,14 +160,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    path =
-      if query == "" do
-        socket.assigns.base_path
-      else
-        "#{socket.assigns.base_path}?#{URI.encode_query(search: query)}"
-      end
-
-    {:noreply, push_patch(socket, to: path)}
+    {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, query)}")}
   end
 
   defp format_date(datetime) do
