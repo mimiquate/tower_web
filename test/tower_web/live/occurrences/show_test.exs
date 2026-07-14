@@ -31,7 +31,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           page: 1,
           total_pages: 1,
           total_count: 1,
-            flash: %{}
+          flash: %{}
         })
 
       assert html =~ ~s(href="/tower/#{event.id}?from_page=1")
@@ -72,6 +72,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         render_component(&Show.render/1, %{
           event: event1,
           base_path: "/tower",
+          back_path: "/tower?page=1",
           from_page: "1",
           show_delete_modal: false,
           reason_expanded: false
@@ -108,7 +109,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
           event: event,
-          base_path: "/",
+          base_path: "/tower",
           show_delete_modal: true,
           flash: %{},
           __changed__: %{}
@@ -119,7 +120,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
       assert Events.list_events(repo: TowerWeb.TestRepo) == []
-      assert updated_socket.redirected == {:live, :redirect, %{to: "/", kind: :push}}
+      assert updated_socket.redirected == {:live, :redirect, %{to: "/tower", kind: :push}}
       assert updated_socket.assigns.flash["info"] == "Event deleted successfully"
     end
   end
@@ -131,9 +132,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         redirected: nil
       }
 
-      {:ok, updated_socket} = Show.mount(%{"id" => "99999"}, %{"base_path" => "/"}, socket)
+      {:ok, updated_socket} = Show.mount(%{"id" => "99999"}, %{"base_path" => "/tower"}, socket)
 
-      assert updated_socket.redirected == {:live, :redirect, %{to: "/", kind: :push}}
+      assert updated_socket.redirected == {:live, :redirect, %{to: "/tower", kind: :push}}
       assert updated_socket.assigns.flash["error"] == "Event not found"
     end
   end
