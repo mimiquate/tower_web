@@ -11,28 +11,39 @@ defmodule TowerWeb.Live.Occurrences.Index do
       Process.send_after(self(), :clear_flash, 3000)
     end
 
-    {:ok, assign(socket, base_path: session["base_path"])}
+    {:ok, assign(socket, base_path: session["base_path"], database_unavailable: false)}
   end
 
   @impl Phoenix.LiveView
   def handle_params(%{"page" => page_param}, _uri, socket) do
     page = parse_page(page_param)
-    total_count = Events.count_events()
-    total_pages = max(ceil(total_count / @per_page), 1)
 
-    if page > total_pages do
-      {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}?page=#{total_pages}")}
-    else
-      offset = (page - 1) * @per_page
-      events = Events.list_events(limit: @per_page, offset: offset)
-
+    with {:ok, total_count} <- Events.count_events(),
+         total_pages = max(ceil(total_count / @per_page), 1),
+         :ok <- if(page <= total_pages, do: :ok, else: {:redirect, total_pages}),
+         offset = (page - 1) * @per_page,
+         {:ok, events} <- Events.list_events(limit: @per_page, offset: offset) do
       {:noreply,
        assign(socket,
          events: events,
          page: page,
          total_pages: total_pages,
-         total_count: total_count
+         total_count: total_count,
+         database_unavailable: false
        )}
+    else
+      {:error, :database_unavailable} ->
+        {:noreply,
+         assign(socket,
+           events: [],
+           page: 1,
+           total_pages: 1,
+           total_count: 0,
+           database_unavailable: true
+         )}
+
+      {:redirect, total_pages} ->
+        {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}?page=#{total_pages}")}
     end
   end
 
@@ -60,11 +71,30 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
-    <div :if={@events == []} class="text-gray-400">
+    <div :if={@database_unavailable} class="w-full bg-neutral-800 rounded-lg p-12 flex flex-col items-center justify-center min-h-[300px]">
+      <div class="relative mb-6">
+        <svg class="w-16 h-16 text-tower-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <ellipse cx="12" cy="5" rx="9" ry="3" stroke-width="1.5"/>
+          <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5" stroke-width="1.5"/>
+          <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3" stroke-width="1.5"/>
+        </svg>
+        <div class="absolute -bottom-1 -right-1 bg-red-500 rounded-full p-1">
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+            <path d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+      </div>
+      <h2 class="text-xl font-roboto-slab text-white mb-2">Database is currently unavailable</h2>
+      <p class="text-tower-text-secondary text-sm text-center max-w-md">
+        Occurrences cannot be loaded because the database is unavailable. Please try again later.
+      </p>
+    </div>
+
+    <div :if={@events == [] and not @database_unavailable} class="text-gray-400">
       No occurrences recorded yet.
     </div>
 
-    <table :if={@events != []} class="w-full text-left">
+    <table :if={@events != [] and not @database_unavailable} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
           <th class="py-2 text-base font-light w-[132px]">Timestamp</th>

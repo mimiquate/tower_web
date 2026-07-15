@@ -8,7 +8,15 @@ defmodule TowerWeb.Live.Occurrences.Show do
     base_path = session["base_path"]
 
     case Events.get_event(String.to_integer(id)) do
-      nil ->
+      {:error, :database_unavailable} ->
+        socket =
+          socket
+          |> put_flash(:error, "Database is currently unavailable")
+          |> push_navigate(to: base_path)
+
+        {:ok, socket}
+
+      {:ok, nil} ->
         socket =
           socket
           |> put_flash(:error, "Event not found")
@@ -16,7 +24,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
         {:ok, socket}
 
-      event ->
+      {:ok, event} ->
         {:ok, assign(socket, event: event, base_path: base_path, show_delete_modal: false)}
     end
   end
