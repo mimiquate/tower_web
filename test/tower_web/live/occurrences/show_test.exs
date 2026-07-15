@@ -15,14 +15,15 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         reason: "Test error"
       }, repo: TowerWeb.TestRepo)
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      {:ok, events} = Events.list_events(repo: TowerWeb.TestRepo)
       html = render_component(&Index.render/1, %{
         events: events,
         page: 1,
         total_pages: 1,
         total_count: 1,
         base_path: "/tower",
-        flash: %{}
+        flash: %{},
+        database_unavailable: false
       })
 
       assert html =~ ~s(href="/tower/#{event.id}?from_page=1")
@@ -44,7 +45,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       }, repo: TowerWeb.TestRepo)
 
       # Reload from database to ensure metadata is loaded properly
-      event1 = Events.get_event(event1.id, repo: TowerWeb.TestRepo)
+      {:ok, event1} = Events.get_event(event1.id, repo: TowerWeb.TestRepo)
 
       # Render show page with event1
       html = render_component(&Show.render/1, %{
@@ -74,7 +75,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         reason: "Event to delete"
       }, repo: TowerWeb.TestRepo)
 
-      assert length(Events.list_events(repo: TowerWeb.TestRepo)) == 1
+      {:ok, events} = Events.list_events(repo: TowerWeb.TestRepo)
+      assert length(events) == 1
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{event: event, base_path: "/", show_delete_modal: true, flash: %{}, __changed__: %{}},
@@ -83,7 +85,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(repo: TowerWeb.TestRepo) == []
+      {:ok, events} = Events.list_events(repo: TowerWeb.TestRepo)
+      assert events == []
       assert updated_socket.redirected == {:live, :redirect, %{to: "/", kind: :push}}
       assert updated_socket.assigns.flash["info"] == "Event deleted successfully"
     end

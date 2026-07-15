@@ -14,7 +14,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         total_pages: 1,
         total_count: 0,
         base_path: "/tower",
-        flash: %{}
+        flash: %{},
+        database_unavailable: false
       })
 
       assert html =~ "No occurrences recorded yet."
@@ -36,7 +37,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       }, repo: TowerWeb.TestRepo)
 
       # Fetch events like the LiveView does
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      {:ok, events} = Events.list_events(repo: TowerWeb.TestRepo)
 
       # Render with real events
       html = render_component(&Occurrences.render/1, %{
@@ -45,7 +46,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         total_pages: 1,
         total_count: 2,
         base_path: "/tower",
-        flash: %{}
+        flash: %{},
+        database_unavailable: false
       })
 
       assert html =~ "<table"
@@ -74,14 +76,15 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         reason: "Info event"
       }, repo: TowerWeb.TestRepo)
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      {:ok, events} = Events.list_events(repo: TowerWeb.TestRepo)
       html = render_component(&Occurrences.render/1, %{
         events: events,
         page: 1,
         total_pages: 1,
         total_count: 3,
         base_path: "/tower",
-        flash: %{}
+        flash: %{},
+        database_unavailable: false
       })
 
       # Error = red, Warning = yellow, Info = gray
@@ -97,14 +100,15 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         reason: "Test error"
       }, repo: TowerWeb.TestRepo)
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      {:ok, events} = Events.list_events(repo: TowerWeb.TestRepo)
       html = render_component(&Occurrences.render/1, %{
         events: events,
         page: 1,
         total_pages: 1,
         total_count: 1,
         base_path: "/tower",
-        flash: %{}
+        flash: %{},
+        database_unavailable: false
       })
 
       assert html =~ "15/03/2024"
