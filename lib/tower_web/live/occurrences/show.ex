@@ -88,7 +88,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
       </div>
 
       <div class="text-lg font-mono text-white mb-8">
-        {format_reason(@event.reason)}
+        <pre class="line-clamp-1">{format_reason(@event.reason)}</pre>
       </div>
 
       <div class="mb-8 border border-tower-line-color p-4">
@@ -103,6 +103,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     </div>
     """
   end
+
 
   defp format_reason(reason) when is_exception(reason) do
     Exception.format(:error, reason)
