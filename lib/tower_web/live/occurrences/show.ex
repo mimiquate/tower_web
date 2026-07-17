@@ -17,7 +17,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
         {:ok, socket}
 
       event ->
-        {:ok, assign(socket, event: event, base_path: base_path, show_delete_modal: false)}
+        {:ok, assign(socket, event: event, base_path: base_path, show_delete_modal: false, reason_expanded: false)}
     end
   end
 
@@ -39,6 +39,10 @@ defmodule TowerWeb.Live.Occurrences.Show do
       |> push_navigate(to: socket.assigns.base_path)
 
     {:noreply, socket}
+  end
+
+  def handle_event("toggle_reason", _params, socket) do
+    {:noreply, assign(socket, reason_expanded: !socket.assigns.reason_expanded)}
   end
 
   @impl Phoenix.LiveView
@@ -87,8 +91,28 @@ defmodule TowerWeb.Live.Occurrences.Show do
         #{@event.id}
       </div>
 
-      <div class="text-lg font-mono text-white mb-8">
-        <pre class="line-clamp-1">{format_reason(@event.reason)}</pre>
+      <div class="font-mono text-white mb-8">
+        <div class="text-lg line-clamp-1">{format_reason(@event.reason)}</div>
+        <div class="mt-4">
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: format_reason(@event.reason), else: format_reason(@event.reason, 500)}</pre>
+        </div>
+        <button
+          :if={reason_exceeds_limit?(@event.reason, 500)}
+          phx-click="toggle_reason"
+          class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
+        >
+          <span class="underline">{if @reason_expanded, do: "Show less", else: "Show more"}</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            class={["size-4 transition-transform", @reason_expanded && "rotate-180"]}
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
       </div>
 
       <div class="mb-8 border border-tower-line-color p-4">
@@ -105,16 +129,43 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
 
-  defp format_reason(reason) when is_exception(reason) do
+  defp format_reason(reason, limit \\ nil)
+
+  defp format_reason(reason, limit) when is_exception(reason) do
     Exception.format(:error, reason)
+    |> maybe_truncate(limit)
   end
 
-  defp format_reason(reason) when is_binary(reason) do
+  defp format_reason(reason, limit) when is_binary(reason) do
+    maybe_truncate(reason, limit)
+  end
+
+  defp format_reason(reason, limit) do
     reason
+    |> inspect(pretty: true)
+    |> maybe_truncate(limit)
   end
 
-  defp format_reason(reason) do
-    inspect(reason, pretty: true)
+  defp maybe_truncate(text, nil), do: text
+
+  defp maybe_truncate(text, max_length) do
+    if String.length(text) > max_length do
+      String.slice(text, 0, max_length) <> "..."
+    else
+      text
+    end
+  end
+
+  defp reason_exceeds_limit?(reason, limit) when is_exception(reason) do
+    String.length(Exception.format(:error, reason)) > limit
+  end
+
+  defp reason_exceeds_limit?(reason, limit) when is_binary(reason) do
+    String.length(reason) > limit
+  end
+
+  defp reason_exceeds_limit?(reason, limit) do
+    String.length(inspect(reason, pretty: true)) > limit
   end
 
   defp format_stacktrace(nil), do: "No stacktrace available"
