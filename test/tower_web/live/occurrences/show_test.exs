@@ -51,7 +51,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         event: event1,
         base_path: "/tower",
         from_page: "1",
-        show_delete_modal: false
+        show_delete_modal: false,
+        reason_expanded: false
       })
 
       # Verify correct occurrence is displayed
