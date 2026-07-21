@@ -26,8 +26,11 @@ defmodule TowerWeb.Layouts do
     Keyword.get(config, key, default)
   end
 
+  attr :socket, Phoenix.LiveView.Socket, required: true
+
   def sidebar(assigns) do
-    assigns = assign(assigns, :app_name, get_app_name())
+    app_name = extract_app_name(assigns.socket)
+    assigns = assign(assigns, :app_name, app_name)
 
     ~H"""
     <div class="fixed top-0 left-0 z-40 w-[233px] h-screen px-3 py-6">
@@ -86,7 +89,11 @@ defmodule TowerWeb.Layouts do
     """
   end
 
-  defp get_app_name do
-    Application.get_env(:tower_web, :app_name, "Project Name")
+  defp extract_app_name(socket) do
+    socket.endpoint
+    |> Module.split()
+    |> List.first()
+    |> String.replace(~r/Web$/, "")
+    |> String.replace(~r/([a-z])([A-Z])/, "\\1 \\2")
   end
 end
