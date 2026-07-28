@@ -176,7 +176,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp format_reason(reason) when is_exception(reason) do
-    Exception.message(reason)
+    Exception.format(:error, reason)
   end
 
   defp format_reason(reason) when is_binary(reason) do
