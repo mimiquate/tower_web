@@ -80,8 +80,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
       />
     </form>
 
-    <div :if={@filtered_events == []} class="text-gray-400">
+    <div :if={@filtered_events == [] and @search_query == ""} class="text-gray-400">
       No occurrences recorded yet.
+    </div>
+    <div :if={@filtered_events == [] and @search_query != ""} class="text-gray-400">
+      No matching occurrences found.
     </div>
 
     <table :if={@filtered_events != []} class="w-full text-left">
@@ -161,12 +164,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    path =
-      if query == "",
-        do: "#{socket.assigns.base_path}?page=1",
-        else: "#{socket.assigns.base_path}?#{URI.encode_query(page: 1, search: query)}"
-
-    {:noreply, push_patch(socket, to: path)}
+    {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, query)}")}
   end
 
   defp format_date(datetime) do

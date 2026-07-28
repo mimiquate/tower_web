@@ -225,7 +225,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "search" => "nonexistent"}, "/tower", socket)
 
       html = render_component(&Occurrences.render/1, socket.assigns)
-      assert html =~ "No occurrences recorded yet."
+      assert html =~ "No matching occurrences found."
       refute html =~ "Database connection failed"
     end
   end
