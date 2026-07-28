@@ -14,7 +14,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           %{
             datetime: ~U[2024-03-15 10:30:00Z],
             level: :error,
-            reason: "Test error"
+            kind: :error,
+            similarity_id: 1,
+            reason: %RuntimeError{message: "Test error"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -40,7 +42,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           %{
             datetime: ~U[2024-03-15 10:30:00Z],
             level: :error,
-            reason: "First error message",
+            kind: :error,
+            similarity_id: 1,
+            reason: %RuntimeError{message: "First error message"},
             stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
             metadata: %{user_id: 123, request_id: "abc"}
           },
@@ -52,6 +56,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           %{
             datetime: ~U[2024-03-14 09:00:00Z],
             level: :warning,
+            kind: :throw,
+            similarity_id: 2,
             reason: "Second error message"
           },
           repo: TowerWeb.TestRepo
@@ -89,6 +95,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           %{
             datetime: ~U[2024-03-15 10:30:00Z],
             level: :error,
+            kind: :message,
+            similarity_id: 1,
             reason: "Event to delete"
           },
           repo: TowerWeb.TestRepo
