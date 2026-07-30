@@ -11,12 +11,12 @@ defmodule TowerWeb.Layouts do
     end
 
   @js Enum.map_join(phoenix_js_paths, "\n", fn path ->
-    path |> File.read!() |> String.replace("//# sourceMappingURL=", "// ")
-  end)
+        path |> File.read!() |> String.replace("//# sourceMappingURL=", "// ")
+      end)
 
   @default_socket_config %{path: "/live", transport: :websocket}
 
-  embed_templates "layouts/*"
+  embed_templates("layouts/*")
 
   def get_content(:js), do: @js
 
@@ -26,7 +26,7 @@ defmodule TowerWeb.Layouts do
     Keyword.get(config, key, default)
   end
 
-  attr :socket, Phoenix.LiveView.Socket, required: true
+  attr(:socket, Phoenix.LiveView.Socket, required: true)
 
   def sidebar(assigns) do
     app_name = extract_app_name(assigns.socket)
@@ -58,9 +58,9 @@ defmodule TowerWeb.Layouts do
     """
   end
 
-  attr :href, :string, required: true
-  attr :active, :boolean, default: false
-  slot :inner_block, required: true
+  attr(:href, :string, required: true)
+  attr(:active, :boolean, default: false)
+  slot(:inner_block, required: true)
 
   def sidebar_item(assigns) do
     ~H"""

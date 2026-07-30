@@ -3,8 +3,8 @@ defmodule TowerWeb.CoreComponents do
 
   use Phoenix.Component
 
-  attr :title, :string, required: true
-  attr :subtitle, :string, default: nil
+  attr(:title, :string, required: true)
+  attr(:subtitle, :string, default: nil)
 
   def page_header(assigns) do
     ~H"""
@@ -15,7 +15,7 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
-  attr :navigate, :string, required: true
+  attr(:navigate, :string, required: true)
 
   def back_button(assigns) do
     ~H"""
@@ -27,7 +27,7 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
-  attr :flash, :map, required: true
+  attr(:flash, :map, required: true)
 
   def flash_messages(assigns) do
     ~H"""
