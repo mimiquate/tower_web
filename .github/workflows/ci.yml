@@ -45,8 +45,6 @@ jobs:
             _build
             deps
           key: ${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.erlang }}-${{ hashFiles('mix.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.erlang }}-
       - uses: erlef/setup-beam@v1
         with:
           otp-version: ${{ matrix.erlang }}
