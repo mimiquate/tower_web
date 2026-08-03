@@ -33,14 +33,12 @@ defmodule TowerWeb.Layouts do
     assigns = assign(assigns, :app_name, app_name)
 
     ~H"""
-    <div class="fixed top-0 left-0 z-40 w-[233px] h-screen px-3 py-6">
-      <div class="bg-tower-bg">
-        <div class="flex items-center justify-center gap-3 pb-6">
-          <svg class="w-12 h-12" viewBox="0 0 1080 1064" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M616 760.005H768V912.006H312V760.005H464V608.004H616V760.005ZM312 304.001H464V152H616V304.001H768V152H920V456.002H160V152H312V304.001Z" fill="white"/>
-          </svg>
-          <div class="w-[149px] h-12">
-            <p class="font-light font-roboto-slab text-white text-lg">{@app_name}</p>
+    <div class="fixed top-0 left-0 z-40 w-sidebar h-screen px-3 py-6 flex flex-col border-r border-tower-line-color">
+      <div class="bg-tower-bg flex flex-col flex-1 min-h-0">
+        <div class="flex items-center justify-start gap-3 pb-6">
+          <.tower_logo />
+          <div class="w-[180px] h-12">
+            <p class="font-light font-roboto-slab text-white text-lg truncate" title={@app_name}>{@app_name}</p>
             <p class="font-light font-roboto-slab text-white text-xs">Tower Monitoring</p>
           </div>
         </div>
@@ -53,6 +51,13 @@ defmodule TowerWeb.Layouts do
             </.sidebar_item>
           </ul>
         </nav>
+
+        <div class="flex gap-3 items-center mt-auto">
+          <.mimiquate_logo />
+          <p class="flex-1 font-roboto-slab text-white text-[8px] tracking-[-0.15px]">
+            Product built by Mimiquate © 2025. This project is open source and community-driven.
+          </p>
+        </div>
       </div>
     </div>
     """
@@ -69,7 +74,7 @@ defmodule TowerWeb.Layouts do
         href={unless @active, do: @href}
         onclick={if @active, do: "return false"}
         class={[
-          "flex items-center w-[209px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm",
+          "flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm",
           @active && "bg-tower-active"
         ]}
       >
@@ -79,12 +84,28 @@ defmodule TowerWeb.Layouts do
     """
   end
 
+  defp tower_logo(assigns) do
+    ~H"""
+    <svg class="w-12 h-12" viewBox="0 0 1080 1064" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M616 760.005H768V912.006H312V760.005H464V608.004H616V760.005ZM312 304.001H464V152H616V304.001H768V152H920V456.002H160V152H312V304.001Z" fill="white"/>
+    </svg>
+    """
+  end
+
   defp occurrences_icon(assigns) do
     ~H"""
     <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
       <path d="M3 3v5h5" />
       <path d="M12 7v5l4 2" />
+    </svg>
+    """
+  end
+
+  defp mimiquate_logo(assigns) do
+    ~H"""
+    <svg class="w-12 h-12" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M36.0316 24.3784C37.3993 20.4386 39.5256 17.2455 39.8772 16.6911C40.2096 16.1667 39.8216 15.5727 39.2576 15.4357C38.6768 15.2947 37.8496 15.5513 37.4256 15.7869C36.2527 16.4389 35.4205 17.2493 33.9756 18.8623C33.5519 19.3354 32.3213 20.9029 31.1488 22.4395C30.1921 23.6903 29.2728 24.9201 28.8585 25.5174C29.6552 23.9988 31.4422 21.18 32.95 18.7386C33.5432 17.781 34.0946 16.8807 34.5272 16.1402C34.7798 15.7261 35.0981 15.1824 35.2147 14.9831C35.3701 14.7181 35.4085 14.5001 35.4191 14.1912C35.4421 13.526 34.8522 13.0923 34.256 13.0455C33.4979 12.9861 32.8362 13.2426 32.2168 13.6628C31.6829 14.0252 31.1977 14.4544 30.7429 14.9151C29.2519 16.3334 24.0171 21.9917 23.8724 22.3225C24.5868 20.6891 25.3251 19.0918 26.0883 17.5293C26.5225 16.6413 26.9661 15.7762 27.4163 14.9254C27.4211 14.9184 27.4256 14.9118 27.4306 14.9047L28.4033 13.0578C28.5449 12.7724 28.6548 12.4627 28.6468 12.1432C28.6286 11.4327 27.9723 11.01 27.3339 11.0003C26.5223 10.9879 25.7438 11.3912 25.1109 11.8808C25.1069 11.884 25.1031 11.8877 25.099 11.8907C24.6635 12.2031 24.2132 12.5251 23.7359 12.8656C16.4521 18.06 11.7631 19.4472 8.53964 18.6257C8.3155 18.5685 8.15932 18.6247 8.04588 18.7763C7.79186 19.1156 8.65179 19.8035 9.1727 20.0328C10.0386 20.4141 10.9829 20.7365 10.9829 20.7365C9.76624 21.774 9.1968 21.7617 9.52619 22.0218C9.76929 22.2138 11.4569 22.2852 12.4148 22.0749C14.9654 21.5153 16.8143 20.3339 18.8041 19.0499C19.8943 18.3462 24.1242 14.8646 24.1242 14.8646C23.4658 16.011 22.8186 17.1247 22.1812 18.2066C20.2818 21.4314 18.4705 24.7369 17.0879 28.2322C16.9896 28.4472 16.986 28.7093 17.0773 29.0166C17.2778 29.6924 17.6708 30.2997 18.1455 30.8066C19.509 32.2626 20.2193 31.8928 20.8063 30.2351C21.1851 29.1423 21.8039 27.4312 22.0446 26.792C22.6332 26.0908 23.2527 25.3525 23.9035 24.5789C25.9085 22.1951 28.0515 19.8466 30.3207 17.7016C29.8023 18.4751 29.281 19.2524 28.7554 20.0333C28.5002 20.4129 25.686 25.2578 25.1278 27.5119C25.0862 27.6982 25.1624 27.9626 25.3585 28.3055C25.5541 28.6484 25.7875 28.9842 26.06 29.3136C26.3326 29.6421 26.612 29.9101 26.8986 30.1172C26.9015 30.1192 26.9044 30.1213 26.9071 30.1233C27.2007 30.3334 27.6082 30.2256 27.7892 29.9093C28.7798 28.1796 29.8555 26.4867 31.0171 24.8313C31.462 24.197 34.7132 19.9549 34.9808 19.6299C35.0005 19.6059 35.0198 19.5817 35.0396 19.5575C34.4513 20.5433 31.8545 26.6823 31.6201 30.5828C31.5261 32.1462 31.7708 33.9954 32.8981 35.1569C33.6635 35.9457 34.7529 36.3311 35.7069 35.6429C35.9786 35.4469 36.2903 35.0701 36.0469 34.7385C34.7976 33.0364 34.7247 30.6714 34.9833 28.6424C35.1694 27.1825 36.0314 24.3784 36.0314 24.3784M35.0463 19.5496C35.045 19.5519 35.0433 19.5551 35.042 19.5574L35.0409 19.5562C35.0426 19.5541 35.0446 19.5518 35.0463 19.5495" fill="white"/>
     </svg>
     """
   end
