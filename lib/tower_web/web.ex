@@ -3,6 +3,7 @@ defmodule TowerWeb.Web do
 
   def html do
     quote do
+      use Phoenix.Component
       import Phoenix.Controller, only: [get_csrf_token: 0]
       unquote(html_helpers())
     end
@@ -23,7 +24,6 @@ defmodule TowerWeb.Web do
 
   defp html_helpers do
     quote do
-      use Phoenix.Component
       import TowerWeb.CoreComponents
       import Phoenix.HTML
       alias Phoenix.LiveView.JS

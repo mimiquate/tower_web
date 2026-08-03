@@ -41,6 +41,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp parse_page(nil), do: 1
+
   defp parse_page(page) when is_binary(page) do
     case Integer.parse(page) do
       {num, _} when num > 0 -> num
@@ -184,7 +185,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
         [1, :ellipsis] ++ Enum.to_list((total_pages - 4)..total_pages)
 
       true ->
-        [1, :ellipsis] ++ Enum.to_list((current_page - 1)..(current_page + 1)) ++ [:ellipsis, total_pages]
+        [1, :ellipsis] ++
+          Enum.to_list((current_page - 1)..(current_page + 1)) ++ [:ellipsis, total_pages]
     end
   end
 end

@@ -8,14 +8,15 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   describe "render/1" do
     test "shows empty message when no events" do
-      html = render_component(&Occurrences.render/1, %{
-        events: [],
-        page: 1,
-        total_pages: 1,
-        total_count: 0,
-        base_path: "/tower",
-        flash: %{}
-      })
+      html =
+        render_component(&Occurrences.render/1, %{
+          events: [],
+          page: 1,
+          total_pages: 1,
+          total_count: 0,
+          base_path: "/tower",
+          flash: %{}
+        })
 
       assert html =~ "No occurrences recorded yet."
       refute html =~ "<table"
@@ -23,30 +24,39 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
     test "shows table with events" do
       # Create real events in database
-      {:ok, event1} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:30:00Z],
-        level: :error,
-        reason: "Something failed"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, event1} =
+        Events.create_event(
+          %{
+            datetime: ~U[2024-03-15 10:30:00Z],
+            level: :error,
+            reason: "Something failed"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, event2} = Events.create_event(%{
-        datetime: ~U[2024-03-14 09:00:00Z],
-        level: :warning,
-        reason: "A warning occurred"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, event2} =
+        Events.create_event(
+          %{
+            datetime: ~U[2024-03-14 09:00:00Z],
+            level: :warning,
+            reason: "A warning occurred"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
       # Fetch events like the LiveView does
       events = Events.list_events(repo: TowerWeb.TestRepo)
 
       # Render with real events
-      html = render_component(&Occurrences.render/1, %{
-        events: events,
-        page: 1,
-        total_pages: 1,
-        total_count: 2,
-        base_path: "/tower",
-        flash: %{}
-      })
+      html =
+        render_component(&Occurrences.render/1, %{
+          events: events,
+          page: 1,
+          total_pages: 1,
+          total_count: 2,
+          base_path: "/tower",
+          flash: %{}
+        })
 
       assert html =~ "<table"
       assert html =~ "Something failed"
@@ -56,33 +66,47 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "displays correct severity colors" do
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:00:00Z],
-        level: :error,
-        reason: "Error event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            datetime: ~U[2024-03-15 10:00:00Z],
+            level: :error,
+            reason: "Error event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:00:00Z],
-        level: :warning,
-        reason: "Warning event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            datetime: ~U[2024-03-15 10:00:00Z],
+            level: :warning,
+            reason: "Warning event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:00:00Z],
-        level: :info,
-        reason: "Info event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            datetime: ~U[2024-03-15 10:00:00Z],
+            level: :info,
+            reason: "Info event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
-      html = render_component(&Occurrences.render/1, %{
-        events: events,
-        page: 1,
-        total_pages: 1,
-        total_count: 3,
-        base_path: "/tower",
-        flash: %{}
-      })
+
+      html =
+        render_component(&Occurrences.render/1, %{
+          events: events,
+          page: 1,
+          total_pages: 1,
+          total_count: 3,
+          base_path: "/tower",
+          flash: %{}
+        })
 
       # Error = red, Warning = yellow, Info = gray
       assert html =~ "text-red-400"
@@ -91,21 +115,27 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "formats date and time correctly" do
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 14:30:45Z],
-        level: :error,
-        reason: "Test error"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            datetime: ~U[2024-03-15 14:30:45Z],
+            level: :error,
+            reason: "Test error"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
-      html = render_component(&Occurrences.render/1, %{
-        events: events,
-        page: 1,
-        total_pages: 1,
-        total_count: 1,
-        base_path: "/tower",
-        flash: %{}
-      })
+
+      html =
+        render_component(&Occurrences.render/1, %{
+          events: events,
+          page: 1,
+          total_pages: 1,
+          total_count: 1,
+          base_path: "/tower",
+          flash: %{}
+        })
 
       assert html =~ "15/03/2024"
       assert html =~ "02:30:45 PM UTC"

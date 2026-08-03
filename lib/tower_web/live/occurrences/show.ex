@@ -17,7 +17,13 @@ defmodule TowerWeb.Live.Occurrences.Show do
         {:ok, socket}
 
       event ->
-        {:ok, assign(socket, event: event, base_path: base_path, show_delete_modal: false, reason_expanded: false)}
+        {:ok,
+         assign(socket,
+           event: event,
+           base_path: base_path,
+           show_delete_modal: false,
+           reason_expanded: false
+         )}
     end
   end
 
@@ -127,7 +133,6 @@ defmodule TowerWeb.Live.Occurrences.Show do
     </div>
     """
   end
-
 
   defp format_reason(reason, limit \\ nil)
 
