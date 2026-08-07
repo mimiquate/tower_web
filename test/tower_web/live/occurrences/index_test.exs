@@ -15,6 +15,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 0,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
@@ -27,6 +28,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, event1} =
         Events.create_event(
           %{
+            similarity_id: 1,
+            kind: :error,
             datetime: ~U[2024-03-15 10:30:00Z],
             level: :error,
             reason: "Something failed"
@@ -37,6 +40,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, event2} =
         Events.create_event(
           %{
+            similarity_id: 2,
+            kind: :error,
             datetime: ~U[2024-03-14 09:00:00Z],
             level: :warning,
             reason: "A warning occurred"
@@ -55,6 +60,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 2,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
@@ -69,6 +75,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 3,
+            kind: :error,
             datetime: ~U[2024-03-15 10:00:00Z],
             level: :error,
             reason: "Error event"
@@ -79,6 +87,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 4,
+            kind: :error,
             datetime: ~U[2024-03-15 10:00:00Z],
             level: :warning,
             reason: "Warning event"
@@ -89,6 +99,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 5,
+            kind: :error,
             datetime: ~U[2024-03-15 10:00:00Z],
             level: :info,
             reason: "Info event"
@@ -105,6 +117,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 3,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
@@ -118,6 +131,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 6,
+            kind: :error,
             datetime: ~U[2024-03-15 14:30:45Z],
             level: :error,
             reason: "Test error"
@@ -134,6 +149,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 1,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 

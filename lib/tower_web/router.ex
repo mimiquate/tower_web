@@ -15,8 +15,10 @@ defmodule TowerWeb.Router do
           on_mount: on_mount,
           root_layout: {TowerWeb.Layouts, :root},
           session: %{"base_path" => scoped_path} do
-          live("/", TowerWeb.Live.Occurrences.Index, :index)
-          live("/:id", TowerWeb.Live.Occurrences.Show, :show)
+          live("/", TowerWeb.Live.RootRedirect, :index)
+          live("/dashboard", TowerWeb.Live.Dashboard.Index, :index)
+          live("/occurrences", TowerWeb.Live.Occurrences.Index, :index)
+          live("/occurrences/:id", TowerWeb.Live.Occurrences.Show, :show)
         end
       end
     end
