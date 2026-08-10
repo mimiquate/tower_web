@@ -27,7 +27,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, event1} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
+            kind: :error,
             level: :error,
             reason: "Something failed"
           },
@@ -37,7 +39,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, event2} =
         Events.create_event(
           %{
+            similarity_id: 2,
             datetime: ~U[2024-03-14 09:00:00Z],
+            kind: :error,
             level: :warning,
             reason: "A warning occurred"
           },
@@ -69,7 +73,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
             level: :error,
             reason: "Error event"
           },
@@ -79,7 +85,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 2,
             datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
             level: :warning,
             reason: "Warning event"
           },
@@ -89,7 +97,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 3,
             datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
             level: :info,
             reason: "Info event"
           },
@@ -118,7 +128,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 14:30:45Z],
+            kind: :error,
             level: :error,
             reason: "Test error"
           },

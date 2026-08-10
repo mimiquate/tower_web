@@ -12,7 +12,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, event} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
+            kind: :error,
             level: :error,
             reason: "Test error"
           },
@@ -38,7 +40,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, event1} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
+            kind: :error,
             level: :error,
             reason: "First error message",
             stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
@@ -50,7 +54,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, _event2} =
         Events.create_event(
           %{
+            similarity_id: 2,
             datetime: ~U[2024-03-14 09:00:00Z],
+            kind: :error,
             level: :warning,
             reason: "Second error message"
           },
@@ -87,7 +93,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, event} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
+            kind: :error,
             level: :error,
             reason: "Event to delete"
           },
