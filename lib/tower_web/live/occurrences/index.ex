@@ -50,8 +50,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
   end
 
-  defp parse_page(nil), do: 1
-
   defp parse_page(page) when is_binary(page) do
     case Integer.parse(page) do
       {num, _} when num > 0 -> num
