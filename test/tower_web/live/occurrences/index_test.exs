@@ -281,7 +281,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: events,
         search_query: "",
         base_path: "/tower",
-        flash: %{}
+        flash: %{},
+        occurrences_base_path: "/tower/occurrences"
       }
     }
   end
