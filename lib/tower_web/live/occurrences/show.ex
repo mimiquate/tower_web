@@ -200,5 +200,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
   defp index_path(base_path, "", page), do: "#{base_path}?page=#{page}"
-  defp index_path(base_path, search, page), do: "#{base_path}?#{URI.encode_query(page: page, search: search)}"
+
+  defp index_path(base_path, search, page),
+    do: "#{base_path}?#{URI.encode_query(page: page, search: search)}"
 end

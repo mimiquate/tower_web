@@ -20,7 +20,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     case Map.get(params, "page") do
       nil ->
-        {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, search)}", replace: true)}
+        {:noreply,
+         push_patch(socket,
+           to: "#{socket.assigns.base_path}#{page_path(1, search)}",
+           replace: true
+         )}
 
       page_param ->
         page = parse_page(page_param)
@@ -28,7 +32,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
         total_pages = max(ceil(total_count / @per_page), 1)
 
         if page > total_pages and total_pages > 0 do
-          {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search)}")}
+          {:noreply,
+           push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search)}")}
         else
           offset = (page - 1) * @per_page
           events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
@@ -218,7 +223,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp show_path(base_path, id, "", page), do: "#{base_path}/#{id}?from_page=#{page}"
-  defp show_path(base_path, id, search, page), do: "#{base_path}/#{id}?#{URI.encode_query(from_page: page, search: search)}"
+
+  defp show_path(base_path, id, search, page),
+    do: "#{base_path}/#{id}?#{URI.encode_query(from_page: page, search: search)}"
 
   defp page_path(page, ""), do: "?page=#{page}"
   defp page_path(page, search), do: "?#{URI.encode_query(page: page, search: search)}"
