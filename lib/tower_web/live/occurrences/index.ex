@@ -11,7 +11,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
       Process.send_after(self(), :clear_flash, 3000)
     end
 
-    {:ok, assign(socket, base_path: session["base_path"])}
+    base_path = session["base_path"]
+
+    {:ok, assign(socket, base_path: base_path, occurrences_base_path: "#{base_path}/occurrences")}
   end
 
   @impl Phoenix.LiveView
@@ -33,7 +35,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
         if page > total_pages and total_pages > 0 do
           {:noreply,
-           push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(total_pages, search)}")}
+           push_patch(socket,
+             to: "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search)}"
+           )}
         else
           offset = (page - 1) * @per_page
           events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
@@ -108,7 +112,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={show_path(@base_path, event.id, @search_query, @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={show_path(@occurrences_base_path, event.id, @search_query, @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>

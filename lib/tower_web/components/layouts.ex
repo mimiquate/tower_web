@@ -27,10 +27,16 @@ defmodule TowerWeb.Layouts do
   end
 
   attr(:socket, Phoenix.LiveView.Socket, required: true)
+  attr(:base_path, :string, required: true)
 
   def sidebar(assigns) do
     app_name = extract_app_name(assigns.socket)
-    assigns = assign(assigns, :app_name, app_name)
+
+    assigns =
+      assigns
+      |> assign(:app_name, app_name)
+      |> assign(:items, sidebar_items(assigns.base_path))
+      |> assign(:current_view, assigns.socket.view)
 
     ~H"""
     <div class="fixed top-0 left-0 z-40 w-sidebar h-screen px-3 py-6 flex flex-col border-r border-tower-line-color">
@@ -44,10 +50,14 @@ defmodule TowerWeb.Layouts do
         </div>
 
         <nav class="pt-6 pb-4 border-t border-b border-tower-line-color">
-          <ul>
-            <.sidebar_item href="." active={true}>
-              <.occurrences_icon />
-              <span class="ml-3 text-sm">Occurrences</span>
+          <ul class="flex flex-col gap-3">
+            <.sidebar_item
+              :for={item <- @items}
+              href={item.href}
+              active={@current_view in item.views}
+            >
+              {item.icon.(%{})}
+              <span class="ml-3 text-sm">{item.label}</span>
             </.sidebar_item>
           </ul>
         </nav>
@@ -61,6 +71,23 @@ defmodule TowerWeb.Layouts do
       </div>
     </div>
     """
+  end
+
+  defp sidebar_items(base_path) do
+    [
+      %{
+        href: "#{base_path}/dashboard",
+        label: "Dashboard",
+        views: [TowerWeb.Live.Dashboard.Index],
+        icon: &dashboard_icon/1
+      },
+      %{
+        href: "#{base_path}/occurrences",
+        label: "Occurrences",
+        views: [TowerWeb.Live.Occurrences.Index, TowerWeb.Live.Occurrences.Show],
+        icon: &occurrences_icon/1
+      }
+    ]
   end
 
   attr(:href, :string, required: true)
@@ -98,6 +125,19 @@ defmodule TowerWeb.Layouts do
       <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
       <path d="M3 3v5h5" />
       <path d="M12 7v5l4 2" />
+    </svg>
+    """
+  end
+
+  defp dashboard_icon(assigns) do
+    ~H"""
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <mask id="mask0_1533_424" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+        <rect width="20" height="20" fill="#D9D9D9"/>
+      </mask>
+      <g mask="url(#mask0_1533_424)">
+        <path d="M11 7V3H17V7H11ZM3 11V3H9V11H3ZM11 17V9H17V17H11ZM3 17V13H9V17H3ZM4.5 9.5H7.5V4.5H4.5V9.5ZM12.5 15.5H15.5V10.5H12.5V15.5ZM12.5 5.52083H15.5V4.5H12.5V5.52083ZM4.5 15.5H7.5V14.5H4.5V15.5Z" fill="white"/>
+      </g>
     </svg>
     """
   end

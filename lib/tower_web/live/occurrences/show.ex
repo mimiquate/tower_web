@@ -6,13 +6,14 @@ defmodule TowerWeb.Live.Occurrences.Show do
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
     base_path = session["base_path"]
+    occurrences_base_path = "#{base_path}/occurrences"
 
     case Events.get_event(String.to_integer(id)) do
       nil ->
         socket =
           socket
           |> put_flash(:error, "Event not found")
-          |> push_navigate(to: base_path)
+          |> push_navigate(to: occurrences_base_path)
 
         {:ok, socket}
 
@@ -21,6 +22,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
          assign(socket,
            event: event,
            base_path: base_path,
+           occurrences_base_path: occurrences_base_path,
            show_delete_modal: false,
            reason_expanded: false
          )}
@@ -42,7 +44,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     socket =
       socket
       |> put_flash(:info, "Event deleted successfully")
-      |> push_navigate(to: socket.assigns.base_path)
+      |> push_navigate(to: socket.assigns.occurrences_base_path)
 
     {:noreply, socket}
   end
@@ -55,7 +57,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   def handle_params(params, _uri, socket) do
     from_page = params["from_page"] || "1"
     search = Map.get(params, "search", "")
-    back_path = index_path(socket.assigns.base_path, search, from_page)
+    back_path = index_path(socket.assigns.occurrences_base_path, search, from_page)
     {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
   end
 

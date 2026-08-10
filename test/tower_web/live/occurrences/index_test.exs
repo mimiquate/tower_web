@@ -16,6 +16,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 0,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
@@ -65,6 +66,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 2,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
@@ -128,6 +130,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 3,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
@@ -162,6 +165,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           total_pages: 1,
           total_count: 1,
           base_path: "/tower",
+          occurrences_base_path: "/tower/occurrences",
           flash: %{}
         })
 
