@@ -80,7 +80,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         render_component(&Show.render/1, %{
           event: event1,
           base_path: "/tower",
-          back_path: "/tower?page=1",
+          back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
           from_page: "1",
           show_delete_modal: false,
