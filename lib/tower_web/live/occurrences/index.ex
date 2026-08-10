@@ -289,15 +289,15 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp build_path(socket, filters) do
-    params =
-      filters
-      |> Enum.reduce(%{page: 1}, fn
-        {_key, nil}, acc -> acc
-        {_key, ""}, acc -> acc
-        {key, value}, acc -> Map.put(acc, key, value)
-      end)
+    "#{socket.assigns.base_path}#{page_path(1, filters)}"
+  end
 
-    "#{socket.assigns.base_path}?#{URI.encode_query(params)}"
+  defp filters_to_params(base, filters) do
+    Enum.reduce(filters, base, fn
+      {_key, nil}, acc -> acc
+      {_key, ""}, acc -> acc
+      {key, value}, acc -> Map.put(acc, key, value)
+    end)
   end
 
   defp format_date(datetime) do
@@ -351,29 +351,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp show_path(base_path, event_id, filters, page) do
-    params =
-      Enum.reduce(filters, %{}, fn
-        {_key, nil}, acc -> acc
-        {_key, ""}, acc -> acc
-        {key, value}, acc -> Map.put(acc, key, value)
-      end)
-
-    if params == %{} do
-      "#{base_path}/#{event_id}?from_page=#{page}"
-    else
-      "#{base_path}/#{event_id}?#{URI.encode_query(Map.put(params, :from_page, page))}"
-    end
+    params = filters_to_params(%{}, filters) |> Map.put(:from_page, page)
+    "#{base_path}/#{event_id}?#{URI.encode_query(params)}"
   end
 
   defp page_path(page, filters) do
-    params =
-      filters
-      |> Enum.reduce(%{page: page}, fn
-        {_key, nil}, acc -> acc
-        {_key, ""}, acc -> acc
-        {key, value}, acc -> Map.put(acc, key, value)
-      end)
-
+    params = filters_to_params(%{page: page}, filters)
     "?#{URI.encode_query(params)}"
   end
 end
