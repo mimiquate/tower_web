@@ -175,7 +175,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :message,
             level: :error,
             reason: "Database connection failed"
           },
@@ -185,7 +187,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :message,
             level: :warning,
             reason: "Memory usage high"
           },
@@ -221,7 +225,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :message,
             level: :error,
             reason: "DATABASE ERROR"
           },
@@ -242,7 +248,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :message,
             level: :error,
             reason: "Database connection failed"
           },
