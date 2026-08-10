@@ -252,7 +252,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       socket = socket_with_events(events)
 
       {:noreply, socket} =
-        Occurrences.handle_params(%{"page" => "1", "search" => "database"}, "/tower", socket)
+        Occurrences.handle_params(
+          %{"page" => "1", "search" => "database"},
+          "/tower",
+          socket
+        )
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "DATABASE ERROR"
@@ -285,28 +289,47 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   describe "handle_params level filter" do
     test "filters events by level" do
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:00:00Z],
-        level: :error,
-        reason: "Error event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :message,
+            level: :error,
+            reason: "Error event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 11:00:00Z],
-        level: :warning,
-        reason: "Warning event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :message,
+            level: :warning,
+            reason: "Warning event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 12:00:00Z],
-        level: :info,
-        reason: "Info event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 12:00:00Z],
+            kind: :message,
+            level: :info,
+            reason: "Info event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
 
       assert length(socket.assigns.filtered_events) == 1
       assert socket.assigns.selected_level == :error
@@ -318,22 +341,36 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "clears level filter when no level param" do
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:00:00Z],
-        level: :error,
-        reason: "Error event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :message,
+            level: :error,
+            reason: "Error event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 11:00:00Z],
-        level: :warning,
-        reason: "Warning event"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :message,
+            level: :warning,
+            reason: "Warning event"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
+
       assert length(socket.assigns.filtered_events) == 1
 
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
@@ -342,28 +379,51 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "combines search and level filters" do
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 10:00:00Z],
-        level: :error,
-        reason: "Database error"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :message,
+            level: :error,
+            reason: "Database error"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 11:00:00Z],
-        level: :error,
-        reason: "Network error"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :message,
+            level: :error,
+            reason: "Network error"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
-      {:ok, _} = Events.create_event(%{
-        datetime: ~U[2024-03-15 12:00:00Z],
-        level: :warning,
-        reason: "Database warning"
-      }, repo: TowerWeb.TestRepo)
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 12:00:00Z],
+            kind: :message,
+            level: :warning,
+            reason: "Database warning"
+          },
+          repo: TowerWeb.TestRepo
+        )
 
       events = Events.list_events(repo: TowerWeb.TestRepo)
       socket = socket_with_events(events)
 
-      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1", "search" => "database", "level" => "error"}, "/tower", socket)
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          %{"page" => "1", "search" => "database", "level" => "error"},
+          "/tower",
+          socket
+        )
 
       assert length(socket.assigns.filtered_events) == 1
       assert socket.assigns.search_query == "database"
