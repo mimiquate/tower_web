@@ -32,7 +32,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             datetime: ~U[2024-03-15 10:30:00Z],
             kind: :error,
             level: :error,
-            reason: "Something failed"
+            kind: :error,
+            similarity_id: 1,
+            reason: %RuntimeError{message: "Something failed"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -44,6 +46,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             datetime: ~U[2024-03-14 09:00:00Z],
             kind: :error,
             level: :warning,
+            kind: :throw,
+            similarity_id: 2,
             reason: "A warning occurred"
           },
           repo: TowerWeb.TestRepo
@@ -79,7 +83,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
             level: :error,
-            reason: "Error event"
+            kind: :error,
+            similarity_id: 1,
+            reason: %RuntimeError{message: "Error event"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -91,6 +97,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
             level: :warning,
+            kind: :exit,
+            similarity_id: 2,
             reason: "Warning event"
           },
           repo: TowerWeb.TestRepo
@@ -103,6 +111,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
             level: :info,
+            kind: :message,
+            similarity_id: 3,
             reason: "Info event"
           },
           repo: TowerWeb.TestRepo
@@ -135,6 +145,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             datetime: ~U[2024-03-15 14:30:45Z],
             kind: :error,
             level: :error,
+            kind: :message,
+            similarity_id: 1,
             reason: "Test error"
           },
           repo: TowerWeb.TestRepo
