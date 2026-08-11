@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
+  alias TowerWeb.Live.Occurrences.Paths
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
@@ -56,8 +57,8 @@ defmodule TowerWeb.Live.Occurrences.Show do
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     from_page = params["from_page"] || "1"
-    search = Map.get(params, "search", "")
-    back_path = index_path(socket.assigns.occurrences_base_path, search, from_page)
+    filters = [search: Map.get(params, "search", ""), level: Map.get(params, "level", "")]
+    back_path = index_path(socket.assigns.occurrences_base_path, filters, from_page)
     {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
   end
 
@@ -201,8 +202,8 @@ defmodule TowerWeb.Live.Occurrences.Show do
     inspect(metadata, pretty: true)
   end
 
-  defp index_path(base_path, "", page), do: "#{base_path}?page=#{page}"
-
-  defp index_path(base_path, search, page),
-    do: "#{base_path}?#{URI.encode_query(page: page, search: search)}"
+  defp index_path(base_path, filters, page) do
+    params = Paths.filters_to_params(%{page: page}, filters)
+    "#{base_path}?#{URI.encode_query(params)}"
+  end
 end

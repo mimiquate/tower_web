@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
+  alias TowerWeb.Live.Occurrences.Paths
 
   @per_page 20
 
@@ -16,31 +17,42 @@ defmodule TowerWeb.Live.Occurrences.Index do
     {:ok, assign(socket, base_path: base_path, occurrences_base_path: "#{base_path}/occurrences")}
   end
 
+  @levels ~w(emergency alert critical error warning notice info)
+
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
+    level = params |> Map.get("level", "") |> validate_level()
 
     case Map.get(params, "page") do
       nil ->
         {:noreply,
          push_patch(socket,
-           to: "#{socket.assigns.occurrences_base_path}#{page_path(1, search)}",
+           to:
+             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level)}",
            replace: true
          )}
 
       page_param ->
         page = parse_page(page_param)
-        total_count = Events.count_events(filters: [search: search])
+        total_count = Events.count_events(filters: [search: search, level: level])
         total_pages = max(ceil(total_count / @per_page), 1)
 
         if page > total_pages do
           {:noreply,
            push_patch(socket,
-             to: "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search)}"
+             to:
+               "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search: search, level: level)}"
            )}
         else
           offset = (page - 1) * @per_page
-          events = Events.list_events(limit: @per_page, offset: offset, filters: [search: search])
+
+          events =
+            Events.list_events(
+              limit: @per_page,
+              offset: offset,
+              filters: [search: search, level: level]
+            )
 
           {:noreply,
            assign(socket,
@@ -48,7 +60,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
              page: page,
              total_pages: total_pages,
              total_count: total_count,
-             search_query: search
+             search_query: search,
+             selected_level: level,
+             levels: @levels
            )}
         end
     end
@@ -60,6 +74,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
       _ -> 1
     end
   end
+
+  defp validate_level(level) when level in @levels, do: level
+  defp validate_level(_level), do: nil
 
   @impl Phoenix.LiveView
   def handle_info(:clear_flash, socket) do
@@ -73,19 +90,60 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
-    <form phx-change="search" phx-submit="search" class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color mb-4">
-      <svg class="w-6 h-6 text-tower-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-      <input
-        type="text"
-        placeholder="Search items"
-        phx-debounce="300"
-        name="query"
-        value={@search_query}
-        class="flex-1 bg-transparent font-inter text-sm text-tower-text-secondary placeholder-tower-text-secondary outline-none"
-      />
-    </form>
+    <div class="flex flex-col gap-3 mb-4">
+      <form phx-change="search" phx-submit="search" class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color">
+        <svg class="w-6 h-6 text-tower-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          type="text"
+          placeholder="Search items"
+          phx-debounce="300"
+          name="query"
+          value={@search_query}
+          class="flex-1 bg-transparent font-inter text-sm text-tower-text-secondary placeholder-tower-text-secondary outline-none"
+        />
+      </form>
+
+      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
+        <div class="flex items-center gap-2">
+          <span class="font-inter font-light text-sm text-white">Level:</span>
+          <div class="flex items-center gap-4">
+            <button
+              :for={level <- @levels}
+              type="button"
+              phx-click="filter_level"
+              phx-value-level={level}
+              class={[
+                "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
+                if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
+              ]}
+            >
+              {level}
+            </button>
+          </div>
+        </div>
+
+        <div :if={@search_query != "" or @selected_level != nil} class="flex items-center gap-3 h-7">
+          <span class="font-inter font-light text-sm text-white">Active filters:</span>
+          <div class="border-l border-tower-line-color h-full"></div>
+          <div class="flex items-center gap-2">
+            <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
+            <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+          </div>
+          <div class="border-l border-tower-line-color h-full"></div>
+          <button
+            type="button"
+            phx-click="clear_filter"
+            phx-value-type="all"
+            class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1"
+          >
+            Clear filter
+            <.close_icon />
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div :if={@filtered_events == [] and @search_query == ""} class="text-gray-400">
       No occurrences recorded yet.
@@ -112,7 +170,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={show_path(@occurrences_base_path, event.id, @search_query, @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={show_path(@occurrences_base_path, event.id, [search: @search_query, level: @selected_level], @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
@@ -128,7 +186,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <div :if={@total_pages > 1} class="flex items-center justify-start gap-2 mt-6 font-inter text-sm">
       <.link
         :if={@page > 1}
-        patch={page_path(@page - 1, @search_query)}
+        patch={page_path(@page - 1, search: @search_query, level: @selected_level)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Previous
@@ -143,7 +201,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
           <% else %>
             <.link
-              patch={page_path(item, @search_query)}
+              patch={page_path(item, search: @search_query, level: @selected_level)}
               class={[
                 "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
                 item == @page && "bg-tower-active"
@@ -157,7 +215,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       <.link
         :if={@page < @total_pages}
-        patch={page_path(@page + 1, @search_query)}
+        patch={page_path(@page + 1, search: @search_query, level: @selected_level)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Next
@@ -169,10 +227,64 @@ defmodule TowerWeb.Live.Occurrences.Index do
     """
   end
 
+  defp close_icon(assigns) do
+    ~H"""
+    <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    """
+  end
+
+  attr(:value, :any, required: true)
+  attr(:type, :string, required: true)
+  attr(:class, :string, default: "")
+
+  defp active_filter_tag(assigns) do
+    ~H"""
+    <button
+      type="button"
+      phx-click="clear_filter"
+      phx-value-type={@type}
+      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
+    >
+      <span class="truncate">{@value}</span>
+      <.close_icon />
+    </button>
+    """
+  end
+
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
     {:noreply,
-     push_patch(socket, to: "#{socket.assigns.occurrences_base_path}#{page_path(1, query)}")}
+     push_patch(socket,
+       to: build_path(socket, search: query, level: socket.assigns.selected_level)
+     )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_level", %{"level" => level}, socket) do
+    new_level = if socket.assigns.selected_level == level, do: nil, else: level
+
+    {:noreply,
+     push_patch(socket,
+       to: build_path(socket, search: socket.assigns.search_query, level: new_level)
+     )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("clear_filter", %{"type" => type}, socket) do
+    filters =
+      case type do
+        "all" -> [search: "", level: nil]
+        "search" -> [search: "", level: socket.assigns.selected_level]
+        "level" -> [search: socket.assigns.search_query, level: nil]
+      end
+
+    {:noreply, push_patch(socket, to: build_path(socket, filters))}
+  end
+
+  defp build_path(socket, filters) do
+    "#{socket.assigns.occurrences_base_path}#{page_path(1, filters)}"
   end
 
   defp format_date(datetime) do
@@ -225,11 +337,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
   end
 
-  defp show_path(base_path, id, "", page), do: "#{base_path}/#{id}?from_page=#{page}"
+  defp show_path(base_path, event_id, filters, page) do
+    params = Paths.filters_to_params(%{}, filters) |> Map.put(:from_page, page)
+    "#{base_path}/#{event_id}?#{URI.encode_query(params)}"
+  end
 
-  defp show_path(base_path, id, search, page),
-    do: "#{base_path}/#{id}?#{URI.encode_query(from_page: page, search: search)}"
-
-  defp page_path(page, ""), do: "?page=#{page}"
-  defp page_path(page, search), do: "?#{URI.encode_query(page: page, search: search)}"
+  defp page_path(page, filters) do
+    params = Paths.filters_to_params(%{page: page}, filters)
+    "?#{URI.encode_query(params)}"
+  end
 end

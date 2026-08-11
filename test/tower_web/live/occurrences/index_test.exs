@@ -6,12 +6,16 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
   alias TowerDB.Events
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
 
+  @levels ~w(emergency alert critical error warning notice info)
+
   describe "render/1" do
     test "shows empty message when no events" do
       html =
         render_component(&Occurrences.render/1, %{
           filtered_events: [],
           search_query: "",
+          selected_level: nil,
+          levels: @levels,
           page: 1,
           total_pages: 1,
           total_count: 0,
@@ -62,6 +66,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         render_component(&Occurrences.render/1, %{
           filtered_events: events,
           search_query: "",
+          selected_level: nil,
+          levels: @levels,
           page: 1,
           total_pages: 1,
           total_count: 2,
@@ -126,6 +132,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         render_component(&Occurrences.render/1, %{
           filtered_events: events,
           search_query: "",
+          selected_level: nil,
+          levels: @levels,
           page: 1,
           total_pages: 1,
           total_count: 3,
@@ -161,6 +169,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         render_component(&Occurrences.render/1, %{
           filtered_events: events,
           search_query: "",
+          selected_level: nil,
+          levels: @levels,
           page: 1,
           total_pages: 1,
           total_count: 1,
@@ -242,7 +252,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       socket = socket_with_events(events)
 
       {:noreply, socket} =
-        Occurrences.handle_params(%{"page" => "1", "search" => "database"}, "/tower", socket)
+        Occurrences.handle_params(
+          %{"page" => "1", "search" => "database"},
+          "/tower",
+          socket
+        )
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "DATABASE ERROR"
@@ -273,6 +287,155 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
   end
 
+  describe "handle_params level filter" do
+    test "filters events by level" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Error event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :warning,
+            reason: %RuntimeError{message: "Warning event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 12:00:00Z],
+            kind: :error,
+            level: :info,
+            reason: %RuntimeError{message: "Info event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 1
+      assert socket.assigns.selected_level == "error"
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "Error event"
+      refute html =~ "Warning event"
+      refute html =~ "Info event"
+    end
+
+    test "clears level filter when no level param" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Error event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :warning,
+            reason: %RuntimeError{message: "Warning event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 1
+
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
+      assert length(socket.assigns.filtered_events) == 2
+      assert socket.assigns.selected_level == nil
+    end
+
+    test "combines search and level filters" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Database error"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Network error"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 12:00:00Z],
+            kind: :error,
+            level: :warning,
+            reason: %RuntimeError{message: "Database warning"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          %{"page" => "1", "search" => "database", "level" => "error"},
+          "/tower",
+          socket
+        )
+
+      assert length(socket.assigns.filtered_events) == 1
+      assert socket.assigns.search_query == "database"
+      assert socket.assigns.selected_level == "error"
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "Database error"
+      refute html =~ "Network error"
+      refute html =~ "Database warning"
+    end
+  end
+
   defp socket_with_events(events) do
     %Phoenix.LiveView.Socket{
       assigns: %{
@@ -280,6 +443,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         events: events,
         filtered_events: events,
         search_query: "",
+        selected_level: nil,
+        levels: @levels,
         base_path: "/tower",
         flash: %{},
         occurrences_base_path: "/tower/occurrences"
