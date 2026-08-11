@@ -294,9 +294,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :error,
-            reason: "Error event"
+            reason: %RuntimeError{message: "Error event"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -306,9 +306,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :warning,
-            reason: "Warning event"
+            reason: %RuntimeError{message: "Warning event"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -318,9 +318,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 12:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :info,
-            reason: "Info event"
+            reason: %RuntimeError{message: "Info event"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -346,9 +346,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :error,
-            reason: "Error event"
+            reason: %RuntimeError{message: "Error event"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -358,9 +358,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :warning,
-            reason: "Warning event"
+            reason: %RuntimeError{message: "Warning event"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -384,9 +384,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :error,
-            reason: "Database error"
+            reason: %RuntimeError{message: "Database error"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -396,9 +396,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :error,
-            reason: "Network error"
+            reason: %RuntimeError{message: "Network error"}
           },
           repo: TowerWeb.TestRepo
         )
@@ -408,9 +408,9 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             similarity_id: 1,
             datetime: ~U[2024-03-15 12:00:00Z],
-            kind: :message,
+            kind: :error,
             level: :warning,
-            reason: "Database warning"
+            reason: %RuntimeError{message: "Database warning"}
           },
           repo: TowerWeb.TestRepo
         )
