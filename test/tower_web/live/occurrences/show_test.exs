@@ -27,7 +27,9 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       html =
         render_component(&Index.render/1, %{
-          events: events,
+          filtered_events: events,
+          search_query: "",
+          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 1,
@@ -78,6 +80,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         render_component(&Show.render/1, %{
           event: event1,
           base_path: "/tower",
+          back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
           from_page: "1",
           show_delete_modal: false,

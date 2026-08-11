@@ -56,7 +56,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     from_page = params["from_page"] || "1"
-    {:noreply, assign(socket, :from_page, from_page)}
+    search = Map.get(params, "search", "")
+    back_path = index_path(socket.assigns.occurrences_base_path, search, from_page)
+    {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
   end
 
   @impl Phoenix.LiveView
@@ -64,7 +66,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     ~H"""
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between items-center mb-4">
-        <.back_button navigate={"#{@occurrences_base_path}?page=#{@from_page}"} />
+        <.back_button navigate={@back_path} />
         <button
           phx-click="show_delete_modal"
           class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium"
@@ -198,4 +200,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
   defp format_metadata(metadata) do
     inspect(metadata, pretty: true)
   end
+
+  defp index_path(base_path, "", page), do: "#{base_path}?page=#{page}"
+
+  defp index_path(base_path, search, page),
+    do: "#{base_path}?#{URI.encode_query(page: page, search: search)}"
 end
