@@ -24,7 +24,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       nil ->
         {:noreply,
          push_patch(socket,
-           to: "#{socket.assigns.base_path}#{page_path(1, search)}",
+           to: "#{socket.assigns.occurrences_base_path}#{page_path(1, search)}",
            replace: true
          )}
 
@@ -33,7 +33,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         total_count = Events.count_events(filters: [search: search])
         total_pages = max(ceil(total_count / @per_page), 1)
 
-        if page > total_pages and total_pages > 0 do
+        if page > total_pages do
           {:noreply,
            push_patch(socket,
              to: "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search)}"
@@ -171,7 +171,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: "#{socket.assigns.base_path}#{page_path(1, query)}")}
+    {:noreply, push_patch(socket, to: "#{socket.assigns.occurrences_base_path}#{page_path(1, query)}")}
   end
 
   defp format_date(datetime) do
