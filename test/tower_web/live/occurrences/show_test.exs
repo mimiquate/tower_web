@@ -7,7 +7,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
   alias TowerWeb.Live.Occurrences.Index
   alias TowerWeb.Live.Occurrences.Show
 
-  @levels [:emergency, :alert, :critical, :error, :warning, :notice, :info]
+  @levels ~w(emergency alert critical error warning notice info)
 
   describe "index to show navigation" do
     test "index page has link to correct occurrence" do
