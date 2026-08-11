@@ -313,15 +313,22 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("filter_issue_id", %{"issue_id" => issue_id}, socket) do
-    {:noreply,
-     push_patch(socket,
-       to:
-         build_path(socket,
-           search: socket.assigns.search_query,
-           level: socket.assigns.selected_level,
-           issue_id: issue_id
-         )
-     )}
+    case Integer.parse(issue_id) do
+      {_id_int, ""} ->
+        {:noreply,
+         push_patch(socket,
+           to:
+             build_path(socket,
+               search: socket.assigns.search_query,
+               level: socket.assigns.selected_level,
+               issue_id: issue_id
+             )
+         )}
+
+      _ ->
+        Process.send_after(self(), :clear_flash, 3000)
+        {:noreply, put_flash(socket, :error, "Please enter a valid number")}
+    end
   end
 
   @impl Phoenix.LiveView
