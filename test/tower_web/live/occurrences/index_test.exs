@@ -6,7 +6,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
   alias TowerDB.Events
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
 
-  @levels [:emergency, :alert, :critical, :error, :warning, :notice, :info]
+  @levels ~w(emergency alert critical error warning notice info)
 
   describe "render/1" do
     test "shows empty message when no events" do
@@ -332,7 +332,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         Occurrences.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
 
       assert length(socket.assigns.filtered_events) == 1
-      assert socket.assigns.selected_level == :error
+      assert socket.assigns.selected_level == "error"
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "Error event"
@@ -427,7 +427,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
       assert length(socket.assigns.filtered_events) == 1
       assert socket.assigns.search_query == "database"
-      assert socket.assigns.selected_level == :error
+      assert socket.assigns.selected_level == "error"
 
       html = render_component(&Occurrences.render/1, socket.assigns)
       assert html =~ "Database error"
