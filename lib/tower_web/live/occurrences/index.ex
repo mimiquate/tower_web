@@ -22,7 +22,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> parse_level()
+    level = params |> Map.get("level", "") |> validate_level()
 
     case Map.get(params, "page") do
       nil ->
@@ -75,8 +75,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
   end
 
-  defp parse_level(level) when level in @levels, do: level
-  defp parse_level(_level), do: nil
+  defp validate_level(level) when level in @levels, do: level
+  defp validate_level(_level), do: nil
 
   @impl Phoenix.LiveView
   def handle_info(:clear_flash, socket) do
