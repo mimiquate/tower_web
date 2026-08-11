@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
+  alias TowerWeb.Live.Occurrences.Paths
 
   @per_page 20
 
@@ -16,7 +17,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     {:ok, assign(socket, base_path: base_path, occurrences_base_path: "#{base_path}/occurrences")}
   end
 
-  @levels [:emergency, :alert, :critical, :error, :warning, :notice, :info]
+  @levels ~w(emergency alert critical error warning notice info)
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
@@ -27,7 +28,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
       nil ->
         {:noreply,
          push_patch(socket,
-           to: "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level)}",
+           to:
+             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level)}",
            replace: true
          )}
 
@@ -73,14 +75,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
   end
 
-  defp parse_level(""), do: nil
-
-  defp parse_level(level) when is_binary(level) do
-    level_atom = String.to_existing_atom(level)
-    if level_atom in @levels, do: level_atom, else: nil
-  rescue
-    ArgumentError -> nil
-  end
+  defp parse_level(level) when level in @levels, do: level
+  defp parse_level(_level), do: nil
 
   @impl Phoenix.LiveView
   def handle_info(:clear_flash, socket) do
@@ -267,7 +263,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("filter_level", %{"level" => level}, socket) do
-    level = String.to_existing_atom(level)
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
     {:noreply,
@@ -290,14 +285,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp build_path(socket, filters) do
     "#{socket.assigns.base_path}#{page_path(1, filters)}"
-  end
-
-  defp filters_to_params(base, filters) do
-    Enum.reduce(filters, base, fn
-      {_key, nil}, acc -> acc
-      {_key, ""}, acc -> acc
-      {key, value}, acc -> Map.put(acc, key, value)
-    end)
   end
 
   defp format_date(datetime) do
@@ -351,12 +338,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp show_path(base_path, event_id, filters, page) do
-    params = filters_to_params(%{}, filters) |> Map.put(:from_page, page)
+    params = Paths.filters_to_params(%{}, filters) |> Map.put(:from_page, page)
     "#{base_path}/#{event_id}?#{URI.encode_query(params)}"
   end
 
   defp page_path(page, filters) do
-    params = filters_to_params(%{page: page}, filters)
+    params = Paths.filters_to_params(%{page: page}, filters)
     "?#{URI.encode_query(params)}"
   end
 end

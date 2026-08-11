@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
+  alias TowerWeb.Live.Occurrences.Paths
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
@@ -202,14 +203,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   end
 
   defp index_path(base_path, filters, page) do
-    params =
-      filters
-      |> Enum.reduce(%{page: page}, fn
-        {_key, nil}, acc -> acc
-        {_key, ""}, acc -> acc
-        {key, value}, acc -> Map.put(acc, key, value)
-      end)
-
+    params = Paths.filters_to_params(%{page: page}, filters)
     "#{base_path}?#{URI.encode_query(params)}"
   end
 end
