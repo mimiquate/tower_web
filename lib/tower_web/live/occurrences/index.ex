@@ -171,7 +171,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: "#{socket.assigns.occurrences_base_path}#{page_path(1, query)}")}
+    {:noreply,
+     push_patch(socket, to: "#{socket.assigns.occurrences_base_path}#{page_path(1, query)}")}
   end
 
   defp format_date(datetime) do
