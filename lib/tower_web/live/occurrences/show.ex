@@ -63,6 +63,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
       level: Map.get(params, "level", ""),
       issue_id: Map.get(params, "issue_id", "")
     ]
+
     back_path = index_path(socket.assigns.occurrences_base_path, filters, from_page)
     {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
   end

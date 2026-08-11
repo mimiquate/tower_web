@@ -57,7 +57,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
             Events.list_events(
               limit: @per_page,
               offset: offset,
-              filters: [search: search, level: level, similarity_id: parse_similarity_id(issue_id)]
+              filters: [
+                search: search,
+                level: level,
+                similarity_id: parse_similarity_id(issue_id)
+              ]
             )
 
           {:noreply,
@@ -339,13 +343,25 @@ defmodule TowerWeb.Live.Occurrences.Index do
           [search: "", level: nil, issue_id: ""]
 
         "search" ->
-          [search: "", level: socket.assigns.selected_level, issue_id: socket.assigns.issue_id_query]
+          [
+            search: "",
+            level: socket.assigns.selected_level,
+            issue_id: socket.assigns.issue_id_query
+          ]
 
         "level" ->
-          [search: socket.assigns.search_query, level: nil, issue_id: socket.assigns.issue_id_query]
+          [
+            search: socket.assigns.search_query,
+            level: nil,
+            issue_id: socket.assigns.issue_id_query
+          ]
 
         "issue_id" ->
-          [search: socket.assigns.search_query, level: socket.assigns.selected_level, issue_id: ""]
+          [
+            search: socket.assigns.search_query,
+            level: socket.assigns.selected_level,
+            issue_id: ""
+          ]
       end
 
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
