@@ -27,7 +27,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
      assign(socket,
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
-       datetime_range_options: @datetime_range_options
+       datetime_range_options: @datetime_range_options,
+       datetime_range_menu_open: false
      )}
   end
 
@@ -136,21 +137,33 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
         <div class="flex items-center gap-[12px]">
-          <form phx-change="filter_datetime_range" class="flex items-center gap-[12px]">
+          <div class="relative flex items-center gap-2" phx-click-away="close_datetime_menu">
             <span class="font-inter font-light text-sm text-white">Date:</span>
 
-            <div class="relative flex items-center gap-2 bg-tower-active px-2 py-1">
-              <select
-                name="datetime_range"
-                class="appearance-none bg-transparent font-inter font-light text-sm text-white pr-5 focus:outline-none cursor-pointer"
+            <button
+              type="button"
+              phx-click="toggle_datetime_menu"
+              class="flex items-center gap-2 bg-tower-active font-inter font-light text-sm text-white px-2 py-1 cursor-pointer"
+            >
+              {datetime_range_label(@datetime_range_options, @datetime_range_param)}
+              <.chevron_down_icon class="size-[16px]" />
+            </button>
+
+            <div :if={@datetime_range_menu_open} class="absolute left-0 top-full mt-1 z-10 min-w-full bg-tower-bg border border-tower-line-color">
+              <button
+                :for={{label, value} <- @datetime_range_options}
+                type="button"
+                phx-click="filter_datetime_range"
+                phx-value-datetime_range={value}
+                class={[
+                  "block w-full text-left px-2 py-1 font-inter font-light text-sm text-white cursor-pointer whitespace-nowrap",
+                  if(@datetime_range_param == value, do: "bg-tower-active", else: "bg-transparent hover:bg-tower-line-color")
+                ]}
               >
-                <option :for={{label, value} <- @datetime_range_options} value={value} selected={@datetime_range_param == value}>
-                  {label}
-                </option>
-              </select>
-              <.chevron_down_icon class="absolute right-2 top-1/2 -translate-y-1/2 size-[16px] pointer-events-none" />
+                {label}
+              </button>
             </div>
-          </form>
+          </div>
 
           <div class="border-l border-tower-line-color h-7"></div>
 
@@ -301,11 +314,23 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("toggle_datetime_menu", _params, socket) do
+    {:noreply, assign(socket, datetime_range_menu_open: !socket.assigns.datetime_range_menu_open)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("close_datetime_menu", _params, socket) do
+    {:noreply, assign(socket, datetime_range_menu_open: false)}
+  end
+
+  @impl Phoenix.LiveView
   def handle_event("filter_datetime_range", params, socket) do
     datetime_range_param = params["datetime_range"] || ""
 
     {:noreply,
-     push_patch(socket,
+     socket
+     |> assign(datetime_range_menu_open: false)
+     |> push_patch(
        to:
          build_path(socket,
            search: socket.assigns.search_query,
@@ -379,6 +404,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp format_reason(reason) do
     inspect(reason)
+  end
+
+  defp datetime_range_label(options, value) do
+    Enum.find_value(options, value, fn {label, option_value} ->
+      if option_value == value, do: label
+    end)
   end
 
   attr(:class, :string, default: nil)
