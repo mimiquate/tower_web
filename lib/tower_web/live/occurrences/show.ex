@@ -61,7 +61,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     filters = [
       search: Map.get(params, "search", ""),
       level: Map.get(params, "level", ""),
-      issue_id: Map.get(params, "issue_id", "")
+      issue_ids: Map.get(params, "issue_ids", "")
     ]
 
     back_path = index_path(socket.assigns.occurrences_base_path, filters, from_page)
