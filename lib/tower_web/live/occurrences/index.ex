@@ -30,7 +30,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level)}",
+             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level, similarity_id: issue_ids)}",
            replace: true
          )}
 
