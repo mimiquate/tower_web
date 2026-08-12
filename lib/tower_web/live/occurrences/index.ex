@@ -157,39 +157,41 @@ defmodule TowerWeb.Live.Occurrences.Index do
         />
       </form>
 
-      <form phx-change="filter_datetime_range" class="flex items-center gap-[12px] mb-4 font-inter">
-        <span class="text-sm text-white tracking-[-0.15px]">Date:</span>
-
-        <div class="relative flex items-center gap-2 border border-tower-line-color px-2 py-1">
-          <select
-            name="datetime_range"
-            class="appearance-none bg-transparent text-sm text-white tracking-[-0.15px] pr-6 focus:outline-none cursor-pointer"
-          >
-            <option :for={{label, value} <- @datetime_range_options} value={value} selected={@datetime_range_param == value}>
-              {label}
-            </option>
-          </select>
-          <.chevron_down_icon class="absolute right-2 top-1/2 -translate-y-1/2 size-[24px] pointer-events-none" />
-        </div>
-
-        <input
-          :if={@datetime_range_param == "custom"}
-          type="datetime-local"
-          name="from"
-          value={@from_param}
-          class="bg-transparent border border-tower-line-color text-sm text-white px-2 py-1 focus:outline-none [color-scheme:dark]"
-        />
-        <input
-          :if={@datetime_range_param == "custom"}
-          type="datetime-local"
-          name="to"
-          value={@to_param}
-          class="bg-transparent border border-tower-line-color text-sm text-white px-2 py-1 focus:outline-none [color-scheme:dark]"
-        />
-      </form>
-
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-[12px]">
+          <form phx-change="filter_datetime_range" class="flex items-center gap-[12px]">
+            <span class="font-inter font-light text-sm text-white">Date:</span>
+
+            <div class="relative flex items-center gap-2 bg-tower-active px-2 py-1">
+              <select
+                name="datetime_range"
+                class="appearance-none bg-transparent font-inter font-light text-sm text-white pr-5 focus:outline-none cursor-pointer"
+              >
+                <option :for={{label, value} <- @datetime_range_options} value={value} selected={@datetime_range_param == value}>
+                  {label}
+                </option>
+              </select>
+              <.chevron_down_icon class="absolute right-2 top-1/2 -translate-y-1/2 size-[16px] pointer-events-none" />
+            </div>
+
+            <input
+              :if={@datetime_range_param == "custom"}
+              type="datetime-local"
+              name="from"
+              value={@from_param}
+              class="bg-transparent border border-tower-line-color font-inter text-sm text-white px-2 py-1 focus:outline-none [color-scheme:dark]"
+            />
+            <input
+              :if={@datetime_range_param == "custom"}
+              type="datetime-local"
+              name="to"
+              value={@to_param}
+              class="bg-transparent border border-tower-line-color font-inter text-sm text-white px-2 py-1 focus:outline-none [color-scheme:dark]"
+            />
+          </form>
+
+          <div class="border-l border-tower-line-color h-7"></div>
+
           <span class="font-inter font-light text-sm text-white">Level:</span>
           <div class="flex items-center gap-4">
             <button
