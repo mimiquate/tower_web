@@ -49,7 +49,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: ""
+          datetime_range_param: "",
+          datetime_range_menu_open: false
         })
 
       assert html =~ ~s(href="/tower/occurrences/#{event.id}?from_page=1")

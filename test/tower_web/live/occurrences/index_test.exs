@@ -31,7 +31,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: ""
+          datetime_range_param: "",
+          datetime_range_menu_open: false
         })
 
       assert html =~ "No occurrences recorded yet."
@@ -85,7 +86,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: ""
+          datetime_range_param: "",
+          datetime_range_menu_open: false
         })
 
       assert html =~ "<table"
@@ -153,7 +155,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: ""
+          datetime_range_param: "",
+          datetime_range_menu_open: false
         })
 
       # Error = red, Warning = yellow, Info = gray
@@ -192,7 +195,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: ""
+          datetime_range_param: "",
+          datetime_range_menu_open: false
         })
 
       assert html =~ "15/03/2024"
@@ -561,7 +565,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         base_path: "/tower",
         flash: %{},
         occurrences_base_path: "/tower/occurrences",
-        datetime_range_options: @datetime_range_options
+        datetime_range_options: @datetime_range_options,
+        datetime_range_menu_open: false
       }
     }
   end
