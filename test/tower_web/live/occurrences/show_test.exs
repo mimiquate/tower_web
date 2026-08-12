@@ -8,6 +8,15 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
   alias TowerWeb.Live.Occurrences.Show
 
   @levels ~w(emergency alert critical error warning notice info)
+  @datetime_range_options [
+    {"All time", ""},
+    {"Last hour", "last_hour"},
+    {"Last 24 hours", "last_24h"},
+    {"Last 7 days", "last_7d"},
+    {"Last 14 days", "last_14d"},
+    {"Last 30 days", "last_30d"},
+    {"Custom", "custom"}
+  ]
 
   describe "index to show navigation" do
     test "index page has link to correct occurrence" do
@@ -39,7 +48,11 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           total_count: 1,
           base_path: "/tower",
           occurrences_base_path: "/tower/occurrences",
-          flash: %{}
+          flash: %{},
+          datetime_range_options: @datetime_range_options,
+          datetime_range_param: "",
+          from_param: "",
+          to_param: ""
         })
 
       assert html =~ ~s(href="/tower/occurrences/#{event.id}?from_page=1")
