@@ -57,7 +57,15 @@ defmodule TowerWeb.Live.Occurrences.Show do
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     from_page = params["from_page"] || "1"
-    filters = [search: Map.get(params, "search", ""), level: Map.get(params, "level", "")]
+
+    filters = [
+      search: Map.get(params, "search", ""),
+      level: Map.get(params, "level", ""),
+      datetime_range: Map.get(params, "datetime_range", ""),
+      from: Map.get(params, "from", ""),
+      to: Map.get(params, "to", "")
+    ]
+
     back_path = index_path(socket.assigns.occurrences_base_path, filters, from_page)
     {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
   end

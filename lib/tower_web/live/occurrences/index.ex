@@ -43,7 +43,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level, datetime_range: datetime_range)}",
+             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level, datetime_range: datetime_range_param, from: from_param, to: to_param)}",
            replace: true
          )}
 
@@ -56,7 +56,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search: search, level: level, datetime_range: filter_query(datetime_range_param, from_param, to_param))}"
+               "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, from: from_param, to: to_param)}"
            )}
         else
           offset = (page - 1) * @per_page
@@ -109,34 +109,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
       {:error, _} -> :error
     end
   end
-
-  defp filter_query("custom", from_param, to_param) do
-    datetime_range_query("custom") <> param_query("from", from_param) <> param_query("to", to_param)
-  end
-
-  defp filter_query(datetime_range_param, _from_param, _to_param) do
-    datetime_range_query(datetime_range_param)
-  end
-
-  defp datetime_range_query(""), do: ""
-  defp datetime_range_query(datetime_range_param), do: "&datetime_range=#{datetime_range_param}"
-
-  defp param_query(_key, value) when value in [nil, ""], do: ""
-  defp param_query(key, value), do: "&#{key}=#{URI.encode_www_form(value)}"
-
-  defp filter_query("custom", from_param, to_param) do
-    datetime_range_query("custom") <> param_query("from", from_param) <> param_query("to", to_param)
-  end
-
-  defp filter_query(datetime_range_param, _from_param, _to_param) do
-    datetime_range_query(datetime_range_param)
-  end
-
-  defp datetime_range_query(""), do: ""
-  defp datetime_range_query(datetime_range_param), do: "&datetime_range=#{datetime_range_param}"
-
-  defp param_query(_key, value) when value in [nil, ""], do: ""
-  defp param_query(key, value), do: "&#{key}=#{URI.encode_www_form(value)}"
 
   defp parse_page(page) when is_binary(page) do
     case Integer.parse(page) do
@@ -271,7 +243,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={show_path(@occurrences_base_path, event.id, [search: @search_query, level: @selected_level], @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link navigate={show_path(@occurrences_base_path, event.id, [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, from: @from_param, to: @to_param], @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
@@ -287,7 +259,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <div :if={@total_pages > 1} class="flex items-center justify-start gap-2 mt-6 font-inter text-sm">
       <.link
         :if={@page > 1}
-        patch={page_path(@page - 1, search: @search_query, level: @selected_level, datetime_range: filter_query(@datetime_range_param, @from_param, @to_param))}
+        patch={page_path(@page - 1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, from: @from_param, to: @to_param)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Previous
@@ -302,7 +274,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
           <% else %>
             <.link
-              patch={page_path(item, search: @search_query, level: @selected_level, datetime_range: filter_query(@datetime_range_param, @from_param, @to_param))}
+              patch={page_path(item, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, from: @from_param, to: @to_param)}
               class={[
                 "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
                 item == @page && "bg-tower-active"
@@ -316,7 +288,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       <.link
         :if={@page < @total_pages}
-        patch={page_path(@page + 1, search: @search_query, level: @selected_level, datetime_range: filter_query(@datetime_range_param, @from_param, @to_param))}
+        patch={page_path(@page + 1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, from: @from_param, to: @to_param)}
         class="text-tower-text-primary hover:text-white transition-colors"
       >
         Next
@@ -362,16 +334,22 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     {:noreply,
      push_patch(socket,
-       to: "#{socket.assigns.occurrences_base_path}?page=1#{filter_query(datetime_range_param, from_param, to_param)}"
+       to:
+         build_path(socket,
+           search: socket.assigns.search_query,
+           level: socket.assigns.selected_level,
+           datetime_range: datetime_range_param,
+           from: from_param,
+           to: to_param
+         )
      )}
-     # usar funcion para aarmar el path
   end
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, search: query, level: socket.assigns.selected_level)
+       to: build_path(socket, search: query, level: socket.assigns.selected_level, datetime_range: socket.assigns.datetime_range_param, from: socket.assigns.from_param, to: socket.assigns.to_param)
      )}
   end
 
@@ -381,17 +359,23 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, search: socket.assigns.search_query, level: new_level)
+       to: build_path(socket, search: socket.assigns.search_query, level: new_level, datetime_range: socket.assigns.datetime_range_param, from: socket.assigns.from_param, to: socket.assigns.to_param)
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("clear_filter", %{"type" => type}, socket) do
+    datetime_range_filters = [
+      datetime_range: socket.assigns.datetime_range_param,
+      from: socket.assigns.from_param,
+      to: socket.assigns.to_param
+    ]
+
     filters =
       case type do
-        "all" -> [search: "", level: nil]
-        "search" -> [search: "", level: socket.assigns.selected_level]
-        "level" -> [search: socket.assigns.search_query, level: nil]
+        "all" -> [search: "", level: nil, datetime_range: "", from: "", to: ""]
+        "search" -> [search: "", level: socket.assigns.selected_level] ++ datetime_range_filters
+        "level" -> [search: socket.assigns.search_query, level: nil] ++ datetime_range_filters
       end
 
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
