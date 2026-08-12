@@ -24,7 +24,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     base_path = session["base_path"]
 
-    {:ok, assign(socket, base_path: base_path, occurrences_base_path: "#{base_path}/occurrences", datetime_range_options: @datetime_range_options)}
+    {:ok,
+     assign(socket,
+       base_path: base_path,
+       occurrences_base_path: "#{base_path}/occurrences",
+       datetime_range_options: @datetime_range_options
+     )}
   end
 
   @levels ~w(emergency alert critical error warning notice info)
@@ -49,7 +54,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
       page_param ->
         page = parse_page(page_param)
-        total_count = Events.count_events(filters: [search: search, level: level, datetime_range: datetime_range])
+
+        total_count =
+          Events.count_events(
+            filters: [search: search, level: level, datetime_range: datetime_range]
+          )
+
         total_pages = max(ceil(total_count / @per_page), 1)
 
         if page > total_pages do
@@ -349,7 +359,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
   def handle_event("search", %{"query" => query}, socket) do
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, search: query, level: socket.assigns.selected_level, datetime_range: socket.assigns.datetime_range_param, from: socket.assigns.from_param, to: socket.assigns.to_param)
+       to:
+         build_path(socket,
+           search: query,
+           level: socket.assigns.selected_level,
+           datetime_range: socket.assigns.datetime_range_param,
+           from: socket.assigns.from_param,
+           to: socket.assigns.to_param
+         )
      )}
   end
 
@@ -359,7 +376,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, search: socket.assigns.search_query, level: new_level, datetime_range: socket.assigns.datetime_range_param, from: socket.assigns.from_param, to: socket.assigns.to_param)
+       to:
+         build_path(socket,
+           search: socket.assigns.search_query,
+           level: new_level,
+           datetime_range: socket.assigns.datetime_range_param,
+           from: socket.assigns.from_param,
+           to: socket.assigns.to_param
+         )
      )}
   end
 
@@ -405,7 +429,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     inspect(reason)
   end
 
-  attr :class, :string, default: nil
+  attr(:class, :string, default: nil)
 
   defp chevron_down_icon(assigns) do
     ~H"""
