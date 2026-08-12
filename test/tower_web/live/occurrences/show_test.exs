@@ -14,8 +14,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
     {"Last 24 hours", "last_24h"},
     {"Last 7 days", "last_7d"},
     {"Last 14 days", "last_14d"},
-    {"Last 30 days", "last_30d"},
-    {"Custom", "custom"}
+    {"Last 30 days", "last_30d"}
   ]
 
   describe "index to show navigation" do
@@ -50,9 +49,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: "",
-          from_param: "",
-          to_param: ""
+          datetime_range_param: ""
         })
 
       assert html =~ ~s(href="/tower/occurrences/#{event.id}?from_page=1")

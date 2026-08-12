@@ -13,8 +13,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     {"Last 24 hours", "last_24h"},
     {"Last 7 days", "last_7d"},
     {"Last 14 days", "last_14d"},
-    {"Last 30 days", "last_30d"},
-    {"Custom", "custom"}
+    {"Last 30 days", "last_30d"}
   ]
 
   describe "render/1" do
@@ -86,9 +85,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: "",
-          from_param: "",
-          to_param: ""
+          datetime_range_param: ""
         })
 
       assert html =~ "<table"
@@ -156,9 +153,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: "",
-          from_param: "",
-          to_param: ""
+          datetime_range_param: ""
         })
 
       # Error = red, Warning = yellow, Info = gray
@@ -197,9 +192,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
           datetime_range_options: @datetime_range_options,
-          datetime_range_param: "",
-          from_param: "",
-          to_param: ""
+          datetime_range_param: ""
         })
 
       assert html =~ "15/03/2024"
@@ -456,6 +449,103 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       assert html =~ "Database error"
       refute html =~ "Network error"
       refute html =~ "Database warning"
+    end
+  end
+
+  describe "handle_params datetime range filter" do
+    setup do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: DateTime.add(now, -30, :minute),
+            kind: :error,
+            level: :error,
+            reason: "30 minutes ago"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 2,
+            datetime: DateTime.add(now, -2, :hour),
+            kind: :error,
+            level: :error,
+            reason: "2 hours ago"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 3,
+            datetime: DateTime.add(now, -3, :day),
+            kind: :error,
+            level: :error,
+            reason: "3 days ago"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 4,
+            datetime: DateTime.add(now, -10, :day),
+            kind: :error,
+            level: :error,
+            reason: "10 days ago"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      %{socket: socket_with_events(events)}
+    end
+
+    test "All time shows every event", %{socket: socket} do
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "datetime_range" => ""}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 4
+    end
+
+    test "Last hour filters to events within the last hour", %{socket: socket} do
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          %{"page" => "1", "datetime_range" => "last_hour"},
+          "/tower",
+          socket
+        )
+
+      assert length(socket.assigns.filtered_events) == 1
+    end
+
+    test "Last 24 hours filters to events within the last day", %{socket: socket} do
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          %{"page" => "1", "datetime_range" => "last_24h"},
+          "/tower",
+          socket
+        )
+
+      assert length(socket.assigns.filtered_events) == 2
+    end
+
+    test "Last 7 days filters to events within the last week", %{socket: socket} do
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          %{"page" => "1", "datetime_range" => "last_7d"},
+          "/tower",
+          socket
+        )
+
+      assert length(socket.assigns.filtered_events) == 3
     end
   end
 
