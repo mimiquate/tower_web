@@ -38,7 +38,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         page = parse_page(page_param)
 
         total_count =
-          Events.count_events(filters: [search: search, level: level, similarity_ids: issue_ids])
+          Events.count_events(filters: [search: search, level: level, similarity_id: issue_ids])
 
         total_pages = max(ceil(total_count / @per_page), 1)
 
@@ -58,7 +58,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               filters: [
                 search: search,
                 level: level,
-                similarity_ids: issue_ids
+                similarity_id: issue_ids
               ]
             )
 
@@ -161,6 +161,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
           <div class="flex items-center gap-2">
             <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
             <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+            <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">Issue ID:</span>
+            <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-full"></div>
             <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
           </div>
           <div class="border-l border-tower-line-color h-full"></div>
