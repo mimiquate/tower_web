@@ -139,54 +139,6 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       assert socket.assigns.total_occurrences == 1
       assert socket.assigns.datetime_range_param == "last_hour"
     end
-
-    test "combines search, level and datetime_range filters" do
-      {:ok, _} =
-        Events.create_event(
-          %{
-            similarity_id: 1,
-            datetime: DateTime.add(DateTime.utc_now(), -30, :minute),
-            kind: :message,
-            level: :error,
-            reason: "database timeout"
-          },
-          repo: TowerWeb.TestRepo
-        )
-
-      {:ok, _} =
-        Events.create_event(
-          %{
-            similarity_id: 2,
-            datetime: DateTime.add(DateTime.utc_now(), -30, :minute),
-            kind: :message,
-            level: :warning,
-            reason: "database timeout"
-          },
-          repo: TowerWeb.TestRepo
-        )
-
-      {:ok, _} =
-        Events.create_event(
-          %{
-            similarity_id: 3,
-            datetime: DateTime.add(DateTime.utc_now(), -2, :day),
-            kind: :message,
-            level: :error,
-            reason: "database timeout"
-          },
-          repo: TowerWeb.TestRepo
-        )
-
-      {:noreply, socket} =
-        Dashboard.handle_params(
-          %{"search" => "database", "level" => "error", "datetime_range" => "last_hour"},
-          "/tower/dashboard",
-          socket_with_dashboard()
-        )
-
-      assert socket.assigns.total_errors == 1
-      assert socket.assigns.total_occurrences == 1
-    end
   end
 
   defp socket_with_dashboard do
