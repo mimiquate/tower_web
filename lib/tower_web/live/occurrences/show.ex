@@ -61,6 +61,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     filters = [
       search: Map.get(params, "search", ""),
       level: Map.get(params, "level", ""),
+      datetime_range: Map.get(params, "datetime_range", ""),
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
