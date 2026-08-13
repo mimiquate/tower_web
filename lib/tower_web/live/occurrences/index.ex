@@ -3,7 +3,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   alias TowerDB.Events
   alias TowerWeb.DatetimePresets
-  alias TowerWeb.Live.Occurrences.Paths
+  alias TowerWeb.Live.Paths
 
   @per_page 20
   @datetime_range_options [

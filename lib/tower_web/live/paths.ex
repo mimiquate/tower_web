@@ -1,4 +1,4 @@
-defmodule TowerWeb.Live.Occurrences.Paths do
+defmodule TowerWeb.Live.Paths do
   @moduledoc false
 
   def filters_to_params(base, filters) do
