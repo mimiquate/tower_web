@@ -23,6 +23,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           filtered_events: [],
           search_query: "",
           selected_level: nil,
+          issue_ids_filtered: [],
           levels: @levels,
           page: 1,
           total_pages: 1,
@@ -78,6 +79,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           filtered_events: events,
           search_query: "",
           selected_level: nil,
+          issue_ids_filtered: [],
           levels: @levels,
           page: 1,
           total_pages: 1,
@@ -147,6 +149,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           filtered_events: events,
           search_query: "",
           selected_level: nil,
+          issue_ids_filtered: [],
           levels: @levels,
           page: 1,
           total_pages: 1,
@@ -187,6 +190,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           filtered_events: events,
           search_query: "",
           selected_level: nil,
+          issue_ids_filtered: [],
           levels: @levels,
           page: 1,
           total_pages: 1,
@@ -553,6 +557,97 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
   end
 
+  describe "handle_params issue_id filter" do
+    test "filters events by a single issue_id" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "First issue"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 2,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Second issue"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "issue_ids" => "1"}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 1
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "First issue"
+      refute html =~ "Second issue"
+    end
+
+    test "filters events by more than one issue_id" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "First issue"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 2,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Second issue"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 3,
+            datetime: ~U[2024-03-15 12:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Third issue"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(%{"page" => "1", "issue_ids" => "1,3"}, "/tower", socket)
+
+      assert length(socket.assigns.filtered_events) == 2
+
+      html = render_component(&Occurrences.render/1, socket.assigns)
+      assert html =~ "First issue"
+      assert html =~ "Third issue"
+      refute html =~ "Second issue"
+    end
+  end
+
   defp socket_with_events(events) do
     %Phoenix.LiveView.Socket{
       assigns: %{
@@ -561,6 +656,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         filtered_events: events,
         search_query: "",
         selected_level: nil,
+        issue_ids_filtered: [],
         levels: @levels,
         base_path: "/tower",
         flash: %{},
