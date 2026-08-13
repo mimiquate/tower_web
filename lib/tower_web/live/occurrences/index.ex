@@ -56,12 +56,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
         total_count =
           Events.count_events(
-            filters: [
-              search: search,
-              level: level,
-              similarity_id: issue_ids,
-              datetime_range: datetime_range
-            ]
+            filters:
+              compact_filters(
+                search: search,
+                level: level,
+                similarity_id: issue_ids,
+                datetime_range: datetime_range
+              )
           )
 
         total_pages = max(ceil(total_count / @per_page), 1)
@@ -79,12 +80,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
             Events.list_events(
               limit: @per_page,
               offset: offset,
-              filters: [
-                search: search,
-                level: level,
-                datetime_range: datetime_range,
-                similarity_id: issue_ids
-              ]
+              filters:
+                compact_filters(
+                  search: search,
+                  level: level,
+                  datetime_range: datetime_range,
+                  similarity_id: issue_ids
+                )
             )
 
           {:noreply,
@@ -101,6 +103,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
            )}
         end
     end
+  end
+
+  defp compact_filters(filters) do
+    Enum.reject(filters, fn {_key, value} -> value in ["", []] end)
   end
 
   defp build_filters(datetime_range_param) do
