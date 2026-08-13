@@ -219,7 +219,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               placeholder="Type Issue ID and press Enter"
               name="issue_id_filter"
               value=""
-              class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[220px]"
+              class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
             />
           </form>
         </div>
