@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
+  alias TowerDB.Issues
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Paths
 
@@ -35,7 +36,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
 
     {:noreply,
      assign(socket,
-       total_errors: Events.count_distinct_similarity_ids(filters: filters),
+       total_errors: Issues.count_issues(filters: filters),
        total_occurrences: Events.count_events(filters: filters),
        search_query: search,
        selected_level: level,
