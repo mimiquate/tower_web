@@ -139,13 +139,15 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:label, :string, default: "Issue ID")
+
   def issue_id_filter(assigns) do
     ~H"""
-    <span class="font-inter font-light text-sm text-white">Issue ID:</span>
+    <span class="font-inter font-light text-sm text-white">{@label}:</span>
     <form phx-submit="filter_issue_id" class="flex items-center">
       <input
         type="text"
-        placeholder="Type Issue ID and press Enter"
+        placeholder={"Type #{@label} and press Enter"}
         name="issue_id_filter"
         value=""
         class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
@@ -157,6 +159,7 @@ defmodule TowerWeb.CoreComponents do
   attr(:search_query, :string, required: true)
   attr(:selected_level, :string, default: nil)
   attr(:issue_ids_filtered, :list, default: [])
+  attr(:issue_id_label, :string, default: "Issue ID")
 
   def active_filters_row(assigns) do
     ~H"""
@@ -166,7 +169,7 @@ defmodule TowerWeb.CoreComponents do
       <div class="flex items-center gap-2">
         <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
         <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
-        <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">Issue ID:</span>
+        <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">{@issue_id_label}:</span>
         <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-full"></div>
         <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
       </div>

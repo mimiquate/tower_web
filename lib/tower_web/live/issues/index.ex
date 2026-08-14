@@ -7,6 +7,10 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
+    if connected?(socket) do
+      Process.send_after(self(), :clear_flash, 3000)
+    end
+
     base_path = session["base_path"]
 
     {:ok,
@@ -25,6 +29,7 @@ defmodule TowerWeb.Live.Issues.Index do
     level = params |> Map.get("level", "") |> Filters.validate_level()
     datetime_range_param = params["datetime_range"] || ""
     datetime_range = Filters.datetime_range(datetime_range_param)
+    issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
 
     issues =
       Issues.list_issues(
@@ -32,7 +37,8 @@ defmodule TowerWeb.Live.Issues.Index do
           Filters.compact_filters(
             search: search,
             level: level,
-            datetime_range: datetime_range
+            datetime_range: datetime_range,
+            similarity_id: issue_ids
           )
       )
 
@@ -41,16 +47,24 @@ defmodule TowerWeb.Live.Issues.Index do
        issues: issues,
        search_query: search,
        selected_level: level,
+       issue_ids_filtered: issue_ids,
        datetime_range_param: datetime_range_param
      )}
   end
 
   @impl Phoenix.LiveView
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
+  @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
+    <.flash_messages flash={@flash} />
+
     <.page_header title="Issues" subtitle="Track and manage application errors" />
 
-    <div class="flex flex-col gap-3 mb-6">
+    <div class="flex flex-col gap-3 mb-4">
       <.search_filter search_query={@search_query} />
 
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
@@ -64,20 +78,29 @@ defmodule TowerWeb.Live.Issues.Index do
           <div class="border-l border-tower-line-color h-7"></div>
 
           <.level_filter levels={@levels} selected_level={@selected_level} />
+
+          <div class="border-l border-tower-line-color h-full"></div>
+
+          <.issue_id_filter label="ID" />
         </div>
 
-        <.active_filters_row search_query={@search_query} selected_level={@selected_level} />
+        <.active_filters_row
+          search_query={@search_query}
+          selected_level={@selected_level}
+          issue_ids_filtered={@issue_ids_filtered}
+          issue_id_label="ID"
+        />
       </div>
     </div>
 
     <div
-      :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)}
+      :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
     >
       No issues recorded yet.
     </div>
     <div
-      :if={@issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)}
+      :if={@issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
     >
       No matching issues found.
@@ -156,12 +179,42 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("filter_issue_id", %{"issue_id_filter" => issue_id}, socket) do
+    case Integer.parse(issue_id) do
+      {_issue_id_int, ""} ->
+        current_issue_ids = socket.assigns.issue_ids_filtered
+
+        new_issue_ids =
+          if issue_id in current_issue_ids,
+            do: current_issue_ids,
+            else: current_issue_ids ++ [issue_id]
+
+        {:noreply,
+         push_patch(socket,
+           to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids))
+         )}
+
+      _ ->
+        Process.send_after(self(), :clear_flash, 3000)
+        {:noreply, put_flash(socket, :error, "Please enter a valid issue ID")}
+    end
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("clear_filter", %{"type" => "issue_id", "id" => issue_id_to_remove}, socket) do
+    new_issue_ids = Enum.reject(socket.assigns.issue_ids_filtered, &(&1 == issue_id_to_remove))
+
+    {:noreply,
+     push_patch(socket, to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids)))}
+  end
+
+  @impl Phoenix.LiveView
   def handle_event("clear_filter", %{"type" => type}, socket) do
     datetime_range_filter = [datetime_range: socket.assigns.datetime_range_param]
 
     filters =
       case type do
-        "all" -> [search: "", level: nil, datetime_range: ""]
+        "all" -> [search: "", level: nil, datetime_range: "", issue_ids: []]
         "search" -> current_filters(socket, search: "") ++ datetime_range_filter
         "level" -> current_filters(socket, level: nil) ++ datetime_range_filter
       end
@@ -178,6 +231,7 @@ defmodule TowerWeb.Live.Issues.Index do
     [
       search: socket.assigns.search_query,
       level: socket.assigns.selected_level,
+      issue_ids: socket.assigns.issue_ids_filtered,
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
