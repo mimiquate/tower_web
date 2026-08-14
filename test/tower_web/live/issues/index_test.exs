@@ -41,12 +41,14 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           issues: issues,
           search_query: "",
           selected_level: nil,
+          issue_ids_filtered: [],
           levels: Filters.levels(),
           base_path: "/tower",
           issues_base_path: "/tower/issues",
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
-          datetime_range_menu_open: false
+          datetime_range_menu_open: false,
+          flash: %{}
         })
 
       assert html =~ "<table"
@@ -173,6 +175,53 @@ defmodule TowerWeb.Live.Issues.IndexTest do
     end
   end
 
+  describe "handle_params issue id filter" do
+    test "filter issues by id" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :warning,
+            reason: %RuntimeError{message: "Warning event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 2,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: %RuntimeError{message: "Error event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            similarity_id: 3,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :critical,
+            reason: %RuntimeError{message: "Critical event"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      socket = socket_with_issues()
+
+      {:noreply, socket} =
+        IssuesIndex.handle_params(%{"issue_ids" => "1"}, "/tower", socket)
+
+      assert length(socket.assigns.issues) == 1
+    end
+  end
+
   defp socket_with_issues do
     %Phoenix.LiveView.Socket{
       assigns: %{
@@ -183,7 +232,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         base_path: "/tower",
         issues_base_path: "/tower/issues",
         datetime_range_options: Filters.datetime_range_options(),
-        datetime_range_menu_open: false
+        datetime_range_menu_open: false,
+        flash: %{}
       }
     }
   end
