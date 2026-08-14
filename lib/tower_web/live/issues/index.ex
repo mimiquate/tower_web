@@ -3,7 +3,10 @@ defmodule TowerWeb.Live.Issues.Index do
 
   alias TowerDB.Issues
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+
+  @per_page 20
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -31,25 +34,53 @@ defmodule TowerWeb.Live.Issues.Index do
     datetime_range = Filters.datetime_range(datetime_range_param)
     issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
 
-    issues =
-      Issues.list_issues(
-        filters:
+    case Map.get(params, "page") do
+      nil ->
+        {:noreply,
+         push_patch(socket,
+           to:
+             "#{socket.assigns.issues_base_path}#{page_path(1, search: search, level: level, datetime_range: datetime_range_param)}",
+           replace: true
+         )}
+
+      page_param ->
+        page = Pagination.parse_page(page_param)
+
+        filters =
           Filters.compact_filters(
             search: search,
             level: level,
             datetime_range: datetime_range,
             similarity_id: issue_ids
           )
-      )
 
-    {:noreply,
-     assign(socket,
-       issues: issues,
-       search_query: search,
-       selected_level: level,
-       issue_ids_filtered: issue_ids,
-       datetime_range_param: datetime_range_param
-     )}
+        total_count = Issues.count_issues(filters: filters)
+        total_pages = Pagination.total_pages(total_count, @per_page)
+
+        if page > total_pages do
+          {:noreply,
+           push_patch(socket,
+             to:
+               "#{socket.assigns.issues_base_path}#{page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param)}"
+           )}
+        else
+          offset = (page - 1) * @per_page
+
+          issues = Issues.list_issues(limit: @per_page, offset: offset, filters: filters)
+
+          {:noreply,
+           assign(socket,
+             issues: issues,
+             page: page,
+             total_pages: total_pages,
+             total_count: total_count,
+             issue_ids_filtered: issue_ids,
+             search_query: search,
+             selected_level: level,
+             datetime_range_param: datetime_range_param
+           )}
+        end
+    end
   end
 
   @impl Phoenix.LiveView
@@ -140,6 +171,14 @@ defmodule TowerWeb.Live.Issues.Index do
         </tr>
       </tbody>
     </table>
+
+    <.pagination
+      page={@page}
+      total_pages={@total_pages}
+      page_path={
+        &page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)
+      }
+    />
     """
   end
 
@@ -223,8 +262,12 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   defp build_path(socket, filters) do
-    params = Paths.filters_to_params(%{}, filters)
-    "#{socket.assigns.issues_base_path}?#{URI.encode_query(params)}"
+    "#{socket.assigns.issues_base_path}#{page_path(1, filters)}"
+  end
+
+  defp page_path(page, filters) do
+    params = Paths.filters_to_params(%{page: page}, filters)
+    "?#{URI.encode_query(params)}"
   end
 
   defp current_filters(socket, overrides) do

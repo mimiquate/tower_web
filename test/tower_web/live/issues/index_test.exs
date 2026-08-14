@@ -45,6 +45,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           selected_level: nil,
           issue_ids_filtered: [],
           levels: Filters.levels(),
+          page: 1,
+          total_pages: 1,
           base_path: "/tower",
           issues_base_path: "/tower/issues",
           datetime_range_options: Filters.datetime_range_options(),
@@ -92,7 +94,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       socket = socket_with_issues()
 
       {:noreply, socket} =
-        IssuesIndex.handle_params(%{"search" => "database"}, "/tower", socket)
+        IssuesIndex.handle_params(%{"page" => "1", "search" => "database"}, "/tower", socket)
 
       assert length(socket.assigns.issues) == 1
       assert socket.assigns.search_query == "database"
@@ -133,7 +135,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
 
       socket = socket_with_issues()
 
-      {:noreply, socket} = IssuesIndex.handle_params(%{"level" => "error"}, "/tower", socket)
+      {:noreply, socket} =
+        IssuesIndex.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
 
       assert length(socket.assigns.issues) == 1
       assert socket.assigns.selected_level == "error"
@@ -177,7 +180,11 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       socket = socket_with_issues()
 
       {:noreply, socket} =
-        IssuesIndex.handle_params(%{"datetime_range" => "last_hour"}, "/tower", socket)
+        IssuesIndex.handle_params(
+          %{"page" => "1", "datetime_range" => "last_hour"},
+          "/tower",
+          socket
+        )
 
       assert length(socket.assigns.issues) == 1
     end
@@ -227,7 +234,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       socket = socket_with_issues()
 
       {:noreply, socket} =
-        IssuesIndex.handle_params(%{"issue_ids" => "1"}, "/tower", socket)
+        IssuesIndex.handle_params(%{"page" => "1", "issue_ids" => "1"}, "/tower", socket)
 
       assert length(socket.assigns.issues) == 1
     end
