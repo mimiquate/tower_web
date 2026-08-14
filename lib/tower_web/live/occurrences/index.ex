@@ -38,7 +38,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.occurrences_base_path}#{page_path(1, search: search, level: level, datetime_range: datetime_range_param, similarity_id: issue_ids)}",
+             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, similarity_id: issue_ids)}",
            replace: true
          )}
 
@@ -62,7 +62,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.occurrences_base_path}#{page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
+               "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
            )}
         else
           offset = (page - 1) * @per_page
@@ -190,7 +190,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       page={@page}
       total_pages={@total_pages}
       page_path={
-        &page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered)
+        &Paths.page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered)
       }
     />
     """
@@ -280,7 +280,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp build_path(socket, filters) do
-    "#{socket.assigns.occurrences_base_path}#{page_path(1, filters)}"
+    "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, filters)}"
   end
 
   defp current_filters(socket, overrides) do
@@ -328,10 +328,5 @@ defmodule TowerWeb.Live.Occurrences.Index do
   defp show_path(base_path, event_id, filters, page) do
     params = Paths.filters_to_params(%{}, filters) |> Map.put(:from_page, page)
     "#{base_path}/#{event_id}?#{URI.encode_query(params)}"
-  end
-
-  defp page_path(page, filters) do
-    params = Paths.filters_to_params(%{page: page}, filters)
-    "?#{URI.encode_query(params)}"
   end
 end

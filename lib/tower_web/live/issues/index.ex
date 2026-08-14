@@ -39,7 +39,7 @@ defmodule TowerWeb.Live.Issues.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.issues_base_path}#{page_path(1, search: search, level: level, datetime_range: datetime_range_param)}",
+             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param)}",
            replace: true
          )}
 
@@ -61,7 +61,7 @@ defmodule TowerWeb.Live.Issues.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.issues_base_path}#{page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param)}"
+               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param)}"
            )}
         else
           offset = (page - 1) * @per_page
@@ -176,7 +176,7 @@ defmodule TowerWeb.Live.Issues.Index do
       page={@page}
       total_pages={@total_pages}
       page_path={
-        &page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)
+        &Paths.page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)
       }
     />
     """
@@ -262,12 +262,7 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   defp build_path(socket, filters) do
-    "#{socket.assigns.issues_base_path}#{page_path(1, filters)}"
-  end
-
-  defp page_path(page, filters) do
-    params = Paths.filters_to_params(%{page: page}, filters)
-    "?#{URI.encode_query(params)}"
+    "#{socket.assigns.issues_base_path}#{Paths.page_path(1, filters)}"
   end
 
   defp current_filters(socket, overrides) do
