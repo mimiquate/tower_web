@@ -44,4 +44,8 @@ defmodule TowerWeb.Live.Filters do
   def compact_filters(filters) do
     Enum.reject(filters, fn {_key, value} -> value in ["", []] end)
   end
+
+  def any_active?(filters) do
+    Enum.any?(filters, fn {_key, value} -> value not in [nil, "", []] end)
+  end
 end

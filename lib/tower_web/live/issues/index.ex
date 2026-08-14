@@ -70,10 +70,16 @@ defmodule TowerWeb.Live.Issues.Index do
       </div>
     </div>
 
-    <div :if={@issues == [] and @search_query == ""} class="text-gray-400">
+    <div
+      :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)}
+      class="text-gray-400"
+    >
       No issues recorded yet.
     </div>
-    <div :if={@issues == [] and @search_query != ""} class="text-gray-400">
+    <div
+      :if={@issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)}
+      class="text-gray-400"
+    >
       No matching issues found.
     </div>
 
