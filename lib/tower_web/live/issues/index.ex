@@ -101,12 +101,12 @@ defmodule TowerWeb.Live.Issues.Index do
           </td>
           <td class="py-3 pl-6 max-w-0">
             <div class="flex items-baseline gap-3 overflow-hidden">
-              <span class="text-sm text-tower-text-primary shrink-0">#{issue.similarity_id}</span>
+              <span class="text-sm text-tower-text-primary shrink-0">#{issue.id}</span>
               <span class="text-sm text-tower-text-secondary truncate">{format_reason(issue.last_event.reason)}</span>
             </div>
           </td>
           <td class="py-3 pl-6">
-            <span class="text-sm text-white">{issue.count_occurrences}</span>
+            <span class="text-sm text-white">{issue.count_events}</span>
           </td>
           <td class="py-3 pl-6">
             <div class="flex flex-col">
