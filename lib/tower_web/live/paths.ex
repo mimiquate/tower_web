@@ -10,4 +10,9 @@ defmodule TowerWeb.Live.Paths do
       {key, value}, acc -> Map.put(acc, key, value)
     end)
   end
+
+  def page_path(page, filters) do
+    params = filters_to_params(%{page: page}, filters)
+    "?#{URI.encode_query(params)}"
+  end
 end

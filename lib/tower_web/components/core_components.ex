@@ -4,6 +4,57 @@ defmodule TowerWeb.CoreComponents do
   use Phoenix.Component
 
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Pagination
+
+  attr(:page, :integer, required: true)
+  attr(:total_pages, :integer, required: true)
+  attr(:page_path, :any, required: true)
+
+  def pagination(assigns) do
+    ~H"""
+    <div :if={@total_pages > 1} class="flex items-center justify-start gap-2 mt-6 font-inter text-sm">
+      <.link
+        :if={@page > 1}
+        patch={@page_path.(@page - 1)}
+        class="text-tower-text-primary hover:text-white transition-colors"
+      >
+        Previous
+      </.link>
+      <span :if={@page == 1} class="text-gray-400">
+        Previous
+      </span>
+
+      <div class="flex items-center gap-2">
+        <%= for item <- Pagination.page_items(@page, @total_pages) do %>
+          <%= if item == :ellipsis do %>
+            <span class="min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary">...</span>
+          <% else %>
+            <.link
+              patch={@page_path.(item)}
+              class={[
+                "min-w-7 h-7 px-2 flex items-center justify-center text-tower-text-primary hover:text-white transition-colors",
+                item == @page && "bg-tower-active"
+              ]}
+            >
+              {item}
+            </.link>
+          <% end %>
+        <% end %>
+      </div>
+
+      <.link
+        :if={@page < @total_pages}
+        patch={@page_path.(@page + 1)}
+        class="text-tower-text-primary hover:text-white transition-colors"
+      >
+        Next
+      </.link>
+      <span :if={@page >= @total_pages} class="text-gray-400">
+        Next
+      </span>
+    </div>
+    """
+  end
 
   attr(:title, :string, required: true)
   attr(:subtitle, :string, default: nil)
