@@ -25,10 +25,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
-            kind: :error,
             level: :error,
             kind: :error,
-            similarity_id: 1,
             reason: %RuntimeError{message: "Test error"}
           },
           repo: TowerWeb.TestRepo
@@ -43,7 +41,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           selected_level: nil,
           issue_ids_filtered: [],
           levels: @levels,
-          base_path: "/tower",
           page: 1,
           total_pages: 1,
           total_count: 1,
@@ -65,10 +62,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 10:30:00Z],
-            kind: :error,
             level: :error,
             kind: :error,
-            similarity_id: 1,
             reason: %RuntimeError{message: "First error message"},
             stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
             metadata: %{user_id: 123, request_id: "abc"}
@@ -82,10 +77,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-14 09:00:00Z],
-            kind: :error,
             level: :warning,
             kind: :throw,
-            similarity_id: 2,
             reason: "Second error message"
           },
           repo: TowerWeb.TestRepo
@@ -126,10 +119,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
-            kind: :error,
             level: :error,
             kind: :message,
-            similarity_id: 1,
             reason: "Event to delete"
           },
           repo: TowerWeb.TestRepo
