@@ -36,12 +36,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, event1} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
-            kind: :error,
             level: :error,
             kind: :error,
-            similarity_id: 1,
             reason: %RuntimeError{message: "Something failed"}
           },
           repo: TowerWeb.TestRepo
@@ -50,12 +49,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, event2} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-14 09:00:00Z],
-            kind: :error,
             level: :warning,
             kind: :throw,
-            similarity_id: 2,
             reason: "A warning occurred"
           },
           repo: TowerWeb.TestRepo
@@ -94,12 +92,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :error,
             level: :error,
             kind: :error,
-            similarity_id: 1,
             reason: %RuntimeError{message: "Error event"}
           },
           repo: TowerWeb.TestRepo
@@ -108,12 +105,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :error,
             level: :warning,
             kind: :exit,
-            similarity_id: 2,
             reason: "Warning event"
           },
           repo: TowerWeb.TestRepo
@@ -122,12 +118,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 3,
             datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :error,
             level: :info,
             kind: :message,
-            similarity_id: 3,
             reason: "Info event"
           },
           repo: TowerWeb.TestRepo
@@ -163,12 +158,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 14:30:45Z],
-            kind: :error,
             level: :error,
             kind: :message,
-            similarity_id: 1,
             reason: "Test error"
           },
           repo: TowerWeb.TestRepo
@@ -204,6 +198,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :message,
@@ -216,6 +211,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :message,
@@ -254,6 +250,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :message,
@@ -281,6 +278,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :message,
@@ -307,6 +305,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
@@ -319,6 +318,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :error,
@@ -331,6 +331,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 12:00:00Z],
             kind: :error,
@@ -359,6 +360,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
@@ -371,6 +373,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :error,
@@ -397,6 +400,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
@@ -409,6 +413,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :error,
@@ -421,6 +426,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 12:00:00Z],
             kind: :error,
@@ -458,6 +464,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: DateTime.add(now, -30, :minute),
             kind: :error,
@@ -470,6 +477,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: DateTime.add(now, -2, :hour),
             kind: :error,
@@ -482,6 +490,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 3,
             datetime: DateTime.add(now, -3, :day),
             kind: :error,
@@ -494,6 +503,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 4,
             datetime: DateTime.add(now, -10, :day),
             kind: :error,
@@ -553,6 +563,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
@@ -565,6 +576,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :error,
@@ -591,6 +603,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :error,
@@ -603,6 +616,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :error,
@@ -615,6 +629,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 3,
             datetime: ~U[2024-03-15 12:00:00Z],
             kind: :error,

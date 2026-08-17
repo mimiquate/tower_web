@@ -9,7 +9,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     base_path = session["base_path"]
     occurrences_base_path = "#{base_path}/occurrences"
 
-    case Events.get_event(String.to_integer(id)) do
+    case Events.get_event(id) do
       nil ->
         socket =
           socket
