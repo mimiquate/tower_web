@@ -195,12 +195,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   describe "handle_params search" do
     test "filters events by reason and clears filter" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :message,
             level: :error,
             reason: "Database connection failed"
@@ -213,7 +215,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :message,
             level: :warning,
             reason: "Memory usage high"
@@ -252,7 +254,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(DateTime.utc_now(), -1, :hour),
             kind: :message,
             level: :error,
             reason: "DATABASE ERROR"
@@ -302,12 +304,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   describe "handle_params level filter" do
     test "filters events by level" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Error event"}
@@ -320,7 +324,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :error,
             level: :warning,
             reason: %RuntimeError{message: "Warning event"}
@@ -333,7 +337,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 12:00:00Z],
+            datetime: DateTime.add(now, -3, :hour),
             kind: :error,
             level: :info,
             reason: %RuntimeError{message: "Info event"}
@@ -357,12 +361,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "clears level filter when no level param" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Error event"}
@@ -375,7 +381,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :error,
             level: :warning,
             reason: %RuntimeError{message: "Warning event"}
@@ -397,12 +403,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "combines search and level filters" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Database error"}
@@ -415,7 +423,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Network error"}
@@ -428,7 +436,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 12:00:00Z],
+            datetime: DateTime.add(now, -3, :hour),
             kind: :error,
             level: :warning,
             reason: %RuntimeError{message: "Database warning"}
@@ -560,12 +568,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   describe "handle_params issue_id filter" do
     test "filters events by a single issue_id" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "First issue"}
@@ -578,7 +588,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 2,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Second issue"}
@@ -600,12 +610,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
 
     test "filters events by more than one issue_id" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "First issue"}
@@ -618,7 +630,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 2,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Second issue"}
@@ -631,7 +643,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 3,
-            datetime: ~U[2024-03-15 12:00:00Z],
+            datetime: DateTime.add(now, -3, :hour),
             kind: :error,
             level: :error,
             reason: %RuntimeError{message: "Third issue"}

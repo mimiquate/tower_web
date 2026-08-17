@@ -27,7 +27,7 @@ defmodule TowerWeb.Live.Issues.Index do
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> Filters.validate_level()
-    datetime_range_param = params["datetime_range"] || ""
+    datetime_range_param = params["datetime_range"] || "last_7d"
     datetime_range = Filters.datetime_range(datetime_range_param)
     issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
 
