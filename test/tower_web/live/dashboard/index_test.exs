@@ -30,12 +30,14 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
 
   describe "handle_params" do
     test "filters counts by search" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :message,
             level: :error,
             reason: "Database connection failed"
@@ -48,7 +50,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 2,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :message,
             level: :warning,
             reason: "Memory usage high"
@@ -69,12 +71,14 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
     end
 
     test "filters counts by level" do
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
       {:ok, _} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
             similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
+            datetime: DateTime.add(now, -1, :hour),
             kind: :message,
             level: :error,
             reason: "Database connection failed"
@@ -87,7 +91,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
           %{
             id: UUIDv7.generate(),
             similarity_id: 2,
-            datetime: ~U[2024-03-15 11:00:00Z],
+            datetime: DateTime.add(now, -2, :hour),
             kind: :message,
             level: :warning,
             reason: "Memory usage high"
