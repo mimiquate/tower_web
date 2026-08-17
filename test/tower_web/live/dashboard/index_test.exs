@@ -33,6 +33,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :message,
@@ -45,6 +46,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :message,
@@ -70,6 +72,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:00:00Z],
             kind: :message,
@@ -82,6 +85,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 11:00:00Z],
             kind: :message,
@@ -107,6 +111,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: DateTime.add(DateTime.utc_now(), -30, :minute),
             kind: :message,
@@ -119,6 +124,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:ok, _} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: DateTime.add(DateTime.utc_now(), -2, :day),
             kind: :message,

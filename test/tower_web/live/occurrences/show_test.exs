@@ -22,6 +22,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, event} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
             kind: :error,
@@ -61,6 +62,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, event1} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-15 10:30:00Z],
             kind: :error,
@@ -77,6 +79,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, _event2} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 2,
             datetime: ~U[2024-03-14 09:00:00Z],
             kind: :error,
@@ -120,6 +123,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, event} =
         Events.create_event(
           %{
+            id: UUIDv7.generate(),
             similarity_id: 1,
             datetime: ~U[2024-03-15 10:30:00Z],
             kind: :error,
@@ -163,7 +167,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         redirected: nil
       }
 
-      {:ok, updated_socket} = Show.mount(%{"id" => "99999"}, %{"base_path" => "/tower"}, socket)
+      {:ok, updated_socket} =
+        Show.mount(%{"id" => UUIDv7.generate()}, %{"base_path" => "/tower"}, socket)
 
       assert updated_socket.redirected ==
                {:live, :redirect, %{to: "/tower/occurrences", kind: :push}}
