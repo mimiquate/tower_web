@@ -3,6 +3,7 @@ defmodule TowerWeb.Live.Issues.Show do
 
   alias TowerDB.Events
   alias TowerDB.Issues
+  alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Paths
 
   @recent_events_limit 10
@@ -23,7 +24,10 @@ defmodule TowerWeb.Live.Issues.Show do
 
       issue ->
         recent_events =
-          Events.list_events(limit: @recent_events_limit, filters: [similarity_id: id])
+          Events.list_events(
+            limit: @recent_events_limit,
+            filters: [similarity_id: id, datetime_range: Filters.datetime_range("last_30d")]
+          )
 
         {:ok,
          assign(socket,
@@ -116,10 +120,10 @@ defmodule TowerWeb.Live.Issues.Show do
           <div class="flex items-center gap-3">
             <span class="text-sm font-medium text-tower-text-secondary">Last {@recent_events_limit}</span>
             <.link
-              navigate={Paths.index_path(@occurrences_base_path, [issue_ids: @issue.id], %{page: 1})}
+              navigate={Paths.index_path(@occurrences_base_path, [issue_ids: @issue.id, datetime_range: "last_30d"], %{page: 1})}
               class="bg-tower-line-color text-white text-sm px-2 py-1"
             >
-              See all
+              See more
             </.link>
           </div>
         </div>
