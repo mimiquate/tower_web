@@ -29,6 +29,7 @@ defmodule TowerWeb.Live.Issues.Show do
          assign(socket,
            issue: issue,
            recent_events: recent_events,
+           recent_events_limit: @recent_events_limit,
            base_path: base_path,
            issues_base_path: issues_base_path,
            occurrences_base_path: "#{base_path}/occurrences"
@@ -87,9 +88,12 @@ defmodule TowerWeb.Live.Issues.Show do
       <div class="border border-tower-line-color p-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-roboto-slab text-lg text-white font-light">Occurrences ({@issue.count_events})</h2>
-          <.link navigate={"#{@occurrences_base_path}?issue_ids=#{@issue.id}"} class="bg-tower-line-color text-white text-sm px-2 py-1">
-            See all
-          </.link>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-medium text-tower-text-secondary">Last {@recent_events_limit}</span>
+            <.link navigate={"#{@occurrences_base_path}?issue_ids=#{@issue.id}"} class="bg-tower-line-color text-white text-sm px-2 py-1">
+              See all
+            </.link>
+          </div>
         </div>
 
         <div :if={@recent_events == []} class="text-gray-400">No occurrences recorded yet.</div>
