@@ -142,10 +142,22 @@ defmodule TowerWeb.Live.Occurrences.Index do
       </div>
     </div>
 
-    <div :if={@filtered_events == [] and @search_query == ""} class="text-gray-400">
+    <div
+      :if={
+        @filtered_events == [] and
+          not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, similarity_id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
       No occurrences recorded yet.
     </div>
-    <div :if={@filtered_events == [] and @search_query != ""} class="text-gray-400">
+    <div
+      :if={
+        @filtered_events == [] and
+          Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, similarity_id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
       No matching occurrences found.
     </div>
 
