@@ -107,8 +107,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
         </div>
       </div>
 
-      <div class="text-lg font-mono text-white mb-6">
-        #{@event.id}
+      <div class="flex items-center gap-3 mb-6">
+        <span class="text-lg font-mono text-white">#{@event.id}</span>
+        <span class="bg-tower-active font-mono text-lg text-white px-2">#{@event.similarity_id}</span>
       </div>
 
       <div class="font-mono text-white mb-8">
