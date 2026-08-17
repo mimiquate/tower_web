@@ -173,7 +173,17 @@ defmodule TowerWeb.Live.Occurrences.Index do
           </td>
           <td class="py-3 max-w-0">
             <div class="flex flex-col overflow-hidden">
-              <.link navigate={show_path(@occurrences_base_path, event.id, [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered], @page)} class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block">
+              <.link
+                navigate={
+                  Paths.show_path(
+                    @occurrences_base_path,
+                    event.id,
+                    [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered],
+                    %{from_page: @page}
+                  )
+                }
+                class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block"
+              >
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
@@ -280,7 +290,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp build_path(socket, filters) do
-    "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, filters)}"
+    Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: 1})
   end
 
   defp current_filters(socket, overrides) do
@@ -323,10 +333,5 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp level_class(_level) do
     "text-gray-400"
-  end
-
-  defp show_path(base_path, event_id, filters, page) do
-    params = Paths.filters_to_params(%{}, filters) |> Map.put(:from_page, page)
-    "#{base_path}/#{event_id}?#{URI.encode_query(params)}"
   end
 end

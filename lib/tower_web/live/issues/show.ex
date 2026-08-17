@@ -45,7 +45,7 @@ defmodule TowerWeb.Live.Issues.Show do
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
-    back_path = index_path(socket.assigns.issues_base_path, filters)
+    back_path = Paths.index_path(socket.assigns.issues_base_path, filters)
     {:noreply, assign(socket, back_path: back_path)}
   end
 
@@ -144,10 +144,5 @@ defmodule TowerWeb.Live.Issues.Show do
 
   defp level_class(_level) do
     "text-gray-400"
-  end
-
-  defp index_path(base_path, filters) do
-    params = Paths.filters_to_params(%{}, filters)
-    "#{base_path}?#{URI.encode_query(params)}"
   end
 end

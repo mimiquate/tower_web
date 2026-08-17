@@ -157,7 +157,12 @@ defmodule TowerWeb.Live.Issues.Index do
             <div class="flex items-baseline gap-3 overflow-hidden">
               <.link
                 navigate={
-                  show_path(@issues_base_path, issue.id, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered)
+                  Paths.show_path(@issues_base_path, issue.id,
+                    search: @search_query,
+                    level: @selected_level,
+                    datetime_range: @datetime_range_param,
+                    issue_ids: @issue_ids_filtered
+                  )
                 }
                 class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block"
               >
@@ -269,12 +274,7 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   defp build_path(socket, filters) do
-    "#{socket.assigns.issues_base_path}#{Paths.page_path(1, filters)}"
-  end
-
-  defp show_path(issues_base_path, issue_id, filters) do
-    params = Paths.filters_to_params(%{}, filters)
-    "#{issues_base_path}/#{issue_id}?#{URI.encode_query(params)}"
+    Paths.index_path(socket.assigns.issues_base_path, filters)
   end
 
   defp current_filters(socket, overrides) do
