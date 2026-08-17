@@ -2,7 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
-  alias TowerWeb.Live.Occurrences.Paths
+  alias TowerWeb.Live.Paths
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do

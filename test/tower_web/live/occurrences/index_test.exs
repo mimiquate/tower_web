@@ -4,17 +4,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
   import Phoenix.LiveViewTest
 
   alias TowerDB.Events
+  alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
-
-  @levels ~w(emergency alert critical error warning notice info)
-  @datetime_range_options [
-    {"All time", ""},
-    {"Last hour", "last_hour"},
-    {"Last 24 hours", "last_24h"},
-    {"Last 7 days", "last_7d"},
-    {"Last 14 days", "last_14d"},
-    {"Last 30 days", "last_30d"}
-  ]
 
   describe "render/1" do
     test "shows empty message when no events" do
@@ -24,14 +15,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: @levels,
+          levels: Filters.levels(),
           page: 1,
           total_pages: 1,
           total_count: 0,
           base_path: "/tower",
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
-          datetime_range_options: @datetime_range_options,
+          datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
           datetime_range_menu_open: false
         })
@@ -80,14 +71,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: @levels,
+          levels: Filters.levels(),
           page: 1,
           total_pages: 1,
           total_count: 2,
           base_path: "/tower",
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
-          datetime_range_options: @datetime_range_options,
+          datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
           datetime_range_menu_open: false
         })
@@ -150,14 +141,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: @levels,
+          levels: Filters.levels(),
           page: 1,
           total_pages: 1,
           total_count: 3,
           base_path: "/tower",
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
-          datetime_range_options: @datetime_range_options,
+          datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
           datetime_range_menu_open: false
         })
@@ -191,14 +182,14 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: @levels,
+          levels: Filters.levels(),
           page: 1,
           total_pages: 1,
           total_count: 1,
           base_path: "/tower",
           occurrences_base_path: "/tower/occurrences",
           flash: %{},
-          datetime_range_options: @datetime_range_options,
+          datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
           datetime_range_menu_open: false
         })
@@ -657,11 +648,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         search_query: "",
         selected_level: nil,
         issue_ids_filtered: [],
-        levels: @levels,
+        levels: Filters.levels(),
         base_path: "/tower",
         flash: %{},
         occurrences_base_path: "/tower/occurrences",
-        datetime_range_options: @datetime_range_options,
+        datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false
       }
     }

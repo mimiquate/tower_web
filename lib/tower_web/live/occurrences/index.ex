@@ -2,18 +2,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
-  alias TowerWeb.DatetimePresets
-  alias TowerWeb.Live.Occurrences.Paths
+  alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Paths
 
   @per_page 20
-  @datetime_range_options [
-    {"All time", ""},
-    {"Last hour", "last_hour"},
-    {"Last 24 hours", "last_24h"},
-    {"Last 7 days", "last_7d"},
-    {"Last 14 days", "last_14d"},
-    {"Last 30 days", "last_30d"}
-  ]
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -27,20 +19,18 @@ defmodule TowerWeb.Live.Occurrences.Index do
      assign(socket,
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
-       datetime_range_options: @datetime_range_options,
+       datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false
      )}
   end
 
-  @levels ~w(emergency alert critical error warning notice info)
-
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> validate_level()
+    level = params |> Map.get("level", "") |> Filters.validate_level()
     datetime_range_param = params["datetime_range"] || ""
-    datetime_range = build_filters(datetime_range_param)
-    issue_ids = params |> Map.get("issue_ids", "") |> parse_issue_ids()
+    datetime_range = Filters.datetime_range(datetime_range_param)
+    issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
 
     case Map.get(params, "page") do
       nil ->
@@ -57,7 +47,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         total_count =
           Events.count_events(
             filters:
-              compact_filters(
+              Filters.compact_filters(
                 search: search,
                 level: level,
                 similarity_id: issue_ids,
@@ -81,7 +71,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               limit: @per_page,
               offset: offset,
               filters:
-                compact_filters(
+                Filters.compact_filters(
                   search: search,
                   level: level,
                   datetime_range: datetime_range,
@@ -98,21 +88,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
              search_query: search,
              selected_level: level,
              issue_ids_filtered: issue_ids,
-             levels: @levels,
+             levels: Filters.levels(),
              datetime_range_param: datetime_range_param
            )}
         end
-    end
-  end
-
-  defp compact_filters(filters) do
-    Enum.reject(filters, fn {_key, value} -> value in ["", []] end)
-  end
-
-  defp build_filters(datetime_range_param) do
-    case DatetimePresets.cast(datetime_range_param) do
-      nil -> []
-      preset -> DatetimePresets.range_for(preset)
     end
   end
 
@@ -121,18 +100,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
       {num, _} when num > 0 -> num
       _ -> 1
     end
-  end
-
-  defp validate_level(level) when level in @levels, do: level
-  defp validate_level(_level), do: nil
-
-  defp parse_issue_ids(""), do: []
-
-  defp parse_issue_ids(issue_ids_string) do
-    issue_ids_string
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-    |> Enum.filter(&(&1 != ""))
   end
 
   @impl Phoenix.LiveView
@@ -148,103 +115,30 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
     <div class="flex flex-col gap-3 mb-4">
-      <form phx-change="search" phx-submit="search" class="w-full h-12 px-3 py-2 flex items-center gap-2 border border-tower-line-color">
-        <svg class="w-6 h-6 text-tower-text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        <input
-          type="text"
-          placeholder="Search items"
-          phx-debounce="300"
-          name="query"
-          value={@search_query}
-          class="flex-1 bg-transparent font-inter text-sm text-tower-text-secondary placeholder-tower-text-secondary outline-none"
-        />
-      </form>
+      <.search_filter search_query={@search_query} />
 
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
         <div class="flex items-center gap-[12px]">
-          <div class="relative flex items-center gap-2" phx-click-away="close_datetime_menu">
-            <span class="font-inter font-light text-sm text-white">Date:</span>
-
-            <button
-              type="button"
-              phx-click="toggle_datetime_menu"
-              class="flex items-center gap-2 bg-tower-active font-inter font-light text-sm text-white px-2 py-1 cursor-pointer"
-            >
-              {datetime_range_label(@datetime_range_options, @datetime_range_param)}
-              <.chevron_down_icon class="size-[16px]" />
-            </button>
-
-            <div :if={@datetime_range_menu_open} class="absolute left-0 top-full mt-1 z-10 min-w-full bg-tower-bg border border-tower-line-color">
-              <button
-                :for={{label, value} <- @datetime_range_options}
-                type="button"
-                phx-click="filter_datetime_range"
-                phx-value-datetime_range={value}
-                class={[
-                  "block w-full text-left px-2 py-1 font-inter font-light text-sm text-white cursor-pointer whitespace-nowrap",
-                  if(@datetime_range_param == value, do: "bg-tower-active", else: "bg-transparent hover:bg-tower-line-color")
-                ]}
-              >
-                {label}
-              </button>
-            </div>
-          </div>
+          <.date_range_filter
+            datetime_range_options={@datetime_range_options}
+            datetime_range_param={@datetime_range_param}
+            datetime_range_menu_open={@datetime_range_menu_open}
+          />
 
           <div class="border-l border-tower-line-color h-7"></div>
 
-          <span class="font-inter font-light text-sm text-white">Level:</span>
-          <div class="flex items-center gap-4">
-            <button
-              :for={level <- @levels}
-              type="button"
-              phx-click="filter_level"
-              phx-value-level={level}
-              class={[
-                "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
-                if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
-              ]}
-            >
-              {level}
-            </button>
-          </div>
+          <.level_filter levels={@levels} selected_level={@selected_level} />
 
           <div class="border-l border-tower-line-color h-full"></div>
 
-          <span class="font-inter font-light text-sm text-white">Issue ID:</span>
-          <form phx-submit="filter_issue_id" class="flex items-center">
-            <input
-              type="text"
-              placeholder="Type Issue ID and press Enter"
-              name="issue_id_filter"
-              value=""
-              class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
-            />
-          </form>
+          <.issue_id_filter />
         </div>
 
-        <div :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []} class="flex items-center gap-3 h-7">
-          <span class="font-inter font-light text-sm text-white">Active filters:</span>
-          <div class="border-l border-tower-line-color h-full"></div>
-          <div class="flex items-center gap-2">
-            <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
-            <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
-            <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">Issue ID:</span>
-            <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-full"></div>
-            <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
-          </div>
-          <div class="border-l border-tower-line-color h-full"></div>
-          <button
-            type="button"
-            phx-click="clear_filter"
-            phx-value-type="all"
-            class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1"
-          >
-            Clear filter
-            <.close_icon />
-          </button>
-        </div>
+        <.active_filters_row
+          search_query={@search_query}
+          selected_level={@selected_level}
+          issue_ids_filtered={@issue_ids_filtered}
+        />
       </div>
     </div>
 
@@ -327,34 +221,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
         Next
       </span>
     </div>
-    """
-  end
-
-  defp close_icon(assigns) do
-    ~H"""
-    <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-    """
-  end
-
-  attr(:value, :any, required: true)
-  attr(:type, :string, required: true)
-  attr(:class, :string, default: "")
-  attr(:id, :string, default: nil)
-
-  defp active_filter_tag(assigns) do
-    ~H"""
-    <button
-      type="button"
-      phx-click="clear_filter"
-      phx-value-type={@type}
-      phx-value-id={@id}
-      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
-    >
-      <span class="truncate">{@value}</span>
-      <.close_icon />
-    </button>
     """
   end
 
@@ -473,22 +339,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp format_reason(reason) do
     inspect(reason)
-  end
-
-  defp datetime_range_label(options, value) do
-    Enum.find_value(options, value, fn {label, option_value} ->
-      if option_value == value, do: label
-    end)
-  end
-
-  attr(:class, :string, default: nil)
-
-  defp chevron_down_icon(assigns) do
-    ~H"""
-    <svg class={@class} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 15.0538L6.34625 9.4L7.4 8.34625L12 12.9463L16.6 8.34625L17.6538 9.4L12 15.0538Z" fill="white" />
-    </svg>
-    """
   end
 
   defp level_class(level) when level in [:error, :alert, :emergency] do
