@@ -84,7 +84,7 @@ defmodule TowerWeb.Layouts do
       %{
         href: "#{base_path}/issues",
         label: "Issues",
-        views: [TowerWeb.Live.Issues.Index],
+        views: [TowerWeb.Live.Issues.Index, TowerWeb.Live.Issues.Show],
         icon: &issues_icon/1
       },
       %{

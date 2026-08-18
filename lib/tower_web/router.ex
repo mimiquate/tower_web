@@ -18,6 +18,7 @@ defmodule TowerWeb.Router do
           live("/", TowerWeb.Live.RootRedirect, :index)
           live("/dashboard", TowerWeb.Live.Dashboard.Index, :index)
           live("/issues", TowerWeb.Live.Issues.Index, :index)
+          live("/issues/:id", TowerWeb.Live.Issues.Show, :show)
           live("/occurrences", TowerWeb.Live.Occurrences.Index, :index)
           live("/occurrences/:id", TowerWeb.Live.Occurrences.Show, :show)
         end

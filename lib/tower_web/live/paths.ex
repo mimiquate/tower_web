@@ -15,4 +15,14 @@ defmodule TowerWeb.Live.Paths do
     params = filters_to_params(%{page: page}, filters)
     "?#{URI.encode_query(params)}"
   end
+
+  def index_path(base_path, filters, extra_params \\ %{}) do
+    params = filters_to_params(extra_params, filters)
+    "#{base_path}?#{URI.encode_query(params)}"
+  end
+
+  def show_path(base_path, id, filters, extra_params \\ %{}) do
+    params = filters_to_params(extra_params, filters)
+    "#{base_path}/#{id}?#{URI.encode_query(params)}"
+  end
 end

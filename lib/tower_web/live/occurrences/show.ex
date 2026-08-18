@@ -65,7 +65,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
-    back_path = index_path(socket.assigns.occurrences_base_path, filters, from_page)
+    back_path =
+      Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: from_page})
+
     {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
   end
 
@@ -105,8 +107,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
         </div>
       </div>
 
-      <div class="text-lg font-mono text-white mb-6">
-        #{@event.id}
+      <div class="flex items-center gap-3 mb-6">
+        <span class="text-lg font-mono text-white">#{@event.id}</span>
+        <span class="bg-tower-active font-mono text-lg text-white px-2">#{@event.similarity_id}</span>
       </div>
 
       <div class="font-mono text-white mb-8">
@@ -207,10 +210,5 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
   defp format_metadata(metadata) do
     inspect(metadata, pretty: true)
-  end
-
-  defp index_path(base_path, filters, page) do
-    params = Paths.filters_to_params(%{page: page}, filters)
-    "#{base_path}?#{URI.encode_query(params)}"
   end
 end
