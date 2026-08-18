@@ -23,17 +23,23 @@ defmodule TowerWeb.Live.Issues.Show do
         {:ok, socket}
 
       issue ->
+        datetime_range = Filters.datetime_range("last_30d")
+
         recent_events =
           Events.list_events(
             limit: @recent_events_limit,
-            filters: [similarity_id: id, datetime_range: Filters.datetime_range("last_30d")]
+            filters: [similarity_id: id, datetime_range: datetime_range]
           )
+
+        occurrences_count =
+          Events.count_events(filters: [similarity_id: id, datetime_range: datetime_range])
 
         {:ok,
          assign(socket,
            issue: issue,
            recent_events: recent_events,
            recent_events_limit: @recent_events_limit,
+           occurrences_count: occurrences_count,
            base_path: base_path,
            issues_base_path: issues_base_path,
            occurrences_base_path: "#{base_path}/occurrences",
@@ -101,7 +107,7 @@ defmodule TowerWeb.Live.Issues.Show do
         <div class="flex gap-12">
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">Total Occurrences</span>
-            <span class="text-sm text-tower-text-secondary">{@issue.count_events}</span>
+            <span class="text-sm text-tower-text-secondary">{@occurrences_count}</span>
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">First Seen</span>
@@ -116,7 +122,7 @@ defmodule TowerWeb.Live.Issues.Show do
 
       <div class="border border-tower-line-color p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-roboto-slab text-lg text-white font-light">Occurrences ({@issue.count_events})</h2>
+          <h2 class="font-roboto-slab text-lg text-white font-light">Occurrences ({@occurrences_count})</h2>
           <div class="flex items-center gap-3">
             <span class="text-sm font-medium text-tower-text-secondary">Last {@recent_events_limit}</span>
             <.link

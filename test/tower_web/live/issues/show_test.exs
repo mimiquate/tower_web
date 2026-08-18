@@ -73,8 +73,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       assert html =~ "ID: #2"
       assert html =~ "Latest error message"
 
-      # count_events includes every event for the issue, even ones outside the 30-day window
-      assert html =~ "Occurrences (3)"
+      # Total Occurrences/heading count only reflects events within the last 30 days
+      assert html =~ "Occurrences (2)"
 
       # the recent occurrences list only includes events within the last 30 days
       assert html =~ "First occurrence message"
