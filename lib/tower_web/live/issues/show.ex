@@ -7,6 +7,7 @@ defmodule TowerWeb.Live.Issues.Show do
   alias TowerWeb.Live.Paths
 
   @recent_events_limit 10
+  @chart_events_limit 100_000
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
@@ -23,17 +24,23 @@ defmodule TowerWeb.Live.Issues.Show do
         {:ok, socket}
 
       issue ->
-        recent_events =
+        chart_datetime_range = Filters.datetime_range("last_30d")
+
+        chart_events =
           Events.list_events(
-            limit: @recent_events_limit,
-            filters: [similarity_id: id, datetime_range: Filters.datetime_range("last_30d")]
+            limit: @chart_events_limit,
+            filters: [similarity_id: id, datetime_range: chart_datetime_range]
           )
+
+        recent_events = Enum.take(chart_events, @recent_events_limit)
 
         {:ok,
          assign(socket,
            issue: issue,
            recent_events: recent_events,
            recent_events_limit: @recent_events_limit,
+           chart_events: chart_events,
+           chart_datetime_range: chart_datetime_range,
            base_path: base_path,
            issues_base_path: issues_base_path,
            occurrences_base_path: "#{base_path}/occurrences",
@@ -112,6 +119,10 @@ defmodule TowerWeb.Live.Issues.Show do
             <span class="text-sm text-tower-text-secondary">{format_date(@issue.last_seen)} {format_time(@issue.last_seen)}</span>
           </div>
         </div>
+      </div>
+
+      <div class="mb-6">
+        <.occurrences_chart events={@chart_events} datetime_range={@chart_datetime_range} />
       </div>
 
       <div class="border border-tower-line-color p-6">
