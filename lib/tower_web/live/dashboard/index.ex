@@ -6,6 +6,8 @@ defmodule TowerWeb.Live.Dashboard.Index do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Paths
 
+  @chart_events_limit 100_000
+
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
     base_path = session["base_path"]
@@ -38,6 +40,8 @@ defmodule TowerWeb.Live.Dashboard.Index do
      assign(socket,
        total_errors: Issues.count_issues(filters: filters),
        total_occurrences: Events.count_events(filters: filters),
+       chart_events: Events.list_events(limit: @chart_events_limit, filters: filters),
+       chart_datetime_range: datetime_range,
        search_query: search,
        selected_level: level,
        datetime_range_param: datetime_range_param
@@ -69,9 +73,13 @@ defmodule TowerWeb.Live.Dashboard.Index do
       </div>
     </div>
 
-    <div class="flex gap-3 items-start w-full">
+    <div class="flex gap-3 items-start w-full mb-6">
       <.metric_card label="Total Errors" value={@total_errors} />
       <.metric_card label="Total Occurrences" value={@total_occurrences} />
+    </div>
+
+    <div class="mb-6">
+      <.occurrences_chart events={@chart_events} datetime_range={@chart_datetime_range} />
     </div>
     """
   end
