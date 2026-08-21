@@ -39,7 +39,7 @@ defmodule TowerWeb.Live.Issues.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param)}",
+             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}",
            replace: true
          )}
 
@@ -61,7 +61,7 @@ defmodule TowerWeb.Live.Issues.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param)}"
+               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
            )}
         else
           offset = (page - 1) * @per_page
