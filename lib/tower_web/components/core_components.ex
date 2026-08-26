@@ -314,15 +314,32 @@ defmodule TowerWeb.CoreComponents do
   @chart_padding_top 12
   @chart_padding_bottom 24
 
-  @two_hours_in_seconds 2 * 60 * 60
-  @minute_bucket_size 15
-  @two_days_in_seconds 48 * 60 * 60
+  @target_buckets 10
+
+  @nice_steps [
+    60,
+    300,
+    900,
+    1_800,
+    3_600,
+    10_800,
+    21_600,
+    43_200,
+    86_400,
+    172_800,
+    259_200,
+    604_800,
+    2_592_000
+  ]
 
   defp build_chart_data(events, {from, to}) do
-    {label_bucket_keys, label_fun} = label_buckets(from, to)
-
-    grid_from = bucket_key_to_datetime(List.first(label_bucket_keys))
-    datetime_range_duration = DateTime.diff(to, grid_from, :microsecond)
+    step = granularity(from, to)
+    grid_from = floor_to_step(from, step)
+    count = bucket_count(grid_from, to, step)
+    starts = bucket_starts(grid_from, count, step)
+    counts = aggregate(events, grid_from, step, count)
+    # first point to last point, so the chart always fills the full width
+    duration_us = max((count - 1) * step * 1_000_000, 1)
 
     plot = %{
       left: @chart_padding_left,
@@ -332,26 +349,11 @@ defmodule TowerWeb.CoreComponents do
       height: @chart_height - @chart_padding_top - @chart_padding_bottom
     }
 
-    edge_counts = %{grid_from => 0, to => 0}
+    chart_max = counts |> Enum.max() |> chart_max_value()
 
-    {point_group_key_fun, point_label_fun} = point_bucket_fun(from, to)
-    bucket_counts = Map.merge(edge_counts, Enum.frequencies_by(events, point_group_key_fun))
-    chart_max = bucket_counts |> Map.values() |> Enum.max() |> chart_max_value()
-
-    x_labels =
-      build_x_labels(label_bucket_keys, label_fun, grid_from, datetime_range_duration, plot)
-
+    x_labels = build_x_labels(starts, grid_from, duration_us, plot)
     y_labels = build_y_labels(chart_max, plot)
-
-    points =
-      build_points(
-        bucket_counts,
-        grid_from,
-        datetime_range_duration,
-        chart_max,
-        point_label_fun,
-        plot
-      )
+    points = build_points(starts, counts, grid_from, duration_us, step, chart_max, plot)
 
     %{
       width: @chart_width,
@@ -365,69 +367,67 @@ defmodule TowerWeb.CoreComponents do
     }
   end
 
-  defp build_x_labels(bucket_keys, label_fun, from, datetime_range_duration, plot) do
-    bucket_count = length(bucket_keys)
-    label_step = max(div(bucket_count, 6), 1)
+  # smallest step (1m, 5m, 15m, ... 1d, 7d, 30d) that keeps the chart under ~10 buckets
+  defp granularity(from, to) do
+    duration = DateTime.diff(to, from, :second)
 
-    bucket_keys
-    |> Enum.with_index()
-    |> Enum.filter(fn {_key, index} ->
-      rem(index, label_step) == 0 or index == bucket_count - 1
-    end)
-    |> Enum.map(fn {key, _index} ->
-      x = time_to_x(bucket_key_to_datetime(key), from, datetime_range_duration, plot)
-      %{x: Float.round(x, 2), label: label_fun.(key)}
+    Enum.find(@nice_steps, List.last(@nice_steps), fn step ->
+      duration <= step * @target_buckets
     end)
   end
 
-  defp label_buckets(from, to) do
-    span_seconds = DateTime.diff(to, from, :second)
-
-    cond do
-      span_seconds <= @two_hours_in_seconds -> time_buckets(from, to, @minute_bucket_size)
-      span_seconds <= @two_days_in_seconds -> time_buckets(from, to, 60)
-      true -> day_buckets(from, to)
-    end
+  # snaps down to the grid, e.g. 12:37 -> 12:30 for a 15-min step
+  defp floor_to_step(datetime, step) do
+    unix = DateTime.to_unix(datetime, :second)
+    DateTime.from_unix!(div(unix, step) * step, :second)
   end
 
-  defp time_buckets(from, to, minutes_per_bucket) do
-    start = floor_to_minutes(from, minutes_per_bucket)
-    bucket_seconds = minutes_per_bucket * 60
-    count = div(DateTime.diff(to, start, :second), bucket_seconds) + 1
-    keys = for offset <- 0..(count - 1), do: DateTime.add(start, offset * bucket_seconds, :second)
-
-    {keys, &Calendar.strftime(&1, "%-I:%M %p")}
+  # calculates the number of time buckets needed from grid_from to to, rounding up partial buckets.
+  defp bucket_count(grid_from, to, step) do
+    diff = DateTime.diff(to, grid_from, :second)
+    whole = div(diff, step)
+    if rem(diff, step) == 0, do: whole, else: whole + 1
   end
 
-  defp day_buckets(from, to) do
-    start_date = DateTime.to_date(from)
-    end_date = DateTime.to_date(to)
-    count = Date.diff(end_date, start_date) + 1
-    keys = for offset <- 0..(count - 1), do: Date.add(start_date, offset)
-
-    {keys, &Calendar.strftime(&1, "%b %d")}
+  # the start time of every bucket, e.g. 12:30, 12:45, 13:00, ...
+  defp bucket_starts(grid_from, count, step) do
+    for offset <- 0..(count - 1), do: DateTime.add(grid_from, offset * step, :second)
   end
 
-  defp floor_to_minutes(%DateTime{} = datetime, size) do
-    truncated = DateTime.truncate(datetime, :second)
-    minute = truncated.minute - rem(truncated.minute, size)
+  # counts how many events fall into each bucket
+  defp aggregate(events, grid_from, step, count) do
+    frequencies =
+      Enum.frequencies_by(events, fn event ->
+        DateTime.diff(event.datetime, grid_from, :second)
+        |> div(step)
+        |> min(count - 1)
+      end)
 
-    %{truncated | minute: minute, second: 0, microsecond: {0, 0}}
+    for index <- 0..(count - 1), do: Map.get(frequencies, index, 0)
   end
 
-  defp floor_to_day(%DateTime{} = datetime) do
-    %{DateTime.truncate(datetime, :second) | hour: 0, minute: 0, second: 0, microsecond: {0, 0}}
+  # calculates the X-axis position and label for each time bucket.
+  defp build_x_labels(bucket_starts, grid_from, duration_us, plot) do
+    Enum.map(bucket_starts, fn start ->
+      x = time_to_x(start, grid_from, duration_us, plot)
+      %{x: Float.round(x, 2), label: axis_label(start, duration_us)}
+    end)
   end
 
-  defp point_bucket_fun(from, to) do
-    span_seconds = DateTime.diff(to, from, :second)
+  @one_day_in_microseconds 86_400 * 1_000_000
 
-    if span_seconds <= @two_days_in_seconds do
-      {&floor_to_minutes(&1.datetime, 1), &Calendar.strftime(&1, "%b %d, %-I:%M %p")}
-    else
-      {&floor_to_day(&1.datetime), &Calendar.strftime(&1, "%b %d")}
-    end
-  end
+  # axis text: just the date for multi-day ranges, just the time otherwise
+  defp axis_label(datetime, duration_us) when duration_us > @one_day_in_microseconds,
+    do: Calendar.strftime(datetime, "%b %d")
+
+  defp axis_label(datetime, _duration_us), do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  # tooltip text: always show the date too when buckets are sub-day, so
+  # hovering a point on a multi-day chart isn't ambiguous about which day
+  defp tooltip_label(datetime, step) when step < 86_400,
+    do: Calendar.strftime(datetime, "%b %d, %-I:%M %p")
+
+  defp tooltip_label(datetime, _step), do: Calendar.strftime(datetime, "%b %d")
 
   defp build_y_labels(chart_max, plot) do
     for fraction <- [0.0, 0.25, 0.5, 0.75, 1.0] do
@@ -438,38 +438,27 @@ defmodule TowerWeb.CoreComponents do
     end
   end
 
-  defp build_points(
-         bucket_counts,
-         from,
-         datetime_range_duration,
-         chart_max,
-         point_label_fun,
-         plot
-       ) do
-    bucket_counts
-    |> Enum.sort_by(fn {bucket, _count} -> bucket end, DateTime)
+  defp build_points(bucket_starts, counts, grid_from, duration_us, step, chart_max, plot) do
+    bucket_starts
+    |> Enum.zip(counts)
     |> Enum.map(fn {bucket, count} ->
-      x = time_to_x(bucket, from, datetime_range_duration, plot)
+      x = time_to_x(bucket, grid_from, duration_us, plot)
       y = plot.bottom - count / chart_max * plot.height
 
       %{
         x: Float.round(x, 2),
         y: Float.round(y, 2),
         count: count,
-        label: point_label_fun.(bucket)
+        label: tooltip_label(bucket, step)
       }
     end)
   end
 
-  defp time_to_x(bucket, from, datetime_range_duration, plot) do
-    raw_fraction = DateTime.diff(bucket, from, :microsecond) / datetime_range_duration
-    fraction = raw_fraction |> max(0.0) |> min(1.0)
-
+  # converts a datetime into its X position based on its relative position in the time range
+  defp time_to_x(datetime, grid_from, duration_us, plot) do
+    fraction = DateTime.diff(datetime, grid_from, :microsecond) / duration_us
     plot.left + fraction * plot.width
   end
-
-  defp bucket_key_to_datetime(%DateTime{} = key), do: key
-  defp bucket_key_to_datetime(%Date{} = key), do: DateTime.new!(key, ~T[00:00:00])
 
   defp chart_max_value(0), do: 4
 
