@@ -189,7 +189,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         })
 
       assert html =~ "15/03/2024"
-      assert html =~ "02:30:45 PM UTC"
+      assert html =~ "02:30:45.000 PM UTC"
     end
   end
 

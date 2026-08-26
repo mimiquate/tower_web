@@ -131,7 +131,7 @@ defmodule TowerWeb.Live.Issues.Show do
         <div :if={@recent_events == []} class="text-gray-400">No occurrences recorded yet.</div>
 
         <div :for={event <- @recent_events} class="flex items-center gap-6 border-b border-tower-line-color py-2 last:border-b-0">
-          <div class="flex flex-col justify-center w-[132px] shrink-0">
+          <div class="flex flex-col justify-center w-[180px] shrink-0">
             <span class="text-sm text-white">{format_date(event.datetime)}</span>
             <span class="text-xs text-tower-text-secondary">{format_time(event.datetime)}</span>
           </div>
@@ -155,7 +155,14 @@ defmodule TowerWeb.Live.Issues.Show do
   end
 
   defp format_time(datetime) do
-    Calendar.strftime(datetime, "%I:%M:%S %p %Z")
+    milliseconds =
+      datetime.microsecond
+      |> elem(0)
+      |> div(1000)
+      |> Integer.to_string()
+      |> String.pad_leading(3, "0")
+
+    Calendar.strftime(datetime, "%I:%M:%S.#{milliseconds} %p %Z")
   end
 
   defp format_reason(reason, limit \\ nil)

@@ -143,7 +143,7 @@ defmodule TowerWeb.Live.Issues.Index do
           <th class="py-2 text-base font-light w-[68px]">Level</th>
           <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
-          <th class="py-2 pl-6 text-base font-light w-[132px]">Last Seen</th>
+          <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
         </tr>
       </thead>
       <tbody class="font-inter">
@@ -292,7 +292,14 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   defp format_time(datetime) do
-    Calendar.strftime(datetime, "%I:%M:%S %p %Z")
+    milliseconds =
+      datetime.microsecond
+      |> elem(0)
+      |> div(1000)
+      |> Integer.to_string()
+      |> String.pad_leading(3, "0")
+
+    Calendar.strftime(datetime, "%I:%M:%S.#{milliseconds} %p %Z")
   end
 
   defp format_reason(reason) when is_exception(reason) do

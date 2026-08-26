@@ -158,7 +158,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <table :if={@filtered_events != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 text-base font-light w-[132px]">Timestamp</th>
+          <th class="py-2 text-base font-light w-[180px]">Timestamp</th>
           <th class="py-2 text-base font-light">Related Occurrence</th>
           <th class="py-2 text-base font-light w-[132px]">Item Level</th>
         </tr>
@@ -308,7 +308,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   defp format_time(datetime) do
-    Calendar.strftime(datetime, "%I:%M:%S %p %Z")
+    milliseconds =
+      datetime.microsecond
+      |> elem(0)
+      |> div(1000)
+      |> Integer.to_string()
+      |> String.pad_leading(3, "0")
+
+    Calendar.strftime(datetime, "%I:%M:%S.#{milliseconds} %p %Z")
   end
 
   defp format_reason(reason) when is_exception(reason) do
