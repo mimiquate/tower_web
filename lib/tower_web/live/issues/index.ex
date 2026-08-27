@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Issues.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Issues
+  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
@@ -176,8 +177,8 @@ defmodule TowerWeb.Live.Issues.Index do
           </td>
           <td class="py-3 pl-6">
             <div class="flex flex-col">
-              <span class="text-sm text-white">{format_date(issue.last_seen)}</span>
-              <span class="text-xs text-tower-text-secondary">{format_time(issue.last_seen)}</span>
+              <span class="text-sm text-white">{DatetimeFormatter.format_date(issue.last_seen)}</span>
+              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(issue.last_seen)}</span>
             </div>
           </td>
         </tr>
@@ -285,21 +286,6 @@ defmodule TowerWeb.Live.Issues.Index do
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
-  end
-
-  defp format_date(datetime) do
-    Calendar.strftime(datetime, "%d/%m/%Y")
-  end
-
-  defp format_time(datetime) do
-    milliseconds =
-      datetime.microsecond
-      |> elem(0)
-      |> div(1000)
-      |> Integer.to_string()
-      |> String.pad_leading(3, "0")
-
-    Calendar.strftime(datetime, "%I:%M:%S.#{milliseconds} %p %Z")
   end
 
   defp format_reason(reason) when is_exception(reason) do

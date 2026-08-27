@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
+  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
@@ -167,8 +168,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
         <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden">
           <td class="py-3">
             <div class="flex flex-col">
-              <span class="text-sm text-white">{format_date(event.datetime)}</span>
-              <span class="text-xs text-tower-text-secondary">{format_time(event.datetime)}</span>
+              <span class="text-sm text-white">{DatetimeFormatter.format_date(event.datetime)}</span>
+              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(event.datetime)}</span>
             </div>
           </td>
           <td class="py-3 max-w-0">
@@ -301,21 +302,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
-  end
-
-  defp format_date(datetime) do
-    Calendar.strftime(datetime, "%d/%m/%Y")
-  end
-
-  defp format_time(datetime) do
-    milliseconds =
-      datetime.microsecond
-      |> elem(0)
-      |> div(1000)
-      |> Integer.to_string()
-      |> String.pad_leading(3, "0")
-
-    Calendar.strftime(datetime, "%I:%M:%S.#{milliseconds} %p %Z")
   end
 
   defp format_reason(reason) when is_exception(reason) do
