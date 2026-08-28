@@ -728,6 +728,59 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     }
   end
 
+  describe "handle_event selection and bulk delete" do
+    test "toggle_select adds the event id to the selection" do
+      {:ok, event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Some error"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
+
+      {:noreply, socket} =
+        Occurrences.handle_event("toggle_select", %{"id" => event.id}, socket)
+
+      assert socket.assigns.selected_occurrences_ids == MapSet.new([event.id])
+    end
+
+    test "delete_selected deletes the selected event" do
+      {:ok, event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Some error"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      events = Events.list_events(repo: TowerWeb.TestRepo)
+      socket = socket_with_events(events)
+      {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
+
+      {:noreply, socket} =
+        Occurrences.handle_event("toggle_select", %{"id" => event.id}, socket)
+
+      {:noreply, socket} = Occurrences.handle_event("delete_selected", %{}, socket)
+
+      assert socket.assigns.selected_occurrences_ids == MapSet.new()
+      assert Events.get_event(event.id, repo: TowerWeb.TestRepo) == nil
+    end
+  end
+
   defp socket_with_events(events) do
     %Phoenix.LiveView.Socket{
       assigns: %{
