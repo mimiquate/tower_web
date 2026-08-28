@@ -264,6 +264,40 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:show, :boolean, required: true)
+  attr(:title, :string, required: true)
+  attr(:description, :string, default: "This action cannot be undone.")
+  attr(:cancel_event, :string, required: true)
+  attr(:confirm_event, :string, required: true)
+  attr(:cancel_label, :string, default: "Cancel")
+  attr(:confirm_label, :string, default: "Delete")
+
+  def confirm_modal(assigns) do
+    ~H"""
+    <div :if={@show} class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black bg-opacity-50" phx-click={@cancel_event}></div>
+      <div class="relative bg-tower-bg border border-tower-line-color p-6 max-w-md">
+        <h3 class="font-inter text-lg font-light text-white mb-4">{@title}</h3>
+        <p class="font-inter text-sm font-light text-tower-text-secondary mb-6">{@description}</p>
+        <div class="flex justify-center items-center gap-3">
+          <button
+            phx-click={@cancel_event}
+            class="px-4 py-2 border border-tower-line-color text-white hover:bg-tower-line-color font-inter text-sm font-light"
+          >
+            {@cancel_label}
+          </button>
+          <button
+            phx-click={@confirm_event}
+            class="px-4 py-2 whitespace-nowrap bg-red-950 border border-red-400 text-red-300 hover:bg-red-900 font-inter text-sm font-light"
+          >
+            {@confirm_label}
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   attr(:class, :string, default: nil)
 
   def chevron_down_icon(assigns) do

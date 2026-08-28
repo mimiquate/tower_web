@@ -165,31 +165,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
       </button>
     </div>
 
-    <div :if={@show_delete_modal} class="fixed inset-0 z-50 flex items-center justify-center">
-      <div class="absolute inset-0 bg-black bg-opacity-50" phx-click="cancel_delete_selected"></div>
-      <div class="relative bg-tower-bg border border-tower-line-color p-6 max-w-sm">
-        <h3 class="font-inter text-lg font-light text-white mb-4">
-          Are you sure you want to delete the selected occurrences?
-        </h3>
-        <p class="font-inter text-sm font-light text-tower-text-secondary mb-6">
-          This action cannot be undone.
-        </p>
-        <div class="flex items-center gap-3">
-          <button
-            phx-click="cancel_delete_selected"
-            class="px-4 py-2 border border-tower-line-color text-white hover:bg-tower-line-color font-inter text-sm font-light"
-          >
-            Cancel
-          </button>
-          <button
-            phx-click="delete_selected"
-            class="px-4 py-2 bg-red-950 border border-red-400 text-red-300 hover:bg-red-900 font-inter text-sm font-light"
-          >
-            Delete {selected_count} occurrence(s) selected
-          </button>
-        </div>
-      </div>
-    </div>
+    <.confirm_modal
+      show={@show_delete_modal}
+      title="Are you sure you want to delete the selected occurrences?"
+      cancel_event="cancel_delete_selected"
+      confirm_event="delete_selected"
+      confirm_label={"Delete #{selected_count} occurrence(s) selected"}
+    />
 
     <div
       :if={
