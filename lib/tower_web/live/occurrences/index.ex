@@ -26,7 +26,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
        datetime_range_options: Filters.datetime_range_options(),
-       datetime_range_menu_open: false
+       datetime_range_menu_open: false,
+       selected_occurrences_ids: MapSet.new(),
+       show_delete_modal: false
      )}
   end
 
@@ -147,6 +149,48 @@ defmodule TowerWeb.Live.Occurrences.Index do
       </div>
     </div>
 
+    <% selected_count = MapSet.size(@selected_occurrences_ids) %>
+
+    <div :if={@filtered_events != []} class="flex items-center gap-3 mb-2">
+      <span class="font-inter text-sm text-tower-text-secondary">
+        {selected_count} selected
+      </span>
+      <button
+        type="button"
+        phx-click="show_delete_modal"
+        disabled={selected_count == 0}
+        class="font-inter text-sm text-red-400 border border-red-400 disabled:opacity-40 disabled:cursor-not-allowed px-2 py-1"
+      >
+        Delete selected
+      </button>
+    </div>
+
+    <div :if={@show_delete_modal} class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black bg-opacity-50" phx-click="cancel_delete_selected"></div>
+      <div class="relative bg-tower-bg border border-tower-line-color p-6 max-w-sm">
+        <h3 class="font-inter text-lg font-light text-white mb-4">
+          Are you sure you want to delete the selected occurrences?
+        </h3>
+        <p class="font-inter text-sm font-light text-tower-text-secondary mb-6">
+          This action cannot be undone.
+        </p>
+        <div class="flex items-center gap-3">
+          <button
+            phx-click="cancel_delete_selected"
+            class="px-4 py-2 border border-tower-line-color text-white hover:bg-tower-line-color font-inter text-sm font-light"
+          >
+            Cancel
+          </button>
+          <button
+            phx-click="delete_selected"
+            class="px-4 py-2 bg-red-950 border border-red-400 text-red-300 hover:bg-red-900 font-inter text-sm font-light"
+          >
+            Delete {selected_count} occurrence(s) selected
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       :if={
         @filtered_events == [] and
@@ -169,13 +213,28 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <table :if={@filtered_events != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 text-base font-light w-[180px]">Timestamp</th>
+          <th class="py-2 w-8">
+            <input
+              type="checkbox"
+              phx-click="toggle_select_all"
+              checked={visible_ids_selected?(@filtered_events, @selected_occurrences_ids)}
+            />
+          </th>
+          <th class="py-2 text-base font-light w-[132px]">Timestamp</th>
           <th class="py-2 text-base font-light">Related Occurrence</th>
           <th class="py-2 text-base font-light w-[132px]">Item Level</th>
         </tr>
       </thead>
       <tbody class="font-inter">
         <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden">
+          <td class="py-3 w-8">
+            <input
+              type="checkbox"
+              phx-click="toggle_select"
+              phx-value-id={event.id}
+              checked={MapSet.member?(@selected_occurrences_ids, event.id)}
+            />
+          </td>
           <td class="py-3">
             <div class="flex flex-col">
               <span class="text-sm text-white">{DatetimeFormatter.format_date(event.datetime)}</span>
@@ -300,6 +359,59 @@ defmodule TowerWeb.Live.Occurrences.Index do
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
   end
 
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select", %{"id" => id}, socket) do
+    selected_occurrences_ids =
+      if MapSet.member?(socket.assigns.selected_occurrences_ids, id) do
+        MapSet.delete(socket.assigns.selected_occurrences_ids, id)
+      else
+        MapSet.put(socket.assigns.selected_occurrences_ids, id)
+      end
+
+    {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select_all", _params, socket) do
+    visible_ids = MapSet.new(socket.assigns.filtered_events, & &1.id)
+
+    selected_occurrences_ids =
+      if MapSet.subset?(visible_ids, socket.assigns.selected_occurrences_ids) do
+        MapSet.difference(socket.assigns.selected_occurrences_ids, visible_ids)
+      else
+        MapSet.union(socket.assigns.selected_occurrences_ids, visible_ids)
+      end
+
+    {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_delete_selected", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("delete_selected", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected_occurrences_ids)
+    deleted_count = Events.delete_events(ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_occurrences_ids: MapSet.new(), show_delete_modal: false)
+     |> put_flash(:info, "Deleted #{deleted_count} occurrence(s).")
+     |> push_patch(
+       to:
+         "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, current_filters(socket, []))}"
+     )}
+  end
+
   defp build_path(socket, filters) do
     Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: 1})
   end
@@ -312,5 +424,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
+  end
+
+  defp visible_ids_selected?(events, selected_occurrences_ids) do
+    Enum.all?(events, &MapSet.member?(selected_occurrences_ids, &1.id))
   end
 end
