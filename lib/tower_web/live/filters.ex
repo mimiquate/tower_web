@@ -3,6 +3,7 @@ defmodule TowerWeb.Live.Filters do
 
   alias TowerWeb.DatetimePresets
 
+  @levels ~w(emergency alert critical error warning notice info)
   @datetime_range_options [
     {"Last hour", "last_hour"},
     {"Last 24 hours", "last_24h"},
@@ -12,19 +13,74 @@ defmodule TowerWeb.Live.Filters do
     {"All time", "all_time"}
   ]
 
+  def levels, do: @levels
   def datetime_range_options, do: @datetime_range_options
 
-  def datetime_range(datetime_range_param) do
+  def datetime_range(datetime_range_param, from \\ nil, to \\ nil)
+
+  def datetime_range("custom", from, to) when from in [nil, ""] and to in [nil, ""] do
+    []
+  end
+
+  def datetime_range("custom", from, to) do
+    with {:ok, from_dt} <- custom_bound(from, ~T[00:00:00], ~U[1970-01-01 00:00:00Z]),
+         {:ok, to_dt} <- custom_bound(to, ~T[23:59:59], DateTime.utc_now()),
+         :lt_or_eq <- compare(from_dt, to_dt) do
+      {from_dt, to_dt}
+    else
+      _ -> []
+    end
+  end
+
+  def datetime_range(datetime_range_param, _from, _to) do
     case DatetimePresets.cast(datetime_range_param) do
       nil -> []
       preset -> DatetimePresets.range_for(preset)
     end
   end
 
-  def datetime_range_label(value) do
+  defp custom_bound(value, _time, default) when value in [nil, ""], do: {:ok, default}
+
+  defp custom_bound(value, time, _default) do
+    with {:ok, date} <- Date.from_iso8601(value) do
+      DateTime.new(date, time, "Etc/UTC")
+    end
+  end
+
+  defp compare(from_dt, to_dt) do
+    if DateTime.compare(from_dt, to_dt) in [:lt, :eq], do: :lt_or_eq, else: :gt
+  end
+
+  def datetime_range_label(value, from \\ nil, to \\ nil)
+
+  def datetime_range_label("custom", from, to)
+      when from not in [nil, ""] and to not in [nil, ""] do
+    "#{format_custom_date(from)} - #{format_custom_date(to)}"
+  end
+
+  def datetime_range_label("custom", from, to) when from not in [nil, ""] do
+    "From #{format_custom_date(from)}"
+  end
+
+  def datetime_range_label("custom", from, to) when to not in [nil, ""] do
+    "Until #{format_custom_date(to)}"
+  end
+
+  def datetime_range_label("custom", _from, _to) do
+    "Custom"
+  end
+
+  def datetime_range_label(value, _from, _to) do
     Enum.find_value(@datetime_range_options, value, fn {label, option_value} ->
       if option_value == value, do: label
     end)
+  end
+
+  defp format_custom_date(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> Calendar.strftime(date, "%b %-d")
+      _ -> value
+    end
   end
 
   def parse_issue_ids(""), do: []
