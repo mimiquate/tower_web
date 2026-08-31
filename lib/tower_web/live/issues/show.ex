@@ -7,7 +7,7 @@ defmodule TowerWeb.Live.Issues.Show do
   alias TowerWeb.Live.Paths
 
   @recent_events_limit 10
-  @chart_events_limit 100_000
+  @occurrences_chart_max_events 500
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
@@ -26,19 +26,34 @@ defmodule TowerWeb.Live.Issues.Show do
       issue ->
         chart_datetime_range = Filters.datetime_range("last_30d")
 
-        chart_events =
-          Events.list_events(
-            limit: @chart_events_limit,
-            filters: [similarity_id: id, datetime_range: chart_datetime_range]
-          )
+        show_chart = issue.count_events <= @occurrences_chart_max_events
 
-        recent_events = Enum.take(chart_events, @recent_events_limit)
+        chart_events =
+          if show_chart do
+            Events.list_events(
+              limit: @occurrences_chart_max_events,
+              filters: [similarity_id: id, datetime_range: chart_datetime_range]
+            )
+          else
+            []
+          end
+
+        recent_events =
+          if show_chart do
+            Enum.take(chart_events, @recent_events_limit)
+          else
+            Events.list_events(
+              limit: @recent_events_limit,
+              filters: [similarity_id: id, datetime_range: chart_datetime_range]
+            )
+          end
 
         {:ok,
          assign(socket,
            issue: issue,
            recent_events: recent_events,
            recent_events_limit: @recent_events_limit,
+           show_chart: show_chart,
            chart_events: chart_events,
            chart_datetime_range: chart_datetime_range,
            base_path: base_path,
@@ -121,7 +136,7 @@ defmodule TowerWeb.Live.Issues.Show do
         </div>
       </div>
 
-      <div class="mb-6">
+      <div :if={@show_chart} class="mb-6">
         <.occurrences_chart events={@chart_events} datetime_range={@chart_datetime_range} />
       </div>
 

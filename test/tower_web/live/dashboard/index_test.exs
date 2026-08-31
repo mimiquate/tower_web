@@ -13,6 +13,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
         render_component(&Dashboard.render/1, %{
           total_errors: 3,
           total_occurrences: 7,
+          show_chart: true,
           chart_events: [],
           chart_datetime_range: Filters.datetime_range("last_7d"),
           search_query: "",
