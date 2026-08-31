@@ -76,12 +76,12 @@ defmodule TowerWeb.Live.Occurrences.Show do
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
         <button
           type="button"
           phx-click="show_delete_modal"
-          class="font-inter text-sm text-red-400 border border-red-400 w-24 px-2 py-1"
+          class="font-inter text-sm text-red-400 border border-red-400 w-24 h-8 px-2 py-1 mb-6"
         >
           Delete
         </button>
