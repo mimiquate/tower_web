@@ -27,6 +27,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
        occurrences_base_path: "#{base_path}/occurrences",
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
+       datetime_range_custom_open: false,
        selected_occurrences_ids: MapSet.new(),
        show_delete_modal: false
      )}
@@ -37,7 +38,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> Level.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
-    datetime_range = Filters.datetime_range(datetime_range_param)
+    datetime_range_from = params["datetime_range_from"] || ""
+    datetime_range_to = params["datetime_range_to"] || ""
+
+    datetime_range =
+      Filters.datetime_range(datetime_range_param, datetime_range_from, datetime_range_to)
+
     issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
 
     case Map.get(params, "page") do
@@ -45,7 +51,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}",
+             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}",
            replace: true
          )}
 
@@ -69,7 +75,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
+               "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}"
            )}
         else
           offset = (page - 1) * @per_page
@@ -98,6 +104,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
              issue_ids_filtered: issue_ids,
              levels: Level.levels(),
              datetime_range_param: datetime_range_param,
+             datetime_range_from: datetime_range_from,
+             datetime_range_to: datetime_range_to,
+             datetime_range_custom_open: datetime_range_param == "custom",
              current_filters: [
                search: search,
                level: level,
@@ -129,6 +138,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
           <.date_range_filter
             datetime_range_options={@datetime_range_options}
             datetime_range_param={@datetime_range_param}
+            datetime_range_from={@datetime_range_from}
+            datetime_range_to={@datetime_range_to}
+            datetime_range_custom_open={@datetime_range_custom_open}
             datetime_range_menu_open={@datetime_range_menu_open}
           />
 
@@ -234,7 +246,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
                   Paths.show_path(
                     @occurrences_base_path,
                     event.id,
-                    [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered],
+                    [
+                      search: @search_query,
+                      level: @selected_level,
+                      datetime_range: @datetime_range_param,
+                      datetime_range_from: @datetime_range_from,
+                      datetime_range_to: @datetime_range_to,
+                      issue_ids: @issue_ids_filtered
+                    ],
                     %{page: @page}
                   )
                 }
@@ -262,7 +281,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
       page={@page}
       total_pages={@total_pages}
       page_path={
-        &Paths.page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered)
+        &Paths.page_path(&1,
+          search: @search_query,
+          level: @selected_level,
+          datetime_range: @datetime_range_param,
+          datetime_range_from: @datetime_range_from,
+          datetime_range_to: @datetime_range_to,
+          issue_ids: @issue_ids_filtered
+        )
       }
     />
     """
@@ -279,6 +305,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("toggle_custom_range", _params, socket) do
+    {:noreply,
+     assign(socket, datetime_range_custom_open: !socket.assigns.datetime_range_custom_open)}
+  end
+
+  @impl Phoenix.LiveView
   def handle_event("filter_datetime_range", params, socket) do
     datetime_range_param = params["datetime_range"] || ""
 
@@ -290,9 +322,34 @@ defmodule TowerWeb.Live.Occurrences.Index do
          build_path(socket,
            search: socket.assigns.search_query,
            level: socket.assigns.selected_level,
-           datetime_range: datetime_range_param
+           datetime_range: datetime_range_param,
+           datetime_range_from: "",
+           datetime_range_to: ""
          )
      )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
+    if Filters.datetime_range("custom", from, to) == [] do
+      Process.send_after(self(), :clear_flash, 3000)
+      {:noreply, put_flash(socket, :error, "Please select at least one valid date")}
+    else
+      {:noreply,
+       socket
+       |> assign(datetime_range_menu_open: false)
+       |> push_patch(
+         to:
+           build_path(
+             socket,
+             current_filters(socket,
+               datetime_range: "custom",
+               datetime_range_from: from,
+               datetime_range_to: to
+             )
+           )
+       )}
+    end
   end
 
   @impl Phoenix.LiveView
@@ -339,13 +396,29 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   def handle_event("clear_filter", %{"type" => type}, socket) do
-    datetime_range_filter = [datetime_range: socket.assigns.datetime_range_param]
+    datetime_range_filter = [
+      datetime_range: socket.assigns.datetime_range_param,
+      datetime_range_from: socket.assigns.datetime_range_from,
+      datetime_range_to: socket.assigns.datetime_range_to
+    ]
 
     filters =
       case type do
-        "all" -> [search: "", level: nil, datetime_range: "", issue_ids: []]
-        "search" -> current_filters(socket, search: "") ++ datetime_range_filter
-        "level" -> current_filters(socket, level: nil) ++ datetime_range_filter
+        "all" ->
+          [
+            search: "",
+            level: nil,
+            datetime_range: "",
+            datetime_range_from: "",
+            datetime_range_to: "",
+            issue_ids: []
+          ]
+
+        "search" ->
+          current_filters(socket, search: "") ++ datetime_range_filter
+
+        "level" ->
+          current_filters(socket, level: nil) ++ datetime_range_filter
       end
 
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
@@ -413,7 +486,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
       search: socket.assigns.search_query,
       level: socket.assigns.selected_level,
       issue_ids: socket.assigns.issue_ids_filtered,
-      datetime_range: socket.assigns.datetime_range_param
+      datetime_range: socket.assigns.datetime_range_param,
+      datetime_range_from: socket.assigns.datetime_range_from,
+      datetime_range_to: socket.assigns.datetime_range_to
     ]
     |> Keyword.merge(overrides)
   end
