@@ -22,6 +22,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
        dashboard_base_path: "#{base_path}/dashboard",
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
+       datetime_range_custom_open: false,
        levels: Level.levels()
      )}
   end
@@ -31,7 +32,11 @@ defmodule TowerWeb.Live.Dashboard.Index do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> Level.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
-    datetime_range = Filters.datetime_range(datetime_range_param)
+    datetime_range_from = params["datetime_range_from"] || ""
+    datetime_range_to = params["datetime_range_to"] || ""
+
+    datetime_range =
+      Filters.datetime_range(datetime_range_param, datetime_range_from, datetime_range_to)
 
     filters =
       Filters.compact_filters(
@@ -74,13 +79,22 @@ defmodule TowerWeb.Live.Dashboard.Index do
        search_query: search,
        selected_level: level,
        datetime_range_param: datetime_range_param,
+       datetime_range_from: datetime_range_from,
+       datetime_range_to: datetime_range_to,
        current_filters: [search: search, level: level, datetime_range: datetime_range_param]
      )}
   end
 
   @impl Phoenix.LiveView
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
+  @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
+    <.flash_messages flash={@flash} />
+
     <.page_header title="Dashboard" subtitle="Overview" />
 
     <div class="flex flex-col gap-3 mb-6">
@@ -91,6 +105,9 @@ defmodule TowerWeb.Live.Dashboard.Index do
           <.date_range_filter
             datetime_range_options={@datetime_range_options}
             datetime_range_param={@datetime_range_param}
+            datetime_range_from={@datetime_range_from}
+            datetime_range_to={@datetime_range_to}
+            datetime_range_custom_open={@datetime_range_custom_open}
             datetime_range_menu_open={@datetime_range_menu_open}
           />
 
@@ -116,11 +133,23 @@ defmodule TowerWeb.Live.Dashboard.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: !socket.assigns.datetime_range_menu_open)}
+    datetime_range_menu_open = !socket.assigns.datetime_range_menu_open
+
+    {:noreply,
+     assign(socket,
+       datetime_range_menu_open: datetime_range_menu_open,
+       datetime_range_custom_open:
+         datetime_range_menu_open and socket.assigns.datetime_range_custom_open
+     )}
   end
 
   def handle_event("close_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: false)}
+    {:noreply, assign(socket, datetime_range_menu_open: false, datetime_range_custom_open: false)}
+  end
+
+  def handle_event("toggle_custom_range", _params, socket) do
+    {:noreply,
+     assign(socket, datetime_range_custom_open: !socket.assigns.datetime_range_custom_open)}
   end
 
   def handle_event("filter_datetime_range", params, socket) do
@@ -128,10 +157,40 @@ defmodule TowerWeb.Live.Dashboard.Index do
 
     {:noreply,
      socket
-     |> assign(datetime_range_menu_open: false)
+     |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
      |> push_patch(
-       to: build_path(socket, current_filters(socket, datetime_range: datetime_range_param))
+       to:
+         build_path(
+           socket,
+           current_filters(socket,
+             datetime_range: datetime_range_param,
+             datetime_range_from: "",
+             datetime_range_to: ""
+           )
+         )
      )}
+  end
+
+  def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
+    if Filters.datetime_range("custom", from, to) == [] do
+      Process.send_after(self(), :clear_flash, 3000)
+      {:noreply, put_flash(socket, :error, "Please select at least one valid date")}
+    else
+      {:noreply,
+       socket
+       |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
+       |> push_patch(
+         to:
+           build_path(
+             socket,
+             current_filters(socket,
+               datetime_range: "custom",
+               datetime_range_from: from,
+               datetime_range_to: to
+             )
+           )
+       )}
+    end
   end
 
   def handle_event("search", %{"query" => query}, socket) do
@@ -148,9 +207,20 @@ defmodule TowerWeb.Live.Dashboard.Index do
   def handle_event("clear_filter", %{"type" => type}, socket) do
     filters =
       case type do
-        "all" -> [search: "", level: nil, datetime_range: ""]
-        "search" -> current_filters(socket, search: "")
-        "level" -> current_filters(socket, level: nil)
+        "all" ->
+          [
+            search: "",
+            level: nil,
+            datetime_range: "",
+            datetime_range_from: "",
+            datetime_range_to: ""
+          ]
+
+        "search" ->
+          current_filters(socket, search: "")
+
+        "level" ->
+          current_filters(socket, level: nil)
       end
 
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
@@ -165,7 +235,9 @@ defmodule TowerWeb.Live.Dashboard.Index do
     [
       search: socket.assigns.search_query,
       level: socket.assigns.selected_level,
-      datetime_range: socket.assigns.datetime_range_param
+      datetime_range: socket.assigns.datetime_range_param,
+      datetime_range_from: socket.assigns.datetime_range_from,
+      datetime_range_to: socket.assigns.datetime_range_to
     ]
     |> Keyword.merge(overrides)
   end
