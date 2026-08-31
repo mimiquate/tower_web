@@ -380,7 +380,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   @impl Phoenix.LiveView
   def handle_event("delete_selected", _params, socket) do
     ids = MapSet.to_list(socket.assigns.selected_occurrences_ids)
-    deleted_count = Events.delete_events(ids)
+    {deleted_count, _} = Events.delete_events(ids)
 
     Process.send_after(self(), :clear_flash, 3000)
 
