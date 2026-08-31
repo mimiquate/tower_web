@@ -133,6 +133,9 @@ defmodule TowerWeb.CoreComponents do
 
   attr(:datetime_range_options, :list, required: true)
   attr(:datetime_range_param, :string, required: true)
+  attr(:datetime_range_from, :string, default: "")
+  attr(:datetime_range_to, :string, default: "")
+  attr(:datetime_range_custom_open, :boolean, default: false)
   attr(:datetime_range_menu_open, :boolean, required: true)
 
   def date_range_filter(assigns) do
@@ -145,7 +148,7 @@ defmodule TowerWeb.CoreComponents do
         phx-click="toggle_datetime_menu"
         class="flex items-center gap-2 bg-tower-active font-inter font-light text-sm text-white px-2 py-1 cursor-pointer whitespace-nowrap shrink-0"
       >
-        {Filters.datetime_range_label(@datetime_range_param)}
+        {Filters.datetime_range_label(@datetime_range_param, @datetime_range_from, @datetime_range_to)}
         <.chevron_down_icon class="size-[16px]" />
       </button>
 
@@ -162,6 +165,45 @@ defmodule TowerWeb.CoreComponents do
         >
           {label}
         </button>
+
+        <div class="relative">
+          <button
+            type="button"
+            phx-click="toggle_custom_range"
+            class={[
+              "flex items-center justify-between gap-2 w-full text-left px-2 py-1 font-inter font-light text-sm text-white cursor-pointer whitespace-nowrap",
+              if(@datetime_range_param == "custom", do: "bg-tower-active", else: "bg-transparent hover:bg-tower-line-color")
+            ]}
+          >
+            Custom
+            <.chevron_down_icon class={"size-[14px] -rotate-90#{if @datetime_range_custom_open, do: " rotate-0", else: ""}"} />
+          </button>
+
+          <form
+            :if={@datetime_range_custom_open}
+            phx-submit="filter_datetime_range_custom"
+            class="absolute left-full top-0 ml-1 z-10 flex flex-col gap-2 p-2 min-w-max bg-tower-bg border border-tower-line-color"
+          >
+            <div class="flex items-center gap-2">
+              <input
+                type="date"
+                name="from"
+                value={@datetime_range_from}
+                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none"
+              />
+              <span class="text-sm text-white">to</span>
+              <input
+                type="date"
+                name="to"
+                value={@datetime_range_to}
+                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none"
+              />
+            </div>
+            <button type="submit" class="font-inter font-light text-sm text-white bg-tower-line-color hover:bg-tower-active py-1 px-2 cursor-pointer">
+              Apply
+            </button>
+          </form>
+        </div>
       </div>
     </div>
     """
