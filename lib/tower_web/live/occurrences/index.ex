@@ -296,12 +296,19 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: !socket.assigns.datetime_range_menu_open)}
+    datetime_range_menu_open = !socket.assigns.datetime_range_menu_open
+
+    {:noreply,
+     assign(socket,
+       datetime_range_menu_open: datetime_range_menu_open,
+       datetime_range_custom_open:
+         datetime_range_menu_open and socket.assigns.datetime_range_custom_open
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("close_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: false)}
+    {:noreply, assign(socket, datetime_range_menu_open: false, datetime_range_custom_open: false)}
   end
 
   @impl Phoenix.LiveView
@@ -316,7 +323,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     {:noreply,
      socket
-     |> assign(datetime_range_menu_open: false)
+     |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
      |> push_patch(
        to:
          build_path(socket,
@@ -337,7 +344,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     else
       {:noreply,
        socket
-       |> assign(datetime_range_menu_open: false)
+       |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
        |> push_patch(
          to:
            build_path(
