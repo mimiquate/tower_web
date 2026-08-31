@@ -58,11 +58,11 @@ defmodule TowerWeb.Live.Filters do
     "#{format_custom_date(from)} - #{format_custom_date(to)}"
   end
 
-  def datetime_range_label("custom", from, to) when from not in [nil, ""] do
+  def datetime_range_label("custom", from, _to) when from not in [nil, ""] do
     "From #{format_custom_date(from)}"
   end
 
-  def datetime_range_label("custom", from, to) when to not in [nil, ""] do
+  def datetime_range_label("custom", _from, to) when to not in [nil, ""] do
     "Until #{format_custom_date(to)}"
   end
 
