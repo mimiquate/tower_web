@@ -27,7 +27,13 @@ defmodule TowerWeb.Live.Dashboard.Index do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> Filters.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
-    datetime_range = Filters.datetime_range(datetime_range_param)
+
+    datetime_range =
+      if datetime_range_param == "all_time" do
+        Filters.datetime_range("last_30d")
+      else
+        Filters.datetime_range(datetime_range_param)
+      end
 
     filters =
       Filters.compact_filters(
