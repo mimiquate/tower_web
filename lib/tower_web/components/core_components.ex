@@ -214,17 +214,15 @@ defmodule TowerWeb.CoreComponents do
 
   def active_filters_row(assigns) do
     ~H"""
-    <div :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []} class="flex items-center gap-3 h-7">
+    <div :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []} class="flex flex-wrap items-center gap-x-3 gap-y-2 min-h-7">
       <span class="font-inter font-light text-sm text-white">Active filters:</span>
-      <div class="border-l border-tower-line-color h-full"></div>
-      <div class="flex items-center gap-2">
-        <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
-        <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
-        <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">{@issue_id_label}:</span>
-        <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-full"></div>
-        <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
-      </div>
-      <div class="border-l border-tower-line-color h-full"></div>
+      <div class="border-l border-tower-line-color h-7"></div>
+      <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
+      <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+      <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">{@issue_id_label}:</span>
+      <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-7"></div>
+      <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
+      <div class="border-l border-tower-line-color h-7"></div>
       <button
         type="button"
         phx-click="clear_filter"

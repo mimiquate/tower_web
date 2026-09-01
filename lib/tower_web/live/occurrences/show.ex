@@ -8,6 +8,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   def mount(%{"id" => id}, session, socket) do
     base_path = session["base_path"]
     occurrences_base_path = "#{base_path}/occurrences"
+    issues_base_path = "#{base_path}/issues"
 
     case Events.get_event(id) do
       nil ->
@@ -24,6 +25,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
            event: event,
            base_path: base_path,
            occurrences_base_path: occurrences_base_path,
+           issues_base_path: issues_base_path,
            show_delete_modal: false,
            reason_expanded: false
          )}
@@ -56,7 +58,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
-    from_page = params["from_page"] || "1"
+    page = params["page"] || "1"
 
     filters = [
       search: Map.get(params, "search", ""),
@@ -65,10 +67,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
-    back_path =
-      Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: from_page})
+    back_path = Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: page})
 
-    {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
+    {:noreply, assign(socket, back_path: back_path)}
   end
 
   @impl Phoenix.LiveView
@@ -107,9 +108,14 @@ defmodule TowerWeb.Live.Occurrences.Show do
         </div>
       </div>
 
-      <div class="flex items-center gap-3 mb-6">
-        <span class="text-lg font-mono text-white">#{@event.id}</span>
-        <span class="bg-tower-active font-mono text-lg text-white px-2">#{@event.similarity_id}</span>
+      <div class="flex flex-col gap-1 mb-6">
+        <span class="text-lg font-mono text-white">ID: #{@event.id}</span>
+        <.link
+          navigate={Paths.show_path(@issues_base_path, @event.similarity_id, [])}
+          class="text-sm font-mono text-tower-text-secondary hover:text-white transition-colors"
+        >
+          Issue ID: #{@event.similarity_id}
+        </.link>
       </div>
 
       <div class="font-mono text-white mb-8">
