@@ -28,25 +28,23 @@ defmodule TowerWeb.Live.Issues.Show do
 
         show_chart = issue.count_events <= @occurrences_chart_max_events
 
-        chart_events =
+        chart_datetimes =
           if show_chart do
             Events.list_events(
               limit: @occurrences_chart_max_events,
-              filters: [similarity_id: id, datetime_range: chart_datetime_range]
+              filters: [similarity_id: id, datetime_range: chart_datetime_range],
+              select: [:datetime]
             )
+            |> Enum.map(& &1.datetime)
           else
             []
           end
 
         recent_events =
-          if show_chart do
-            Enum.take(chart_events, @recent_events_limit)
-          else
-            Events.list_events(
-              limit: @recent_events_limit,
-              filters: [similarity_id: id, datetime_range: chart_datetime_range]
-            )
-          end
+          Events.list_events(
+            limit: @recent_events_limit,
+            filters: [similarity_id: id, datetime_range: chart_datetime_range]
+          )
 
         {:ok,
          assign(socket,
@@ -54,7 +52,7 @@ defmodule TowerWeb.Live.Issues.Show do
            recent_events: recent_events,
            recent_events_limit: @recent_events_limit,
            show_chart: show_chart,
-           chart_events: chart_events,
+           chart_datetimes: chart_datetimes,
            chart_datetime_range: chart_datetime_range,
            base_path: base_path,
            issues_base_path: issues_base_path,
@@ -137,7 +135,7 @@ defmodule TowerWeb.Live.Issues.Show do
       </div>
 
       <div :if={@show_chart} class="mb-6">
-        <.occurrences_chart events={@chart_events} datetime_range={@chart_datetime_range} />
+        <.occurrences_chart datetimes={@chart_datetimes} datetime_range={@chart_datetime_range} />
       </div>
 
       <div class="border border-tower-line-color p-6">

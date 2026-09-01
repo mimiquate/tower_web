@@ -277,11 +277,11 @@ defmodule TowerWeb.CoreComponents do
   end
 
   attr(:title, :string, default: "Occurrences Over Time")
-  attr(:events, :list, required: true)
+  attr(:datetimes, :list, required: true)
   attr(:datetime_range, :any, required: true)
 
   def occurrences_chart(assigns) do
-    assigns = assign(assigns, :chart, build_chart_data(assigns.events, assigns.datetime_range))
+    assigns = assign(assigns, :chart, build_chart_data(assigns.datetimes, assigns.datetime_range))
 
     ~H"""
     <div class="border border-tower-line-color p-4">
@@ -332,12 +332,12 @@ defmodule TowerWeb.CoreComponents do
     2_592_000
   ]
 
-  defp build_chart_data(events, {from, to}) do
+  defp build_chart_data(datetimes, {from, to}) do
     step = granularity(from, to)
     grid_from = floor_to_step(from, step)
     count = bucket_count(grid_from, to, step)
     starts = bucket_starts(grid_from, count, step)
-    counts = aggregate(events, grid_from, step, count)
+    counts = aggregate(datetimes, grid_from, step, count)
     # first point to last point, so the chart always fills the full width
     duration_us = max((count - 1) * step * 1_000_000, 1)
 
@@ -395,10 +395,10 @@ defmodule TowerWeb.CoreComponents do
   end
 
   # counts how many events fall into each bucket
-  defp aggregate(events, grid_from, step, count) do
+  defp aggregate(datetimes, grid_from, step, count) do
     frequencies =
-      Enum.frequencies_by(events, fn event ->
-        DateTime.diff(event.datetime, grid_from, :second)
+      Enum.frequencies_by(datetimes, fn datetime ->
+        DateTime.diff(datetime, grid_from, :second)
         |> div(step)
         |> min(count - 1)
       end)

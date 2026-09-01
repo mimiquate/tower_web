@@ -39,9 +39,14 @@ defmodule TowerWeb.Live.Dashboard.Index do
     total_occurrences = Events.count_events(filters: filters)
     show_chart = total_occurrences <= @occurrences_chart_max_events
 
-    chart_events =
+    chart_datetimes =
       if show_chart do
-        Events.list_events(limit: @occurrences_chart_max_events, filters: filters)
+        Events.list_events(
+          limit: @occurrences_chart_max_events,
+          filters: filters,
+          select: [:datetime]
+        )
+        |> Enum.map(& &1.datetime)
       else
         []
       end
@@ -51,7 +56,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
        total_errors: Issues.count_issues(filters: filters),
        total_occurrences: total_occurrences,
        show_chart: show_chart,
-       chart_events: chart_events,
+       chart_datetimes: chart_datetimes,
        chart_datetime_range: datetime_range,
        search_query: search,
        selected_level: level,
@@ -90,7 +95,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
     </div>
 
     <div :if={@show_chart} class="mb-6">
-      <.occurrences_chart events={@chart_events} datetime_range={@chart_datetime_range} />
+      <.occurrences_chart datetimes={@chart_datetimes} datetime_range={@chart_datetime_range} />
     </div>
     """
   end
