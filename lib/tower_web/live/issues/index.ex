@@ -158,11 +158,16 @@ defmodule TowerWeb.Live.Issues.Index do
             <div class="flex items-baseline gap-3 overflow-hidden">
               <.link
                 navigate={
-                  Paths.show_path(@issues_base_path, issue.id,
-                    search: @search_query,
-                    level: @selected_level,
-                    datetime_range: @datetime_range_param,
-                    issue_ids: @issue_ids_filtered
+                  Paths.show_path(
+                    @issues_base_path,
+                    issue.id,
+                    [
+                      search: @search_query,
+                      level: @selected_level,
+                      datetime_range: @datetime_range_param,
+                      issue_ids: @issue_ids_filtered
+                    ],
+                    %{page: @page}
                   )
                 }
                 class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block"

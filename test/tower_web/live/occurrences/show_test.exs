@@ -51,7 +51,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           datetime_range_menu_open: false
         })
 
-      assert html =~ ~s(href="/tower/occurrences/#{event.id}?from_page=1")
+      assert html =~ ~s(href="/tower/occurrences/#{event.id}?page=1")
     end
 
     test "show page displays the correct occurrence info" do
@@ -93,7 +93,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
-          from_page: "1",
           show_delete_modal: false,
           reason_expanded: false
         })

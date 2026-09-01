@@ -180,7 +180,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
                     @occurrences_base_path,
                     event.id,
                     [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered],
-                    %{from_page: @page}
+                    %{page: @page}
                   )
                 }
                 class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block"
