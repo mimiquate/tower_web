@@ -141,7 +141,7 @@ defmodule TowerWeb.Live.Issues.Index do
     <table :if={@issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 text-base font-light w-[68px]">Level</th>
+          <th class="py-2 text-base font-light w-[132px]">Level</th>
           <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
           <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
@@ -150,7 +150,7 @@ defmodule TowerWeb.Live.Issues.Index do
       <tbody class="font-inter">
         <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden">
           <td class="py-3">
-            <span class={["bg-tower-level-bg w-[68px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", level_class(issue.last_event.level)]}>
+            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", level_class(issue.last_event.level)]}>
               {issue.last_event.level}
             </span>
           </td>
