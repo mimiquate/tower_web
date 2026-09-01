@@ -93,6 +93,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
+          issues_base_path: "/tower/issues",
           show_delete_modal: false,
           reason_expanded: false
         })
