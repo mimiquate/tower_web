@@ -3,6 +3,7 @@ defmodule TowerWeb.Live.Issues.Show do
 
   alias TowerDB.Events
   alias TowerDB.Issues
+  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Paths
 
@@ -44,6 +45,8 @@ defmodule TowerWeb.Live.Issues.Show do
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
+    page = params["page"] || "1"
+
     filters = [
       search: Map.get(params, "search", ""),
       level: Map.get(params, "level", ""),
@@ -51,7 +54,7 @@ defmodule TowerWeb.Live.Issues.Show do
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
-    back_path = Paths.index_path(socket.assigns.issues_base_path, filters)
+    back_path = Paths.index_path(socket.assigns.issues_base_path, filters, %{page: page})
     {:noreply, assign(socket, back_path: back_path)}
   end
 
@@ -105,11 +108,11 @@ defmodule TowerWeb.Live.Issues.Show do
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">First Seen</span>
-            <span class="text-sm text-tower-text-secondary">{format_date(@issue.first_seen)} {format_time(@issue.first_seen)}</span>
+            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.first_seen)} {DatetimeFormatter.format_time(@issue.first_seen)}</span>
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">Last Seen</span>
-            <span class="text-sm text-tower-text-secondary">{format_date(@issue.last_seen)} {format_time(@issue.last_seen)}</span>
+            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_seen)} {DatetimeFormatter.format_time(@issue.last_seen)}</span>
           </div>
         </div>
       </div>
@@ -131,9 +134,9 @@ defmodule TowerWeb.Live.Issues.Show do
         <div :if={@recent_events == []} class="text-gray-400">No occurrences recorded yet.</div>
 
         <div :for={event <- @recent_events} class="flex items-center gap-6 border-b border-tower-line-color py-2 last:border-b-0">
-          <div class="flex flex-col justify-center w-[132px] shrink-0">
-            <span class="text-sm text-white">{format_date(event.datetime)}</span>
-            <span class="text-xs text-tower-text-secondary">{format_time(event.datetime)}</span>
+          <div class="flex flex-col justify-center w-[180px] shrink-0">
+            <span class="text-sm text-white">{DatetimeFormatter.format_date(event.datetime)}</span>
+            <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(event.datetime)}</span>
           </div>
           <div class="flex flex-col justify-center flex-1 min-w-0">
             <.link navigate={"#{@occurrences_base_path}/#{event.id}"} class="text-sm text-tower-text-primary hover:text-white transition-colors truncate">
@@ -148,14 +151,6 @@ defmodule TowerWeb.Live.Issues.Show do
       </div>
     </div>
     """
-  end
-
-  defp format_date(datetime) do
-    Calendar.strftime(datetime, "%d/%m/%Y")
-  end
-
-  defp format_time(datetime) do
-    Calendar.strftime(datetime, "%I:%M:%S %p %Z")
   end
 
   defp format_reason(reason, limit \\ nil)

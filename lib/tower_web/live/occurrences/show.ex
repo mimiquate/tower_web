@@ -58,7 +58,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
-    from_page = params["from_page"] || "1"
+    page = params["page"] || "1"
 
     filters = [
       search: Map.get(params, "search", ""),
@@ -67,10 +67,9 @@ defmodule TowerWeb.Live.Occurrences.Show do
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
-    back_path =
-      Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: from_page})
+    back_path = Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: page})
 
-    {:noreply, assign(socket, back_path: back_path, from_page: from_page)}
+    {:noreply, assign(socket, back_path: back_path)}
   end
 
   @impl Phoenix.LiveView
