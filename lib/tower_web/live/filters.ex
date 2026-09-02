@@ -5,12 +5,12 @@ defmodule TowerWeb.Live.Filters do
 
   @levels ~w(emergency alert critical error warning notice info)
   @datetime_range_options [
-    {"All time", "all_time"},
     {"Last hour", "last_hour"},
     {"Last 24 hours", "last_24h"},
     {"Last 7 days", "last_7d"},
     {"Last 14 days", "last_14d"},
-    {"Last 30 days", "last_30d"}
+    {"Last 30 days", "last_30d"},
+    {"All time", "all_time"}
   ]
 
   def levels, do: @levels

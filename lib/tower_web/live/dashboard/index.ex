@@ -27,13 +27,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> Filters.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
-
-    datetime_range =
-      if datetime_range_param == "all_time" do
-        Filters.datetime_range("last_30d")
-      else
-        Filters.datetime_range(datetime_range_param)
-      end
+    datetime_range = Filters.datetime_range(datetime_range_param)
 
     filters =
       Filters.compact_filters(
@@ -45,11 +39,20 @@ defmodule TowerWeb.Live.Dashboard.Index do
     total_occurrences = Events.count_events(filters: filters)
     show_chart = total_occurrences <= @occurrences_chart_max_events
 
+    chart_datetime_range =
+      if datetime_range_param == "all_time" do
+        Filters.datetime_range("last_30d")
+      else
+        datetime_range
+      end
+
+    chart_filters = Keyword.put(filters, :datetime_range, chart_datetime_range)
+
     chart_datetimes =
       if show_chart do
         Events.list_events(
           limit: @occurrences_chart_max_events,
-          filters: filters,
+          filters: chart_filters,
           select: [:datetime]
         )
         |> Enum.map(& &1.datetime)
@@ -63,7 +66,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
        total_occurrences: total_occurrences,
        show_chart: show_chart,
        chart_datetimes: chart_datetimes,
-       chart_datetime_range: datetime_range,
+       chart_datetime_range: chart_datetime_range,
        search_query: search,
        selected_level: level,
        datetime_range_param: datetime_range_param
