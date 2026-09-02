@@ -189,14 +189,14 @@ defmodule TowerWeb.CoreComponents do
                 type="date"
                 name="from"
                 value={@datetime_range_from}
-                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none"
+                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none [color-scheme:dark]"
               />
               <span class="text-sm text-white">to</span>
               <input
                 type="date"
                 name="to"
                 value={@datetime_range_to}
-                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none"
+                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none [color-scheme:dark]"
               />
             </div>
             <button type="submit" class="font-inter font-light text-sm text-white bg-tower-line-color hover:bg-tower-active py-1 px-2 cursor-pointer">
@@ -459,7 +459,7 @@ defmodule TowerWeb.CoreComponents do
 
     chart_max = counts |> Enum.max() |> chart_max_value()
 
-    x_labels = build_x_labels(starts, grid_from, duration_us, plot)
+    x_labels = build_x_labels(starts, grid_from, duration_us, axis_label_mode(from, to), plot)
     y_labels = build_y_labels(chart_max, plot)
     points = build_points(starts, counts, grid_from, duration_us, step, chart_max, plot)
 
@@ -514,25 +514,52 @@ defmodule TowerWeb.CoreComponents do
     for index <- 0..(count - 1), do: Map.get(frequencies, index, 0)
   end
 
-  # calculates the X-axis position and label for each time bucket.
-  defp build_x_labels(bucket_starts, grid_from, duration_us, plot) do
-    Enum.map(bucket_starts, fn start ->
-      x = time_to_x(start, grid_from, duration_us, plot)
-      %{x: Float.round(x, 2), label: axis_label(start, duration_us)}
-    end)
+  @one_day_in_seconds 86_400
+  @five_days_in_seconds 5 * 86_400
+
+  defp axis_label_mode(from, to) do
+    duration = DateTime.diff(to, from, :second)
+    same_date? = DateTime.to_date(from) == DateTime.to_date(to)
+
+    cond do
+      duration < @one_day_in_seconds and same_date? -> :hours_only
+      duration < @five_days_in_seconds -> :date_and_hour
+      true -> :date_only
+    end
   end
 
-  @one_day_in_microseconds 86_400 * 1_000_000
+  defp build_x_labels(bucket_starts, grid_from, duration_us, mode, plot) do
+    bucket_starts
+    |> Enum.map_reduce(nil, fn start, previous_date ->
+      date = DateTime.to_date(start)
+      x = time_to_x(start, grid_from, duration_us, plot)
+      label = axis_label(start, mode, date, previous_date)
 
-  # axis text: just the date for multi-day ranges, just the time otherwise
-  defp axis_label(datetime, duration_us) when duration_us > @one_day_in_microseconds,
+      {%{x: Float.round(x, 2), label: label}, date}
+    end)
+    |> elem(0)
+  end
+
+  defp axis_label(datetime, :hours_only, _date, _previous_date),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_and_hour, _date, nil),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_and_hour, date, date),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_and_hour, _date, _previous_date),
     do: Calendar.strftime(datetime, "%b %d")
 
-  defp axis_label(datetime, _duration_us), do: Calendar.strftime(datetime, "%-I:%M %p")
+  defp axis_label(_datetime, :date_only, date, date), do: ""
+
+  defp axis_label(datetime, :date_only, _date, _previous_date),
+    do: Calendar.strftime(datetime, "%b %d")
 
   # tooltip text: always show the date too when buckets are sub-day, so
   # hovering a point on a multi-day chart isn't ambiguous about which day
-  defp tooltip_label(datetime, step) when step < 86_400,
+  defp tooltip_label(datetime, step) when step < @one_day_in_seconds,
     do: Calendar.strftime(datetime, "%b %d, %-I:%M %p")
 
   defp tooltip_label(datetime, _step), do: Calendar.strftime(datetime, "%b %d")

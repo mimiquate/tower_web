@@ -12,6 +12,7 @@ defmodule TowerWeb.Live.Filters do
     {"Last 30 days", "last_30d"},
     {"All time", "all_time"}
   ]
+  @max_custom_range_days 30
 
   def levels, do: @levels
   def datetime_range_options, do: @datetime_range_options
@@ -26,7 +27,7 @@ defmodule TowerWeb.Live.Filters do
     with {:ok, from_dt} <- custom_bound(from, ~T[00:00:00], ~U[1970-01-01 00:00:00Z]),
          {:ok, to_dt} <- custom_bound(to, ~T[23:59:59], DateTime.utc_now()),
          :lt_or_eq <- compare(from_dt, to_dt) do
-      {from_dt, to_dt}
+      {clamp_from(from_dt, to_dt), to_dt}
     else
       _ -> []
     end
@@ -49,6 +50,12 @@ defmodule TowerWeb.Live.Filters do
 
   defp compare(from_dt, to_dt) do
     if DateTime.compare(from_dt, to_dt) in [:lt, :eq], do: :lt_or_eq, else: :gt
+  end
+
+  defp clamp_from(from_dt, to_dt) do
+    min_from_dt = DateTime.add(to_dt, -@max_custom_range_days, :day)
+
+    if DateTime.compare(from_dt, min_from_dt) == :lt, do: min_from_dt, else: from_dt
   end
 
   def datetime_range_label(value, from \\ nil, to \\ nil)
