@@ -4,6 +4,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerDB.Issues
   alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
 
@@ -23,14 +24,14 @@ defmodule TowerWeb.Live.Issues.Index do
        issues_base_path: "#{base_path}/issues",
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
-       levels: Filters.levels()
+       levels: Level.levels()
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> Filters.validate_level()
+    level = params |> Map.get("level", "") |> Level.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
     datetime_range = Filters.datetime_range(datetime_range_param)
     issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
@@ -141,7 +142,7 @@ defmodule TowerWeb.Live.Issues.Index do
     <table :if={@issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 text-base font-light w-[68px]">Level</th>
+          <th class="py-2 text-base font-light w-[132px]">Level</th>
           <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
           <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
@@ -150,7 +151,7 @@ defmodule TowerWeb.Live.Issues.Index do
       <tbody class="font-inter">
         <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden">
           <td class="py-3">
-            <span class={["bg-tower-level-bg w-[68px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", level_class(issue.last_event.level)]}>
+            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(issue.last_event.level)]}>
               {issue.last_event.level}
             </span>
           </td>
@@ -303,17 +304,5 @@ defmodule TowerWeb.Live.Issues.Index do
 
   defp format_reason(reason) do
     inspect(reason)
-  end
-
-  defp level_class(level) when level in [:error, :alert, :emergency] do
-    "text-red-400"
-  end
-
-  defp level_class(level) when level in [:warning, :notice] do
-    "text-yellow-400"
-  end
-
-  defp level_class(_level) do
-    "text-gray-400"
   end
 end
