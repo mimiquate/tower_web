@@ -273,4 +273,195 @@ defmodule TowerWeb.CoreComponents do
     </svg>
     """
   end
+
+  attr(:title, :string, default: "Occurrences Over Time")
+  attr(:datetimes, :list, required: true)
+  attr(:datetime_range, :any, required: true)
+
+  def occurrences_chart(assigns) do
+    assigns = assign(assigns, :chart, build_chart_data(assigns.datetimes, assigns.datetime_range))
+
+    ~H"""
+    <div class="border border-tower-line-color p-4">
+      <p class="font-roboto-slab text-sm text-white mb-3">{@title}</p>
+      <svg viewBox={"0 0 #{@chart.width} #{@chart.height}"} class="w-full h-auto">
+        <line
+          :for={label <- @chart.y_labels}
+          x1={@chart.plot_left}
+          y1={label.y}
+          x2={@chart.plot_right}
+          y2={label.y}
+          stroke="#444"
+          stroke-dasharray="2,2"
+        />
+        <text :for={label <- @chart.y_labels} x={@chart.plot_left - 6} y={label.y + 3} fill="#a1a1a1" font-size="9" text-anchor="end">{label.label}</text>
+        <text :for={label <- @chart.x_labels} x={label.x} y={@chart.plot_bottom + 16} fill="#a1a1a1" font-size="9" text-anchor="middle">{label.label}</text>
+        <polyline points={Enum.map_join(@chart.points, " ", fn point -> "#{point.x},#{point.y}" end)} fill="none" stroke="#51a2ff" stroke-width="1" />
+        <rect :for={point <- @chart.points} x={point.x - 3} y={point.y - 3} width="6" height="6" fill="#51a2ff">
+          <title>{"#{point.count} occurrence#{if point.count != 1, do: "s"} — #{point.label}"}</title>
+        </rect>
+      </svg>
+    </div>
+    """
+  end
+
+  @chart_width 720
+  @chart_height 260
+  @chart_padding_left 36
+  @chart_padding_right 24
+  @chart_padding_top 12
+  @chart_padding_bottom 24
+
+  @target_buckets 10
+
+  @nice_steps [
+    60,
+    300,
+    900,
+    1_800,
+    3_600,
+    10_800,
+    21_600,
+    43_200,
+    86_400,
+    172_800,
+    259_200,
+    604_800,
+    2_592_000
+  ]
+
+  defp build_chart_data(datetimes, {from, to}) do
+    step = granularity(from, to)
+    grid_from = floor_to_step(from, step)
+    count = bucket_count(grid_from, to, step)
+    starts = bucket_starts(grid_from, count, step)
+    counts = aggregate(datetimes, grid_from, step, count)
+    # first point to last point, so the chart always fills the full width
+    duration_us = max((count - 1) * step * 1_000_000, 1)
+
+    plot = %{
+      left: @chart_padding_left,
+      right: @chart_width - @chart_padding_right,
+      width: @chart_width - @chart_padding_left - @chart_padding_right,
+      bottom: @chart_height - @chart_padding_bottom,
+      height: @chart_height - @chart_padding_top - @chart_padding_bottom
+    }
+
+    chart_max = counts |> Enum.max() |> chart_max_value()
+
+    x_labels = build_x_labels(starts, grid_from, duration_us, plot)
+    y_labels = build_y_labels(chart_max, plot)
+    points = build_points(starts, counts, grid_from, duration_us, step, chart_max, plot)
+
+    %{
+      width: @chart_width,
+      height: @chart_height,
+      plot_left: plot.left,
+      plot_right: plot.right,
+      plot_bottom: plot.bottom,
+      points: points,
+      x_labels: x_labels,
+      y_labels: y_labels
+    }
+  end
+
+  # smallest step (1m, 5m, 15m, ... 1d, 7d, 30d) that keeps the chart under ~10 buckets
+  defp granularity(from, to) do
+    duration = DateTime.diff(to, from, :second)
+
+    Enum.find(@nice_steps, List.last(@nice_steps), fn step ->
+      duration <= step * @target_buckets
+    end)
+  end
+
+  # snaps down to the grid, e.g. 12:37 -> 12:30 for a 15-min step
+  defp floor_to_step(datetime, step) do
+    unix = DateTime.to_unix(datetime, :second)
+    DateTime.from_unix!(div(unix, step) * step, :second)
+  end
+
+  # calculates the number of time buckets needed from grid_from to to, rounding up partial buckets.
+  defp bucket_count(grid_from, to, step) do
+    diff = DateTime.diff(to, grid_from, :second)
+    whole = div(diff, step)
+    if rem(diff, step) == 0, do: whole, else: whole + 1
+  end
+
+  # the start time of every bucket, e.g. 12:30, 12:45, 13:00, ...
+  defp bucket_starts(grid_from, count, step) do
+    for offset <- 0..(count - 1), do: DateTime.add(grid_from, offset * step, :second)
+  end
+
+  # counts how many events fall into each bucket
+  defp aggregate(datetimes, grid_from, step, count) do
+    frequencies =
+      Enum.frequencies_by(datetimes, fn datetime ->
+        DateTime.diff(datetime, grid_from, :second)
+        |> div(step)
+        |> min(count - 1)
+      end)
+
+    for index <- 0..(count - 1), do: Map.get(frequencies, index, 0)
+  end
+
+  # calculates the X-axis position and label for each time bucket.
+  defp build_x_labels(bucket_starts, grid_from, duration_us, plot) do
+    Enum.map(bucket_starts, fn start ->
+      x = time_to_x(start, grid_from, duration_us, plot)
+      %{x: Float.round(x, 2), label: axis_label(start, duration_us)}
+    end)
+  end
+
+  @one_day_in_microseconds 86_400 * 1_000_000
+
+  # axis text: just the date for multi-day ranges, just the time otherwise
+  defp axis_label(datetime, duration_us) when duration_us > @one_day_in_microseconds,
+    do: Calendar.strftime(datetime, "%b %d")
+
+  defp axis_label(datetime, _duration_us), do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  # tooltip text: always show the date too when buckets are sub-day, so
+  # hovering a point on a multi-day chart isn't ambiguous about which day
+  defp tooltip_label(datetime, step) when step < 86_400,
+    do: Calendar.strftime(datetime, "%b %d, %-I:%M %p")
+
+  defp tooltip_label(datetime, _step), do: Calendar.strftime(datetime, "%b %d")
+
+  defp build_y_labels(chart_max, plot) do
+    for fraction <- [0.0, 0.25, 0.5, 0.75, 1.0] do
+      %{
+        y: Float.round(plot.bottom - fraction * plot.height, 2),
+        label: round(chart_max * fraction)
+      }
+    end
+  end
+
+  defp build_points(bucket_starts, counts, grid_from, duration_us, step, chart_max, plot) do
+    bucket_starts
+    |> Enum.zip(counts)
+    |> Enum.map(fn {bucket, count} ->
+      x = time_to_x(bucket, grid_from, duration_us, plot)
+      y = plot.bottom - count / chart_max * plot.height
+
+      %{
+        x: Float.round(x, 2),
+        y: Float.round(y, 2),
+        count: count,
+        label: tooltip_label(bucket, step)
+      }
+    end)
+  end
+
+  # converts a datetime into its X position based on its relative position in the time range
+  defp time_to_x(datetime, grid_from, duration_us, plot) do
+    fraction = DateTime.diff(datetime, grid_from, :microsecond) / duration_us
+    plot.left + fraction * plot.width
+  end
+
+  defp chart_max_value(0), do: 4
+
+  defp chart_max_value(max_count) do
+    step = if max_count <= 20, do: 4, else: 20
+    ceil(max_count / step) * step
+  end
 end

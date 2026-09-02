@@ -8,6 +8,7 @@ defmodule TowerWeb.Live.Issues.Show do
   alias TowerWeb.Live.Paths
 
   @recent_events_limit 10
+  @occurrences_chart_max_events 500
 
   @impl Phoenix.LiveView
   def mount(%{"id" => id}, session, socket) do
@@ -24,10 +25,26 @@ defmodule TowerWeb.Live.Issues.Show do
         {:ok, socket}
 
       issue ->
+        chart_datetime_range = Filters.datetime_range("last_30d")
+
+        show_chart = issue.count_events <= @occurrences_chart_max_events
+
+        chart_datetimes =
+          if show_chart do
+            Events.list_events(
+              limit: @occurrences_chart_max_events,
+              filters: [similarity_id: id, datetime_range: chart_datetime_range],
+              select: [:datetime]
+            )
+            |> Enum.map(& &1.datetime)
+          else
+            []
+          end
+
         recent_events =
           Events.list_events(
             limit: @recent_events_limit,
-            filters: [similarity_id: id, datetime_range: Filters.datetime_range("last_30d")]
+            filters: [similarity_id: id, datetime_range: chart_datetime_range]
           )
 
         {:ok,
@@ -35,6 +52,9 @@ defmodule TowerWeb.Live.Issues.Show do
            issue: issue,
            recent_events: recent_events,
            recent_events_limit: @recent_events_limit,
+           show_chart: show_chart,
+           chart_datetimes: chart_datetimes,
+           chart_datetime_range: chart_datetime_range,
            base_path: base_path,
            issues_base_path: issues_base_path,
            occurrences_base_path: "#{base_path}/occurrences",
@@ -115,6 +135,10 @@ defmodule TowerWeb.Live.Issues.Show do
             <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_seen)} {DatetimeFormatter.format_time(@issue.last_seen)}</span>
           </div>
         </div>
+      </div>
+
+      <div :if={@show_chart} class="mb-6">
+        <.occurrences_chart datetimes={@chart_datetimes} datetime_range={@chart_datetime_range} />
       </div>
 
       <div class="border border-tower-line-color p-6">

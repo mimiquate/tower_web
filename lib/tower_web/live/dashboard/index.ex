@@ -6,6 +6,8 @@ defmodule TowerWeb.Live.Dashboard.Index do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Paths
 
+  @occurrences_chart_max_events 500
+
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
     base_path = session["base_path"]
@@ -34,10 +36,28 @@ defmodule TowerWeb.Live.Dashboard.Index do
         datetime_range: datetime_range
       )
 
+    total_occurrences = Events.count_events(filters: filters)
+    show_chart = total_occurrences <= @occurrences_chart_max_events
+
+    chart_datetimes =
+      if show_chart do
+        Events.list_events(
+          limit: @occurrences_chart_max_events,
+          filters: filters,
+          select: [:datetime]
+        )
+        |> Enum.map(& &1.datetime)
+      else
+        []
+      end
+
     {:noreply,
      assign(socket,
        total_errors: Issues.count_issues(filters: filters),
-       total_occurrences: Events.count_events(filters: filters),
+       total_occurrences: total_occurrences,
+       show_chart: show_chart,
+       chart_datetimes: chart_datetimes,
+       chart_datetime_range: datetime_range,
        search_query: search,
        selected_level: level,
        datetime_range_param: datetime_range_param
@@ -69,9 +89,13 @@ defmodule TowerWeb.Live.Dashboard.Index do
       </div>
     </div>
 
-    <div class="flex gap-3 items-start w-full">
+    <div class="flex gap-3 items-start w-full mb-6">
       <.metric_card label="Total Errors" value={@total_errors} />
       <.metric_card label="Total Occurrences" value={@total_occurrences} />
+    </div>
+
+    <div :if={@show_chart} class="mb-6">
+      <.occurrences_chart datetimes={@chart_datetimes} datetime_range={@chart_datetime_range} />
     </div>
     """
   end
