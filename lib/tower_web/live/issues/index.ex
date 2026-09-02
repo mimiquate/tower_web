@@ -305,12 +305,12 @@ defmodule TowerWeb.Live.Issues.Index do
     inspect(reason)
   end
 
-  defp level_class(level) when level in [:error, :alert, :emergency] do
-    "text-red-400"
+  defp level_class(level) when level in [:error, :alert, :emergency, :critical] do
+    "text-red-500"
   end
 
-  defp level_class(level) when level in [:warning, :notice] do
-    "text-yellow-400"
+  defp level_class(level) when level in [:warning] do
+    "text-yellow-500"
   end
 
   defp level_class(_level) do

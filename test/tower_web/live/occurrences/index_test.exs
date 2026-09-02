@@ -149,8 +149,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         })
 
       # Error = red, Warning = yellow, Info = gray
-      assert html =~ "text-red-400"
-      assert html =~ "text-yellow-400"
+      assert html =~ "text-red-500"
+      assert html =~ "text-yellow-500"
       assert html =~ "text-gray-400"
     end
 
