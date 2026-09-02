@@ -22,7 +22,11 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
           levels: Level.levels(),
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
-          datetime_range_menu_open: false
+          datetime_range_from: "",
+          datetime_range_to: "",
+          datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
+          flash: %{}
         })
 
       assert html =~ "Total Errors"

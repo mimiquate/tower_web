@@ -52,7 +52,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           issues_base_path: "/tower/issues",
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           flash: %{}
         })
 
@@ -295,6 +298,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         issues_base_path: "/tower/issues",
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
+        datetime_range_custom_open: false,
         flash: %{}
       }
     }
