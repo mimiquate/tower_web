@@ -5,6 +5,7 @@ defmodule TowerWeb.Live.Issues.Show do
   alias TowerDB.Issues
   alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Paths
 
   @recent_events_limit 10
@@ -77,7 +78,7 @@ defmodule TowerWeb.Live.Issues.Show do
       <div class="border border-tower-line-color p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-roboto-slab text-lg text-white font-light">Description</h2>
-          <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", level_class(@issue.last_event.level)]}>
+          <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(@issue.last_event.level)]}>
             {@issue.last_event.level}
           </span>
         </div>
@@ -144,7 +145,7 @@ defmodule TowerWeb.Live.Issues.Show do
             </.link>
             <span class="text-sm text-tower-text-secondary line-clamp-1">{format_reason(event.reason)}</span>
           </div>
-          <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center shrink-0", level_class(event.level)]}>
+          <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center shrink-0", Level.level_class(event.level)]}>
             {event.level}
           </span>
         </div>
@@ -190,17 +191,5 @@ defmodule TowerWeb.Live.Issues.Show do
 
   defp reason_exceeds_limit?(reason, limit) do
     String.length(inspect(reason, pretty: true)) > limit
-  end
-
-  defp level_class(level) when level in [:error, :alert, :emergency] do
-    "text-red-400"
-  end
-
-  defp level_class(level) when level in [:warning, :notice] do
-    "text-yellow-400"
-  end
-
-  defp level_class(_level) do
-    "text-gray-400"
   end
 end

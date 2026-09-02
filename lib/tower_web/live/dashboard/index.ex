@@ -4,6 +4,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
   alias TowerDB.Events
   alias TowerDB.Issues
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Paths
 
   @impl Phoenix.LiveView
@@ -16,14 +17,14 @@ defmodule TowerWeb.Live.Dashboard.Index do
        dashboard_base_path: "#{base_path}/dashboard",
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
-       levels: Filters.levels()
+       levels: Level.levels()
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> Filters.validate_level()
+    level = params |> Map.get("level", "") |> Level.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
     datetime_range = Filters.datetime_range(datetime_range_param)
 

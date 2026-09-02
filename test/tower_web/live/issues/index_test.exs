@@ -6,6 +6,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
   alias TowerDB.Events
   alias TowerDB.Issues
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Issues.Index, as: IssuesIndex
 
   describe "render/1" do
@@ -44,7 +45,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: Filters.levels(),
+          levels: Level.levels(),
           page: 1,
           total_pages: 1,
           base_path: "/tower",
@@ -252,7 +253,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         __changed__: %{},
         search_query: "",
         selected_level: nil,
-        levels: Filters.levels(),
+        levels: Level.levels(),
         base_path: "/tower",
         issues_base_path: "/tower/issues",
         datetime_range_options: Filters.datetime_range_options(),
