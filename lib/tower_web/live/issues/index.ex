@@ -248,8 +248,7 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_custom_range", _params, socket) do
-    {:noreply,
-     assign(socket, datetime_range_custom_open: !socket.assigns.datetime_range_custom_open)}
+    {:noreply, assign(socket, Filters.toggle_custom_range(socket.assigns))}
   end
 
   @impl Phoenix.LiveView
@@ -276,7 +275,7 @@ defmodule TowerWeb.Live.Issues.Index do
   def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
     if Filters.datetime_range("custom", from, to) == [] do
       Process.send_after(self(), :clear_flash, 3000)
-      {:noreply, put_flash(socket, :error, "Please select at least one valid date")}
+      {:noreply, put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
     else
       {:noreply,
        socket

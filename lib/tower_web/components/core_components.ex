@@ -182,22 +182,11 @@ defmodule TowerWeb.CoreComponents do
           <form
             :if={@datetime_range_custom_open}
             phx-submit="filter_datetime_range_custom"
-            class="absolute left-full top-0 ml-1 z-10 flex flex-col gap-2 p-2 min-w-max bg-tower-bg border border-tower-line-color"
+            class="absolute left-full top-0 ml-1 z-10 flex flex-col gap-3 p-3 min-w-max bg-tower-bg border border-tower-line-color"
           >
-            <div class="flex items-center gap-2">
-              <input
-                type="date"
-                name="from"
-                value={@datetime_range_from}
-                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none [color-scheme:dark]"
-              />
-              <span class="text-sm text-white">to</span>
-              <input
-                type="date"
-                name="to"
-                value={@datetime_range_to}
-                class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1 px-2 outline-none [color-scheme:dark]"
-              />
+            <div class="flex items-start gap-3">
+              <.custom_date_input label="Start Date" name="from" value={@datetime_range_from} />
+              <.custom_date_input label="End Date" name="to" value={@datetime_range_to} />
             </div>
             <button type="submit" class="font-inter font-light text-sm text-white bg-tower-line-color hover:bg-tower-active py-1 px-2 cursor-pointer">
               Apply
@@ -206,6 +195,26 @@ defmodule TowerWeb.CoreComponents do
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:label, :string, required: true)
+  attr(:name, :string, required: true)
+  attr(:value, :string, required: true)
+
+  defp custom_date_input(assigns) do
+    ~H"""
+    <label class="flex flex-col gap-1">
+      <span class="font-inter font-light text-xs text-tower-text-secondary">{@label}</span>
+      <input
+        type="text"
+        name={@name}
+        value={@value}
+        placeholder="YYYY-MM-DD HH:MM:SS"
+        autocomplete="off"
+        class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1.5 px-2 outline-none focus:border-tower-active w-[190px]"
+      />
+    </label>
     """
   end
 

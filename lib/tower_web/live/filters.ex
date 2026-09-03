@@ -17,6 +17,25 @@ defmodule TowerWeb.Live.Filters do
   def levels, do: @levels
   def datetime_range_options, do: @datetime_range_options
 
+  def default_custom_range do
+    to = DateTime.utc_now()
+    from = DateTime.add(to, -@max_custom_range_days, :day)
+
+    {format_datetime(from), format_datetime(to)}
+  end
+
+  def toggle_custom_range(assigns) do
+    custom_open = !assigns.datetime_range_custom_open
+
+    if custom_open and assigns.datetime_range_from in [nil, ""] and
+         assigns.datetime_range_to in [nil, ""] do
+      {from, to} = default_custom_range()
+      %{datetime_range_custom_open: true, datetime_range_from: from, datetime_range_to: to}
+    else
+      %{datetime_range_custom_open: custom_open}
+    end
+  end
+
   def datetime_range(datetime_range_param, from \\ nil, to \\ nil)
 
   def datetime_range("custom", from, to) when from in [nil, ""] and to in [nil, ""] do
@@ -43,9 +62,29 @@ defmodule TowerWeb.Live.Filters do
   defp custom_bound(value, _time, default) when value in [nil, ""], do: {:ok, default}
 
   defp custom_bound(value, time, _default) do
-    with {:ok, date} <- Date.from_iso8601(value) do
-      DateTime.new(date, time, "Etc/UTC")
+    trimmed = String.trim(value)
+
+    with {:error, _} <- date_only(trimmed, time) do
+      full_datetime(trimmed)
     end
+  end
+
+  defp date_only(value, time) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> DateTime.new(date, time, "Etc/UTC")
+      error -> error
+    end
+  end
+
+  defp full_datetime(value) do
+    case parse_flexible_naive_datetime(value) do
+      {:ok, naive} -> DateTime.from_naive(naive, "Etc/UTC")
+      error -> error
+    end
+  end
+
+  defp parse_flexible_naive_datetime(value) do
+    NaiveDateTime.from_iso8601(String.replace(value, " ", "T", global: false))
   end
 
   defp compare(from_dt, to_dt) do
@@ -84,11 +123,21 @@ defmodule TowerWeb.Live.Filters do
   end
 
   defp format_custom_date(value) do
-    case Date.from_iso8601(value) do
-      {:ok, date} -> Calendar.strftime(date, "%b %-d")
-      _ -> value
+    trimmed = String.trim(value)
+
+    case parse_flexible_naive_datetime(trimmed) do
+      {:ok, naive} ->
+        Calendar.strftime(naive, "%b %-d, %H:%M")
+
+      _ ->
+        case Date.from_iso8601(trimmed) do
+          {:ok, date} -> Calendar.strftime(date, "%b %-d")
+          _ -> trimmed
+        end
     end
   end
+
+  defp format_datetime(datetime), do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S")
 
   def parse_issue_ids(""), do: []
 
