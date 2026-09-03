@@ -5,6 +5,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   alias TowerDB.Events
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
 
   describe "render/1" do
@@ -15,7 +16,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: Filters.levels(),
+          levels: Level.levels(),
           page: 1,
           total_pages: 1,
           total_count: 0,
@@ -69,7 +70,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: Filters.levels(),
+          levels: Level.levels(),
           page: 1,
           total_pages: 1,
           total_count: 2,
@@ -136,7 +137,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: Filters.levels(),
+          levels: Level.levels(),
           page: 1,
           total_pages: 1,
           total_count: 3,
@@ -149,8 +150,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         })
 
       # Error = red, Warning = yellow, Info = gray
-      assert html =~ "text-red-400"
-      assert html =~ "text-yellow-400"
+      assert html =~ "text-red-500"
+      assert html =~ "text-yellow-500"
       assert html =~ "text-gray-400"
     end
 
@@ -176,7 +177,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
-          levels: Filters.levels(),
+          levels: Level.levels(),
           page: 1,
           total_pages: 1,
           total_count: 1,
@@ -675,7 +676,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         search_query: "",
         selected_level: nil,
         issue_ids_filtered: [],
-        levels: Filters.levels(),
+        levels: Level.levels(),
         base_path: "/tower",
         flash: %{},
         occurrences_base_path: "/tower/occurrences",

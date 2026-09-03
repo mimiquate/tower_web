@@ -3,7 +3,6 @@ defmodule TowerWeb.Live.Filters do
 
   alias TowerWeb.DatetimePresets
 
-  @levels ~w(emergency alert critical error warning notice info)
   @datetime_range_options [
     {"Last hour", "last_hour"},
     {"Last 24 hours", "last_24h"},
@@ -13,11 +12,7 @@ defmodule TowerWeb.Live.Filters do
     {"All time", "all_time"}
   ]
 
-  def levels, do: @levels
   def datetime_range_options, do: @datetime_range_options
-
-  def validate_level(level) when level in @levels, do: level
-  def validate_level(_level), do: nil
 
   def datetime_range(datetime_range_param) do
     case DatetimePresets.cast(datetime_range_param) do

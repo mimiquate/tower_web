@@ -4,6 +4,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerDB.Events
   alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
 
@@ -29,7 +30,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> Filters.validate_level()
+    level = params |> Map.get("level", "") |> Level.validate_level()
     datetime_range_param = params["datetime_range"] || "last_7d"
     datetime_range = Filters.datetime_range(datetime_range_param)
     issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
@@ -90,7 +91,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
              search_query: search,
              selected_level: level,
              issue_ids_filtered: issue_ids,
-             levels: Filters.levels(),
+             levels: Level.levels(),
              datetime_range_param: datetime_range_param
            )}
         end
@@ -191,7 +192,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             </div>
           </td>
           <td class="py-3">
-            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", level_class(event.level)]}>{event.level}</span>
+            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(event.level)]}>{event.level}</span>
           </td>
         </tr>
       </tbody>
@@ -314,17 +315,5 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp format_reason(reason) do
     inspect(reason)
-  end
-
-  defp level_class(level) when level in [:error, :alert, :emergency] do
-    "text-red-400"
-  end
-
-  defp level_class(level) when level in [:warning, :notice] do
-    "text-yellow-400"
-  end
-
-  defp level_class(_level) do
-    "text-gray-400"
   end
 end

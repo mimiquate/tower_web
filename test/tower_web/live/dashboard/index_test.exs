@@ -6,6 +6,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
   alias TowerDB.Events
   alias TowerWeb.Live.Dashboard.Index, as: Dashboard
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
 
   describe "render/1" do
     test "shows total errors and total occurrences" do
@@ -18,7 +19,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
           chart_datetime_range: Filters.datetime_range("last_7d"),
           search_query: "",
           selected_level: nil,
-          levels: Filters.levels(),
+          levels: Level.levels(),
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
           datetime_range_menu_open: false
@@ -162,7 +163,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
         dashboard_base_path: "/tower/dashboard",
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
-        levels: Filters.levels()
+        levels: Level.levels()
       }
     }
   end
