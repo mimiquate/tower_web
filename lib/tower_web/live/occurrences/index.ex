@@ -200,6 +200,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               type="checkbox"
               phx-click="toggle_select_all"
               checked={visible_ids_selected?(@filtered_events, @selected_occurrences_ids)}
+              class="accent-tower-active [color-scheme:dark]"
             />
           </th>
           <th class="py-2 text-base font-light w-[132px]">Timestamp</th>
@@ -208,13 +209,17 @@ defmodule TowerWeb.Live.Occurrences.Index do
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden">
+        <tr :for={event <- @filtered_events} class="group border-b border-tower-line-color h-24 overflow-hidden">
           <td class="py-3 w-8">
             <input
               type="checkbox"
               phx-click="toggle_select"
               phx-value-id={event.id}
               checked={MapSet.member?(@selected_occurrences_ids, event.id)}
+              class={[
+                "accent-tower-active [color-scheme:dark] opacity-0 group-hover:opacity-100 focus:opacity-100",
+                MapSet.member?(@selected_occurrences_ids, event.id) && "opacity-100"
+              ]}
             />
           </td>
           <td class="py-3">
