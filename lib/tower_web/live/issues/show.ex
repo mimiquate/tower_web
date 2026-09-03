@@ -148,10 +148,10 @@ defmodule TowerWeb.Live.Issues.Show do
           <div class="flex items-center gap-3">
             <span class="text-sm font-medium text-tower-text-secondary">Last {@recent_events_limit}</span>
             <.link
-              navigate={Paths.index_path(@occurrences_base_path, [issue_ids: @issue.id, datetime_range: "last_30d"], %{page: 1})}
+              navigate={Paths.index_path(@occurrences_base_path, [issue_ids: @issue.id, datetime_range: "all_time"], %{page: 1})}
               class="bg-tower-line-color text-white text-sm px-2 py-1"
             >
-              See more
+              See all
             </.link>
           </div>
         </div>

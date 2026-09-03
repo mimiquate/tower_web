@@ -8,7 +8,8 @@ defmodule TowerWeb.Live.Filters do
     {"Last 24 hours", "last_24h"},
     {"Last 7 days", "last_7d"},
     {"Last 14 days", "last_14d"},
-    {"Last 30 days", "last_30d"}
+    {"Last 30 days", "last_30d"},
+    {"All time", "all_time"}
   ]
 
   def datetime_range_options, do: @datetime_range_options
