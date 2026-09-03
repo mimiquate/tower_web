@@ -5,7 +5,7 @@ defmodule TowerWeb.MixProject do
     [
       app: :tower_web,
       description: "Phoenix LiveView dashboard for browsing Tower error events",
-      version: "0.4.0",
+      version: "0.5.0",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -27,7 +27,7 @@ defmodule TowerWeb.MixProject do
 
   defp deps do
     [
-      {:tower_db, "~> 0.6"},
+      {:tower_db, "~> 0.7"},
       {:phoenix_live_view, "~> 1.1"}
     ]
   end
@@ -40,7 +40,6 @@ defmodule TowerWeb.MixProject do
 
   defp package do
     [
-      organization: "mimiquate",
       licenses: ["Apache-2.0"],
       links: %{}
     ]
