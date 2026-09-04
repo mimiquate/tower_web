@@ -92,7 +92,7 @@ defmodule TowerWeb.Live.Issues.Show do
 
       <div class="flex flex-col gap-3 mb-8">
         <span class="inline-flex bg-tower-active font-mono text-lg text-white px-2 w-fit">ID: #{@issue.id}</span>
-        <p class="font-mono text-lg text-white line-clamp-1">{format_reason(@issue.last_event.reason)}</p>
+        <p class="font-mono text-lg text-white line-clamp-1">{@issue.last_event.normalized_reason}</p>
       </div>
 
       <div class="border border-tower-line-color p-6 mb-6">
@@ -103,9 +103,9 @@ defmodule TowerWeb.Live.Issues.Show do
           </span>
         </div>
         <div class="mb-6">
-          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: format_reason(@issue.last_event.reason), else: format_reason(@issue.last_event.reason, 500)}</pre>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: @issue.last_event.normalized_reason, else: truncate_reason(@issue.last_event.normalized_reason, 500)}</pre>
           <button
-            :if={reason_exceeds_limit?(@issue.last_event.reason, 500)}
+            :if={reason_exceeds_limit?(@issue.last_event.normalized_reason, 500)}
             phx-click="toggle_reason"
             class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
           >
@@ -167,7 +167,7 @@ defmodule TowerWeb.Live.Issues.Show do
             <.link navigate={"#{@occurrences_base_path}/#{event.id}"} class="text-sm text-tower-text-primary hover:text-white transition-colors truncate">
               #{event.id}
             </.link>
-            <span class="text-sm text-tower-text-secondary line-clamp-1">{format_reason(event.reason)}</span>
+            <span class="text-sm text-tower-text-secondary line-clamp-1">{event.normalized_reason}</span>
           </div>
           <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center shrink-0", Level.level_class(event.level)]}>
             {event.level}
@@ -178,42 +178,15 @@ defmodule TowerWeb.Live.Issues.Show do
     """
   end
 
-  defp format_reason(reason, limit \\ nil)
-
-  defp format_reason(reason, limit) when is_exception(reason) do
-    Exception.format(:error, reason)
-    |> maybe_truncate(limit)
-  end
-
-  defp format_reason(reason, limit) when is_binary(reason) do
-    maybe_truncate(reason, limit)
-  end
-
-  defp format_reason(reason, limit) do
-    reason
-    |> inspect(pretty: true)
-    |> maybe_truncate(limit)
-  end
-
-  defp maybe_truncate(text, nil), do: text
-
-  defp maybe_truncate(text, max_length) do
-    if String.length(text) > max_length do
-      String.slice(text, 0, max_length) <> "..."
+  defp truncate_reason(reason, max_length) do
+    if String.length(reason) > max_length do
+      String.slice(reason, 0, max_length) <> "..."
     else
-      text
+      reason
     end
   end
 
-  defp reason_exceeds_limit?(reason, limit) when is_exception(reason) do
-    String.length(Exception.format(:error, reason)) > limit
-  end
-
-  defp reason_exceeds_limit?(reason, limit) when is_binary(reason) do
-    String.length(reason) > limit
-  end
-
   defp reason_exceeds_limit?(reason, limit) do
-    String.length(inspect(reason, pretty: true)) > limit
+    String.length(reason) > limit
   end
 end

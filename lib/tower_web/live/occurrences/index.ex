@@ -197,7 +197,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               >
                 #{event.id}
               </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
+              <span class="text-sm text-tower-text-secondary line-clamp-2">{event.normalized_reason}</span>
             </div>
           </td>
           <td class="py-3">
@@ -312,17 +312,5 @@ defmodule TowerWeb.Live.Occurrences.Index do
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
-  end
-
-  defp format_reason(reason) when is_exception(reason) do
-    Exception.format(:error, reason)
-  end
-
-  defp format_reason(reason) when is_binary(reason) do
-    reason
-  end
-
-  defp format_reason(reason) do
-    inspect(reason)
   end
 end
