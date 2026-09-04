@@ -81,7 +81,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
         <button
           type="button"
           phx-click="show_delete_modal"
-          class="font-inter text-sm text-red-500 border border-red-500 w-24 h-8 px-2 py-1 mb-6"
+          class="font-inter text-sm text-red-500 border border-red-500 w-24 h-8 px-2 py-1 mb-6 hover:bg-red-400/10"
         >
           Delete
         </button>

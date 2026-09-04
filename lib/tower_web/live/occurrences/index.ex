@@ -182,7 +182,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <table :if={@filtered_events != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 w-8">
+          <th class="py-2 pl-2 w-8">
             <input
               type="checkbox"
               phx-click="toggle_select_all"
@@ -213,7 +213,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       </thead>
       <tbody class="font-inter">
         <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
-          <td class="py-3 w-8">
+          <td class="py-3 pl-2 w-8">
             <input
               type="checkbox"
               phx-click="toggle_select"

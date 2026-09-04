@@ -315,14 +315,14 @@ defmodule TowerWeb.CoreComponents do
           <button
             type="button"
             phx-click={@cancel_event}
-            class="flex-1 font-inter text-sm text-tower-text-secondary border border-tower-text-secondary px-2 py-1"
+            class="flex-1 font-inter text-sm text-tower-text-secondary border border-tower-text-secondary px-2 py-1 hover:bg-tower-text-secondary/10"
           >
             {@cancel_label}
           </button>
           <button
             type="button"
             phx-click={@confirm_event}
-            class="flex-1 font-inter text-sm text-red-500 border border-red-500 px-2 py-1"
+            class="flex-1 font-inter text-sm text-red-500 border border-red-500 px-2 py-1 hover:bg-red-400/10"
           >
             {@confirm_label}
           </button>
