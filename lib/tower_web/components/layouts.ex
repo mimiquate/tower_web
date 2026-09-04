@@ -3,6 +3,9 @@ defmodule TowerWeb.Layouts do
 
   use TowerWeb.Web, :html
 
+  alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Paths
+
   phoenix_js_paths =
     for app <- ~w[phoenix phoenix_html phoenix_live_view]a do
       path = Application.app_dir(app, ["priv", "static", "#{app}.js"])
@@ -28,6 +31,7 @@ defmodule TowerWeb.Layouts do
 
   attr(:socket, Phoenix.LiveView.Socket, required: true)
   attr(:base_path, :string, required: true)
+  attr(:current_filters, :list, default: [])
 
   def sidebar(assigns) do
     app_name = extract_app_name(assigns.socket)
@@ -35,7 +39,7 @@ defmodule TowerWeb.Layouts do
     assigns =
       assigns
       |> assign(:app_name, app_name)
-      |> assign(:items, sidebar_items(assigns.base_path))
+      |> assign(:items, sidebar_items(assigns.base_path, assigns.current_filters))
       |> assign(:current_view, assigns.socket.view)
 
     ~H"""
@@ -73,22 +77,37 @@ defmodule TowerWeb.Layouts do
     """
   end
 
-  defp sidebar_items(base_path) do
+  defp sidebar_items(base_path, current_filters) do
     [
       %{
-        href: "#{base_path}/dashboard",
+        href:
+          Paths.index_path(
+            "#{base_path}/dashboard",
+            Filters.for_path(current_filters, TowerWeb.Live.Dashboard.Index.allowed_filter_keys())
+          ),
         label: "Dashboard",
         views: [TowerWeb.Live.Dashboard.Index],
         icon: &dashboard_icon/1
       },
       %{
-        href: "#{base_path}/issues",
+        href:
+          Paths.index_path(
+            "#{base_path}/issues",
+            Filters.for_path(current_filters, TowerWeb.Live.Issues.Index.allowed_filter_keys())
+          ),
         label: "Issues",
         views: [TowerWeb.Live.Issues.Index, TowerWeb.Live.Issues.Show],
         icon: &issues_icon/1
       },
       %{
-        href: "#{base_path}/occurrences",
+        href:
+          Paths.index_path(
+            "#{base_path}/occurrences",
+            Filters.for_path(
+              current_filters,
+              TowerWeb.Live.Occurrences.Index.allowed_filter_keys()
+            )
+          ),
         label: "Occurrences",
         views: [TowerWeb.Live.Occurrences.Index, TowerWeb.Live.Occurrences.Show],
         icon: &occurrences_icon/1
@@ -103,13 +122,17 @@ defmodule TowerWeb.Layouts do
   def sidebar_item(assigns) do
     ~H"""
     <li>
+      <.link
+        :if={not @active}
+        navigate={@href}
+        class="flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm"
+      >
+        {render_slot(@inner_block)}
+      </.link>
       <a
-        href={unless @active, do: @href}
-        onclick={if @active, do: "return false"}
-        class={[
-          "flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm",
-          @active && "bg-tower-active"
-        ]}
+        :if={@active}
+        onclick="return false"
+        class="flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm bg-tower-active"
       >
         {render_slot(@inner_block)}
       </a>

@@ -9,6 +9,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Paths
 
   @per_page 20
+  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
+
+  def allowed_filter_keys, do: @allowed_filter_keys
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -40,7 +43,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, similarity_id: issue_ids)}",
+             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}",
            replace: true
          )}
 
@@ -92,7 +95,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
              selected_level: level,
              issue_ids_filtered: issue_ids,
              levels: Level.levels(),
-             datetime_range_param: datetime_range_param
+             datetime_range_param: datetime_range_param,
+             current_filters: [
+               search: search,
+               level: level,
+               datetime_range: datetime_range_param,
+               issue_ids: issue_ids
+             ]
            )}
         end
     end
@@ -182,7 +191,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               >
                 #{event.id}
               </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-2">{format_reason(event.reason)}</span>
+              <span class="text-sm text-tower-text-secondary line-clamp-2">{event.normalized_reason}</span>
             </div>
           </td>
           <td class="py-3 pl-6">
@@ -303,17 +312,5 @@ defmodule TowerWeb.Live.Occurrences.Index do
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
-  end
-
-  defp format_reason(reason) when is_exception(reason) do
-    Exception.format(:error, reason)
-  end
-
-  defp format_reason(reason) when is_binary(reason) do
-    reason
-  end
-
-  defp format_reason(reason) do
-    inspect(reason)
   end
 end

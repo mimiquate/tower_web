@@ -667,6 +667,59 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
   end
 
+  describe "allowed_filter_keys/0" do
+    test "supports search, level, datetime_range, and issue_ids" do
+      assert Occurrences.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
+    end
+  end
+
+  describe "handle_params current_filters" do
+    test "assigns current_filters with the resolved filters, including issue_ids, following the same page-1 redirect a fresh nav takes" do
+      {:noreply, redirected_socket} =
+        Occurrences.handle_params(
+          %{
+            "search" => "timeout",
+            "level" => "error",
+            "datetime_range" => "last_30d",
+            "issue_ids" => "1,2"
+          },
+          "/tower/occurrences",
+          socket_with_occurrences()
+        )
+
+      assert {:live, :patch, %{to: to}} = redirected_socket.redirected
+
+      %URI{query: query} = URI.parse(to)
+      redirected_params = URI.decode_query(query)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          redirected_params,
+          "/tower/occurrences",
+          socket_with_occurrences()
+        )
+
+      assert socket.assigns.current_filters == [
+               search: "timeout",
+               level: "error",
+               datetime_range: "last_30d",
+               issue_ids: ["1", "2"]
+             ]
+    end
+  end
+
+  defp socket_with_occurrences do
+    %Phoenix.LiveView.Socket{
+      assigns: %{
+        __changed__: %{},
+        base_path: "/tower",
+        occurrences_base_path: "/tower/occurrences",
+        datetime_range_options: Filters.datetime_range_options(),
+        datetime_range_menu_open: false
+      }
+    }
+  end
+
   defp socket_with_events(events) do
     %Phoenix.LiveView.Socket{
       assigns: %{

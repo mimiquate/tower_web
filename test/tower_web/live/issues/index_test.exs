@@ -247,6 +247,43 @@ defmodule TowerWeb.Live.Issues.IndexTest do
     end
   end
 
+  describe "allowed_filter_keys/0" do
+    test "supports search, level, datetime_range, and issue_ids" do
+      assert IssuesIndex.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
+    end
+  end
+
+  describe "handle_params current_filters" do
+    test "assigns current_filters with the resolved filters, including issue_ids, following the same page-1 redirect a fresh nav takes" do
+      {:noreply, redirected_socket} =
+        IssuesIndex.handle_params(
+          %{
+            "search" => "timeout",
+            "level" => "error",
+            "datetime_range" => "last_30d",
+            "issue_ids" => "1,2"
+          },
+          "/tower/issues",
+          socket_with_issues()
+        )
+
+      assert {:live, :patch, %{to: to}} = redirected_socket.redirected
+
+      %URI{query: query} = URI.parse(to)
+      redirected_params = URI.decode_query(query)
+
+      {:noreply, socket} =
+        IssuesIndex.handle_params(redirected_params, "/tower/issues", socket_with_issues())
+
+      assert socket.assigns.current_filters == [
+               search: "timeout",
+               level: "error",
+               datetime_range: "last_30d",
+               issue_ids: ["1", "2"]
+             ]
+    end
+  end
+
   defp socket_with_issues do
     %Phoenix.LiveView.Socket{
       assigns: %{

@@ -119,12 +119,12 @@ defmodule TowerWeb.Live.Occurrences.Show do
       </div>
 
       <div class="font-mono text-white mb-8">
-        <div class="text-lg line-clamp-1">{format_reason(@event.reason)}</div>
+        <div class="text-lg line-clamp-1">{@event.normalized_reason}</div>
         <div class="mt-4">
-          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: format_reason(@event.reason), else: format_reason(@event.reason, 500)}</pre>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: @event.normalized_reason, else: truncate_reason(@event.normalized_reason, 500)}</pre>
         </div>
         <button
-          :if={reason_exceeds_limit?(@event.reason, 500)}
+          :if={reason_exceeds_limit?(@event.normalized_reason, 500)}
           phx-click="toggle_reason"
           class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
         >
@@ -155,43 +155,16 @@ defmodule TowerWeb.Live.Occurrences.Show do
     """
   end
 
-  defp format_reason(reason, limit \\ nil)
-
-  defp format_reason(reason, limit) when is_exception(reason) do
-    Exception.format(:error, reason)
-    |> maybe_truncate(limit)
-  end
-
-  defp format_reason(reason, limit) when is_binary(reason) do
-    maybe_truncate(reason, limit)
-  end
-
-  defp format_reason(reason, limit) do
-    reason
-    |> inspect(pretty: true)
-    |> maybe_truncate(limit)
-  end
-
-  defp maybe_truncate(text, nil), do: text
-
-  defp maybe_truncate(text, max_length) do
-    if String.length(text) > max_length do
-      String.slice(text, 0, max_length) <> "..."
+  defp truncate_reason(reason, max_length) do
+    if String.length(reason) > max_length do
+      String.slice(reason, 0, max_length) <> "..."
     else
-      text
+      reason
     end
   end
 
-  defp reason_exceeds_limit?(reason, limit) when is_exception(reason) do
-    String.length(Exception.format(:error, reason)) > limit
-  end
-
-  defp reason_exceeds_limit?(reason, limit) when is_binary(reason) do
-    String.length(reason) > limit
-  end
-
   defp reason_exceeds_limit?(reason, limit) do
-    String.length(inspect(reason, pretty: true)) > limit
+    String.length(reason) > limit
   end
 
   defp format_stacktrace(nil), do: "No stacktrace available"
