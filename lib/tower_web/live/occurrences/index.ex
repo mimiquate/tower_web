@@ -121,7 +121,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
-    <div class="flex flex-col gap-3 mb-4">
+    <div class="flex flex-col gap-3 mb-3">
       <.search_filter search_query={@search_query} />
 
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
@@ -151,7 +151,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <% selected_count = MapSet.size(@selected_occurrences_ids) %>
 
-    <div :if={@filtered_events != []} class="flex items-center gap-3 mb-2">
+    <div class={[
+      "w-full px-3 py-2 flex items-center gap-3 border border-tower-line-color mb-2",
+      (@filtered_events == [] or selected_count == 0) && "invisible"
+    ]}>
       <span class="font-inter text-sm text-tower-text-secondary">
         {selected_count} selected
       </span>
@@ -167,10 +170,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.confirm_modal
       show={@show_delete_modal}
-      title="Are you sure you want to delete the selected occurrences?"
+      title={"Are you sure you want to delete #{selected_count} occurrence(s)?"}
       cancel_event="cancel_delete_selected"
       confirm_event="delete_selected"
-      confirm_label={"Delete #{selected_count} occurrence(s) selected"}
+      confirm_label="Delete"
     />
 
     <div
@@ -209,7 +212,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={event <- @filtered_events} class="group border-b border-tower-line-color h-24 overflow-hidden">
+        <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden">
           <td class="py-3 w-8">
             <input
               type="checkbox"
@@ -217,7 +220,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               phx-value-id={event.id}
               checked={MapSet.member?(@selected_occurrences_ids, event.id)}
               class={[
-                "accent-tower-active [color-scheme:dark] opacity-0 group-hover:opacity-100 focus:opacity-100",
+                "accent-tower-active [color-scheme:dark]",
                 MapSet.member?(@selected_occurrences_ids, event.id) && "opacity-100"
               ]}
             />
