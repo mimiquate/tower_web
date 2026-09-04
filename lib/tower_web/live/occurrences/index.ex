@@ -153,7 +153,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.confirm_modal
       show={@show_delete_modal}
-      title={"Are you sure you want to delete #{selected_count} occurrence(s)?"}
+      title="Delete occurrence(s)?"
+      description={"Are you sure you want to delete #{selected_count} occurrence(s)? This action cannot be undone."}
       cancel_event="cancel_delete_selected"
       confirm_event="delete_selected"
       confirm_label="Delete"
