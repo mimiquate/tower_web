@@ -151,21 +151,16 @@ defmodule TowerWeb.Live.Issues.Index do
     <table :if={@issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 text-base font-light w-[132px]">Level</th>
           <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
+          <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
           <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden">
-          <td class="py-3">
-            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(issue.last_event.level)]}>
-              {issue.last_event.level}
-            </span>
-          </td>
+        <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
           <td class="py-3 pl-6 max-w-0">
-            <div class="flex items-baseline gap-3 overflow-hidden">
+            <div class="flex flex-col overflow-hidden">
               <.link
                 navigate={
                   Paths.show_path(
@@ -180,19 +175,24 @@ defmodule TowerWeb.Live.Issues.Index do
                     %{page: @page}
                   )
                 }
-                class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block"
+                class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline"
               >
                 #{issue.id}
               </.link>
-              <span class="text-sm text-tower-text-secondary truncate">{issue.last_event.normalized_reason}</span>
+              <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
             </div>
+          </td>
+          <td class="py-3 pl-6">
+            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(issue.last_event.level)]}>
+              {issue.last_event.level}
+            </span>
           </td>
           <td class="py-3 pl-6">
             <span class="text-sm text-white">{issue.count_events}</span>
           </td>
           <td class="py-3 pl-6">
             <div class="flex flex-col">
-              <span class="text-sm text-white">{DatetimeFormatter.format_date(issue.last_seen)}</span>
+              <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(issue.last_seen)}</span>
               <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(issue.last_seen)}</span>
             </div>
           </td>

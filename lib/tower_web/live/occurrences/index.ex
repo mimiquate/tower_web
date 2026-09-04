@@ -206,13 +206,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
               class="accent-tower-active [color-scheme:dark]"
             />
           </th>
-          <th class="py-2 text-base font-light w-[132px]">Timestamp</th>
-          <th class="py-2 text-base font-light">Related Occurrence</th>
-          <th class="py-2 text-base font-light w-[132px]">Item Level</th>
+
+          <th class="py-2 pl-6 text-base font-light">Related Occurrence</th>
+          <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
+          <th class="py-2 pl-6 text-base font-light w-[180px]">Timestamp</th>
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden">
+        <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
           <td class="py-3 w-8">
             <input
               type="checkbox"
@@ -225,13 +226,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               ]}
             />
           </td>
-          <td class="py-3">
-            <div class="flex flex-col">
-              <span class="text-sm text-white">{DatetimeFormatter.format_date(event.datetime)}</span>
-              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(event.datetime)}</span>
-            </div>
-          </td>
-          <td class="py-3 max-w-0">
+          <td class="py-3 pl-6 max-w-0">
             <div class="flex flex-col overflow-hidden">
               <.link
                 navigate={
@@ -242,15 +237,21 @@ defmodule TowerWeb.Live.Occurrences.Index do
                     %{page: @page}
                   )
                 }
-                class="text-sm text-tower-text-primary hover:text-white hover:text-base transition-all cursor-pointer inline-block"
+                class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline"
               >
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{event.normalized_reason}</span>
             </div>
           </td>
-          <td class="py-3">
+          <td class="py-3 pl-6">
             <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(event.level)]}>{event.level}</span>
+          </td>
+          <td class="py-3 pl-6">
+            <div class="flex flex-col">
+              <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(event.datetime)}</span>
+              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(event.datetime)}</span>
+            </div>
           </td>
         </tr>
       </tbody>
