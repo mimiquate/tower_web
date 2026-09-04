@@ -150,7 +150,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
           <div class="border-l border-tower-line-color h-full"></div>
 
-          <.issue_id_filter />
+          <.issue_id_filter issue_ids_filtered={@issue_ids_filtered} />
 
           <div
             :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []}

@@ -101,7 +101,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
       <.search_filter search_query={@search_query} />
 
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
-        <div class="flex items-center gap-[12px]">
+        <div class="flex flex-wrap items-center gap-[12px]">
           <.date_range_filter
             datetime_range_options={@datetime_range_options}
             datetime_range_param={@datetime_range_param}
@@ -116,7 +116,9 @@ defmodule TowerWeb.Live.Dashboard.Index do
           <.level_filter levels={@levels} selected_level={@selected_level} />
         </div>
 
-        <.active_filters_row search_query={@search_query} selected_level={@selected_level} />
+        <div :if={@search_query != "" or @selected_level != nil} class="flex flex-wrap items-center gap-[12px]">
+          <.active_filters_row search_query={@search_query} selected_level={@selected_level} />
+        </div>
       </div>
     </div>
 

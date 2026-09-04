@@ -244,6 +244,7 @@ defmodule TowerWeb.CoreComponents do
   end
 
   attr(:label, :string, default: "Issue ID")
+  attr(:issue_ids_filtered, :list, default: [])
 
   def issue_id_filter(assigns) do
     ~H"""
@@ -252,6 +253,7 @@ defmodule TowerWeb.CoreComponents do
       <form phx-submit="filter_issue_id" class="flex items-center">
         <input
           type="text"
+          id={"issue-id-filter-input-#{Enum.join(@issue_ids_filtered, ",")}"}
           placeholder={"Type #{@label} and press Enter"}
           name="issue_id_filter"
           value=""
