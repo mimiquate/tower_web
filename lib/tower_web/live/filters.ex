@@ -43,4 +43,8 @@ defmodule TowerWeb.Live.Filters do
   def any_active?(filters) do
     Enum.any?(filters, fn {_key, value} -> value not in [nil, "", []] end)
   end
+
+  def for_path(filters, allowed_keys) do
+    Keyword.take(filters, allowed_keys)
+  end
 end

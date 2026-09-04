@@ -9,6 +9,9 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Paths
 
   @per_page 20
+  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
+
+  def allowed_filter_keys, do: @allowed_filter_keys
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -79,7 +82,13 @@ defmodule TowerWeb.Live.Issues.Index do
              issue_ids_filtered: issue_ids,
              search_query: search,
              selected_level: level,
-             datetime_range_param: datetime_range_param
+             datetime_range_param: datetime_range_param,
+             current_filters: [
+               search: search,
+               level: level,
+               datetime_range: datetime_range_param,
+               issue_ids: issue_ids
+             ]
            )}
         end
     end

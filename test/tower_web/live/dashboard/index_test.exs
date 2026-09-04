@@ -155,6 +155,36 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
     end
   end
 
+  describe "allowed_filter_keys/0" do
+    test "supports search, level, and datetime_range, but not issue_ids" do
+      assert Dashboard.allowed_filter_keys() == [:search, :level, :datetime_range]
+    end
+  end
+
+  describe "handle_params current_filters" do
+    test "assigns current_filters with the resolved search/level/datetime_range" do
+      {:noreply, socket} =
+        Dashboard.handle_params(
+          %{"search" => "timeout", "level" => "error", "datetime_range" => "last_30d"},
+          "/tower/dashboard",
+          socket_with_dashboard()
+        )
+
+      assert socket.assigns.current_filters == [
+               search: "timeout",
+               level: "error",
+               datetime_range: "last_30d"
+             ]
+    end
+
+    test "assigns current_filters with defaults when no params are given" do
+      {:noreply, socket} =
+        Dashboard.handle_params(%{}, "/tower/dashboard", socket_with_dashboard())
+
+      assert socket.assigns.current_filters == [search: "", level: nil, datetime_range: "last_7d"]
+    end
+  end
+
   defp socket_with_dashboard do
     %Phoenix.LiveView.Socket{
       assigns: %{
