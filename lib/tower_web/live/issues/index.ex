@@ -117,8 +117,8 @@ defmodule TowerWeb.Live.Issues.Index do
     <div class="flex flex-col gap-3 mb-4">
       <.search_filter search_query={@search_query} />
 
-      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
-        <div class="flex items-center gap-[12px]">
+      <div class="w-full px-3 py-2 gap-3 border border-tower-line-color">
+        <div class="flex flex-wrap items-center gap-[12px]">
           <.date_range_filter
             datetime_range_options={@datetime_range_options}
             datetime_range_param={@datetime_range_param}
@@ -135,14 +135,20 @@ defmodule TowerWeb.Live.Issues.Index do
           <div class="border-l border-tower-line-color h-full"></div>
 
           <.issue_id_filter label="ID" />
-        </div>
 
-        <.active_filters_row
-          search_query={@search_query}
-          selected_level={@selected_level}
-          issue_ids_filtered={@issue_ids_filtered}
-          issue_id_label="ID"
-        />
+          <div
+            :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []}
+            class="border-l border-tower-line-color h-7"
+          >
+          </div>
+
+          <.active_filters_row
+            search_query={@search_query}
+            selected_level={@selected_level}
+            issue_ids_filtered={@issue_ids_filtered}
+            issue_id_label="ID"
+          />
+        </div>
       </div>
     </div>
 
@@ -275,7 +281,9 @@ defmodule TowerWeb.Live.Issues.Index do
   def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
     if Filters.datetime_range("custom", from, to) == [] do
       Process.send_after(self(), :clear_flash, 3000)
-      {:noreply, put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
+
+      {:noreply,
+       put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
     else
       {:noreply,
        socket

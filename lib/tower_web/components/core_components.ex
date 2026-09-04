@@ -223,20 +223,22 @@ defmodule TowerWeb.CoreComponents do
 
   def level_filter(assigns) do
     ~H"""
-    <span class="font-inter font-light text-sm text-white">Level:</span>
-    <div class="flex items-center gap-4">
-      <button
-        :for={level <- @levels}
-        type="button"
-        phx-click="filter_level"
-        phx-value-level={level}
-        class={[
-          "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
-          if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
-        ]}
-      >
-        {level}
-      </button>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="font-inter font-light text-sm text-white">Level:</span>
+      <div class="flex items-center gap-4">
+        <button
+          :for={level <- @levels}
+          type="button"
+          phx-click="filter_level"
+          phx-value-level={level}
+          class={[
+            "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
+            if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
+          ]}
+        >
+          {level}
+        </button>
+      </div>
     </div>
     """
   end
@@ -245,16 +247,18 @@ defmodule TowerWeb.CoreComponents do
 
   def issue_id_filter(assigns) do
     ~H"""
-    <span class="font-inter font-light text-sm text-white">{@label}:</span>
-    <form phx-submit="filter_issue_id" class="flex items-center">
-      <input
-        type="text"
-        placeholder={"Type #{@label} and press Enter"}
-        name="issue_id_filter"
-        value=""
-        class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
-      />
-    </form>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="font-inter font-light text-sm text-white whitespace-nowrap">{@label}:</span>
+      <form phx-submit="filter_issue_id" class="flex items-center">
+        <input
+          type="text"
+          placeholder={"Type #{@label} and press Enter"}
+          name="issue_id_filter"
+          value=""
+          class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
+        />
+      </form>
+    </div>
     """
   end
 
@@ -265,20 +269,34 @@ defmodule TowerWeb.CoreComponents do
 
   def active_filters_row(assigns) do
     ~H"""
-    <div :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []} class="flex flex-wrap items-center gap-x-3 gap-y-2 min-h-7">
-      <span class="font-inter font-light text-sm text-white">Active filters:</span>
+    <div
+      :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []}
+      class="flex items-center gap-2 shrink-0"
+    >
+      <span class="font-inter font-light text-sm text-white whitespace-nowrap">Active filters:</span>
       <div class="border-l border-tower-line-color h-7"></div>
-      <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
-      <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
-      <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">{@issue_id_label}:</span>
-      <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-7"></div>
-      <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
+    </div>
+
+    <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
+    <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+
+    <div :if={@issue_ids_filtered != []} class="flex items-center gap-2 shrink-0">
+      <span class="font-inter font-light text-sm text-white whitespace-nowrap">{@issue_id_label}:</span>
+      <div class="border-l border-tower-line-color h-7"></div>
+    </div>
+
+    <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
+
+    <div
+      :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []}
+      class="flex items-center gap-2 shrink-0"
+    >
       <div class="border-l border-tower-line-color h-7"></div>
       <button
         type="button"
         phx-click="clear_filter"
         phx-value-type="all"
-        class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1"
+        class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1 whitespace-nowrap"
       >
         Clear filter
         <.close_icon />
@@ -299,7 +317,7 @@ defmodule TowerWeb.CoreComponents do
       phx-click="clear_filter"
       phx-value-type={@type}
       phx-value-id={@id}
-      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
+      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer shrink-0", @class]}
     >
       <span class="truncate">{@value}</span>
       <.close_icon />

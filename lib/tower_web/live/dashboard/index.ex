@@ -173,7 +173,9 @@ defmodule TowerWeb.Live.Dashboard.Index do
   def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
     if Filters.datetime_range("custom", from, to) == [] do
       Process.send_after(self(), :clear_flash, 3000)
-      {:noreply, put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
+
+      {:noreply,
+       put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
     else
       {:noreply,
        socket
