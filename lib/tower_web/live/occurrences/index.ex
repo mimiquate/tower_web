@@ -151,23 +151,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <% selected_count = MapSet.size(@selected_occurrences_ids) %>
 
-    <div class={[
-      "w-full px-3 py-2 flex items-center gap-3 border border-tower-line-color mb-2",
-      (@filtered_events == [] or selected_count == 0) && "invisible"
-    ]}>
-      <span class="font-inter text-sm text-tower-text-secondary">
-        {selected_count} selected
-      </span>
-      <button
-        type="button"
-        phx-click="show_delete_modal"
-        disabled={selected_count == 0}
-        class="font-inter text-sm text-red-400 border border-red-400 disabled:opacity-40 disabled:cursor-not-allowed px-2 py-1"
-      >
-        Delete selected
-      </button>
-    </div>
-
     <.confirm_modal
       show={@show_delete_modal}
       title={"Are you sure you want to delete #{selected_count} occurrence(s)?"}
@@ -207,7 +190,22 @@ defmodule TowerWeb.Live.Occurrences.Index do
             />
           </th>
 
-          <th class="py-2 pl-6 text-base font-light">Related Occurrence</th>
+          <th class="py-2 pl-6 text-base font-light">
+            <div class="flex items-center gap-3">
+              <span>Related Occurrence</span>
+              <span :if={selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
+                {selected_count} Item(s) selected
+              </span>
+              <button
+                :if={selected_count > 0}
+                type="button"
+                phx-click="show_delete_modal"
+                class="font-inter text-sm font-normal text-red-500 border border-red-500 px-2 hover:bg-red-400/10"
+              >
+                Delete
+              </button>
+            </div>
+          </th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
           <th class="py-2 pl-6 text-base font-light w-[180px]">Timestamp</th>
         </tr>
