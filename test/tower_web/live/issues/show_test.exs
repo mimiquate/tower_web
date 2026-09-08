@@ -36,7 +36,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           repo: TowerWeb.TestRepo
         )
 
-      {:ok, _old_event_outside_range} =
+      {:ok, _old_event} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -44,7 +44,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             datetime: DateTime.add(now, -45, :day),
             level: :error,
             kind: :error,
-            reason: "Old occurrence outside 30 day range"
+            reason: "Old occurrence outside chart range"
           },
           repo: TowerWeb.TestRepo
         )
