@@ -9,7 +9,14 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Paths
 
   @per_page 20
-  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
+  @allowed_filter_keys [
+    :search,
+    :level,
+    :datetime_range,
+    :datetime_range_from,
+    :datetime_range_to,
+    :issue_ids
+  ]
 
   def allowed_filter_keys, do: @allowed_filter_keys
 
@@ -91,10 +98,13 @@ defmodule TowerWeb.Live.Issues.Index do
              datetime_range_param: datetime_range_param,
              datetime_range_from: datetime_range_from,
              datetime_range_to: datetime_range_to,
+             datetime_range_custom_open: datetime_range_param == "custom",
              current_filters: [
                search: search,
                level: level,
                datetime_range: datetime_range_param,
+               datetime_range_from: datetime_range_from,
+               datetime_range_to: datetime_range_to,
                issue_ids: issue_ids
              ]
            )}
