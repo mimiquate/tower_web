@@ -581,7 +581,8 @@ defmodule TowerWeb.CoreComponents do
   defp axis_label(datetime, :date_and_hour, _date, _previous_date),
     do: Calendar.strftime(datetime, "%b %d")
 
-  defp axis_label(_datetime, :date_only, date, date), do: ""
+  defp axis_label(datetime, :date_only, date, date),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
 
   defp axis_label(datetime, :date_only, _date, _previous_date),
     do: Calendar.strftime(datetime, "%b %d")
