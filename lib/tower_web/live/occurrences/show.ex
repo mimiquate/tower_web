@@ -76,37 +76,22 @@ defmodule TowerWeb.Live.Occurrences.Show do
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
         <button
+          type="button"
           phx-click="show_delete_modal"
-          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium"
+          class="font-inter text-sm text-red-500 border border-red-500 w-24 h-8 px-2 py-1 mb-6 hover:bg-red-400/10"
         >
           Delete
         </button>
       </div>
 
-      <div :if={@show_delete_modal} class="fixed inset-0 z-50 flex items-center justify-center">
-        <div class="absolute inset-0 bg-black bg-opacity-50" phx-click="cancel_delete"></div>
-        <div class="relative bg-tower-bg border border-tower-line-color p-6 max-w-sm">
-          <h3 class="font-inter text-lg font-light text-white mb-4">Are you sure?</h3>
-          <p class="font-inter text-sm font-light text-tower-text-secondary mb-6">This action cannot be undone.</p>
-          <div class="flex justify-end items-center gap-3">
-            <button
-              phx-click="cancel_delete"
-              class="px-4 py-2 bg-tower-success hover:bg-tower-success-hover text-white font-inter text-sm font-light"
-            >
-              No, keep it
-            </button>
-            <button
-              phx-click="confirm_delete"
-              class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-inter text-sm font-light"
-            >
-              Yes, delete
-            </button>
-          </div>
-        </div>
-      </div>
+      <.confirm_modal
+        show={@show_delete_modal}
+        cancel_event="cancel_delete"
+        confirm_event="confirm_delete"
+      />
 
       <div class="flex flex-col gap-1 mb-6">
         <span class="text-lg font-mono text-white">ID: #{@event.id}</span>

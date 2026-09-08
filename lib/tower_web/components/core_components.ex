@@ -256,11 +256,79 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:class, :string, default: "w-3 h-3 flex-shrink-0")
+
   def close_icon(assigns) do
     ~H"""
-    <svg class="w-3 h-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg class={@class} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
     </svg>
+    """
+  end
+
+  attr(:class, :string, default: nil)
+
+  def warning_icon(assigns) do
+    ~H"""
+    <svg class={@class} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"
+      />
+    </svg>
+    """
+  end
+
+  attr(:show, :boolean, required: true)
+  attr(:title, :string, default: "Delete occurrence?")
+
+  attr(:description, :string,
+    default: "Are you sure you want to delete this occurrence? This action cannot be undone."
+  )
+
+  attr(:cancel_event, :string, required: true)
+  attr(:confirm_event, :string, required: true)
+  attr(:cancel_label, :string, default: "Cancel")
+  attr(:confirm_label, :string, default: "Delete")
+
+  def confirm_modal(assigns) do
+    ~H"""
+    <div :if={@show} class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black bg-opacity-50" phx-click={@cancel_event}></div>
+      <div class="relative bg-tower-level-bg flex flex-col gap-3 px-6 py-3 max-w-md w-full">
+        <div class="flex items-start justify-between w-full">
+          <div class="flex flex-col gap-2 items-start">
+            <.warning_icon class="size-6 text-red-500" />
+            <p class="font-roboto-slab text-base text-white">{@title}</p>
+          </div>
+          <button type="button" phx-click={@cancel_event} class="shrink-0 text-white">
+            <.close_icon class="size-4" />
+          </button>
+        </div>
+
+        <p class="font-inter text-sm text-tower-text-secondary">{@description}</p>
+
+        <div class="border-t border-tower-line-color w-full"></div>
+
+        <div class="flex items-center gap-3 w-full">
+          <button
+            type="button"
+            phx-click={@cancel_event}
+            class="flex-1 font-inter text-sm text-tower-text-secondary border border-tower-text-secondary px-2 py-1 hover:bg-tower-text-secondary/10"
+          >
+            {@cancel_label}
+          </button>
+          <button
+            type="button"
+            phx-click={@confirm_event}
+            class="flex-1 font-inter text-sm text-red-500 border border-red-500 px-2 py-1 hover:bg-red-400/10"
+          >
+            {@confirm_label}
+          </button>
+        </div>
+      </div>
+    </div>
     """
   end
 

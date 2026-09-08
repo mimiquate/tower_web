@@ -26,7 +26,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
        datetime_range_options: Filters.datetime_range_options(),
-       datetime_range_menu_open: false
+       datetime_range_menu_open: false,
+       selected_occurrences_ids: MapSet.new(),
+       show_delete_modal: false
      )}
   end
 
@@ -119,7 +121,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <.page_header title="Occurrences" subtitle="Track occurrences" />
 
-    <div class="flex flex-col gap-3 mb-4">
+    <div class="flex flex-col gap-3 mb-3">
       <.search_filter search_query={@search_query} />
 
       <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
@@ -147,6 +149,19 @@ defmodule TowerWeb.Live.Occurrences.Index do
       </div>
     </div>
 
+    <% selected_count = MapSet.size(@selected_occurrences_ids) %>
+    <% selected_item_label = item_label(selected_count) %>
+    <% selected_occurrence_label = occurrence_label(selected_count) %>
+
+    <.confirm_modal
+      show={@show_delete_modal}
+      title={"Delete #{selected_occurrence_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_occurrence_label}? This action cannot be undone."}
+      cancel_event="cancel_delete_selected"
+      confirm_event="delete_selected"
+      confirm_label="Delete"
+    />
+
     <div
       :if={
         @filtered_events == [] and
@@ -169,13 +184,49 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <table :if={@filtered_events != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 pl-6 text-base font-light">Related Occurrence</th>
+          <th class="py-2 pl-2 w-8">
+            <input
+              type="checkbox"
+              phx-click="toggle_select_all"
+              checked={visible_ids_selected?(@filtered_events, @selected_occurrences_ids)}
+              class="accent-tower-active [color-scheme:dark]"
+            />
+          </th>
+
+          <th class="py-2 pl-6 text-base font-light">
+            <div class="flex items-center gap-3">
+              <span>Related Occurrence</span>
+              <span :if={selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
+                {selected_count} {selected_item_label} selected
+              </span>
+              <button
+                :if={selected_count > 0}
+                type="button"
+                phx-click="show_delete_modal"
+                class="font-inter text-sm font-normal text-red-500 border border-red-500 px-2 hover:bg-red-400/10"
+              >
+                Delete
+              </button>
+            </div>
+          </th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
           <th class="py-2 pl-6 text-base font-light w-[180px]">Timestamp</th>
         </tr>
       </thead>
       <tbody class="font-inter">
         <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
+          <td class="py-3 pl-2 w-8">
+            <input
+              type="checkbox"
+              phx-click="toggle_select"
+              phx-value-id={event.id}
+              checked={MapSet.member?(@selected_occurrences_ids, event.id)}
+              class={[
+                "accent-tower-active [color-scheme:dark]",
+                MapSet.member?(@selected_occurrences_ids, event.id) && "opacity-100"
+              ]}
+            />
+          </td>
           <td class="py-3 pl-6 max-w-0">
             <div class="flex flex-col overflow-hidden">
               <.link
@@ -300,6 +351,59 @@ defmodule TowerWeb.Live.Occurrences.Index do
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
   end
 
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select", %{"id" => id}, socket) do
+    selected_occurrences_ids =
+      if MapSet.member?(socket.assigns.selected_occurrences_ids, id) do
+        MapSet.delete(socket.assigns.selected_occurrences_ids, id)
+      else
+        MapSet.put(socket.assigns.selected_occurrences_ids, id)
+      end
+
+    {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select_all", _params, socket) do
+    visible_ids = MapSet.new(socket.assigns.filtered_events, & &1.id)
+
+    selected_occurrences_ids =
+      if MapSet.subset?(visible_ids, socket.assigns.selected_occurrences_ids) do
+        MapSet.difference(socket.assigns.selected_occurrences_ids, visible_ids)
+      else
+        MapSet.union(socket.assigns.selected_occurrences_ids, visible_ids)
+      end
+
+    {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_delete_selected", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("delete_selected", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected_occurrences_ids)
+    {deleted_count, _} = Events.delete_events(ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_occurrences_ids: MapSet.new(), show_delete_modal: false)
+     |> put_flash(:info, "Deleted #{deleted_count} #{occurrence_label(deleted_count)}.")
+     |> push_patch(
+       to:
+         "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, current_filters(socket, []))}"
+     )}
+  end
+
   defp build_path(socket, filters) do
     Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: 1})
   end
@@ -313,4 +417,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
     ]
     |> Keyword.merge(overrides)
   end
+
+  defp visible_ids_selected?(events, selected_occurrences_ids) do
+    Enum.all?(events, &MapSet.member?(selected_occurrences_ids, &1.id))
+  end
+
+  defp item_label(1), do: "item"
+  defp item_label(_count), do: "items"
+
+  defp occurrence_label(1), do: "occurrence"
+  defp occurrence_label(_count), do: "occurrences"
 end
