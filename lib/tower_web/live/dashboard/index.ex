@@ -8,7 +8,13 @@ defmodule TowerWeb.Live.Dashboard.Index do
   alias TowerWeb.Live.Paths
 
   @occurrences_chart_max_events 500
-  @allowed_filter_keys [:search, :level, :datetime_range, :datetime_range_from, :datetime_range_to]
+  @allowed_filter_keys [
+    :search,
+    :level,
+    :datetime_range,
+    :datetime_range_from,
+    :datetime_range_to
+  ]
 
   def allowed_filter_keys, do: @allowed_filter_keys
 
