@@ -151,11 +151,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     <% selected_count = MapSet.size(@selected_occurrences_ids) %>
     <% selected_item_label = item_label(selected_count) %>
+    <% selected_occurrence_label = occurrence_label(selected_count) %>
 
     <.confirm_modal
       show={@show_delete_modal}
-      title={"Delete #{selected_count} #{selected_item_label}?"}
-      description={"Are you sure you want to delete #{selected_count} #{selected_item_label}? This action cannot be undone."}
+      title={"Delete #{selected_occurrence_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_occurrence_label}? This action cannot be undone."}
       cancel_event="cancel_delete_selected"
       confirm_event="delete_selected"
       confirm_label="Delete"
@@ -396,7 +397,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     {:noreply,
      socket
      |> assign(selected_occurrences_ids: MapSet.new(), show_delete_modal: false)
-     |> put_flash(:info, "Deleted #{deleted_count} occurrence(s).")
+     |> put_flash(:info, "Deleted #{deleted_count} #{occurrence_label(deleted_count)}.")
      |> push_patch(
        to:
          "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, current_filters(socket, []))}"
@@ -423,4 +424,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp item_label(1), do: "item"
   defp item_label(_count), do: "items"
+
+  defp occurrence_label(1), do: "occurrence"
+  defp occurrence_label(_count), do: "occurrences"
 end

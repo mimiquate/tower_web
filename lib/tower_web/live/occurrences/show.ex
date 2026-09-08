@@ -89,7 +89,6 @@ defmodule TowerWeb.Live.Occurrences.Show do
 
       <.confirm_modal
         show={@show_delete_modal}
-        title="Are you sure you want to delete this occurrence?"
         cancel_event="cancel_delete"
         confirm_event="confirm_delete"
       />
