@@ -5,7 +5,7 @@ defmodule TowerWeb.MixProject do
     [
       app: :tower_web,
       description: "Phoenix LiveView dashboard for browsing Tower error events",
-      version: "0.6.0",
+      version: "0.7.0",
       elixir: "~> 1.16",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),

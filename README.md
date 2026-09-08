@@ -23,7 +23,7 @@ Then add `tower_web` as a dependency in your `mix.exs`:
 ```elixir
 def deps do
   [
-    {:tower_web, "~> 0.6.0"}
+    {:tower_web, "~> 0.7.0"}
   ]
 end
 ```
