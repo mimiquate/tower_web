@@ -150,11 +150,12 @@ defmodule TowerWeb.Live.Occurrences.Index do
     </div>
 
     <% selected_count = MapSet.size(@selected_occurrences_ids) %>
+    <% selected_item_label = item_label(selected_count) %>
 
     <.confirm_modal
       show={@show_delete_modal}
-      title="Delete occurrence(s)?"
-      description={"Are you sure you want to delete #{selected_count} occurrence(s)? This action cannot be undone."}
+      title={"Delete #{selected_count} #{selected_item_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_item_label}? This action cannot be undone."}
       cancel_event="cancel_delete_selected"
       confirm_event="delete_selected"
       confirm_label="Delete"
@@ -195,7 +196,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             <div class="flex items-center gap-3">
               <span>Related Occurrence</span>
               <span :if={selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
-                {selected_count} Item(s) selected
+                {selected_count} {selected_item_label} selected
               </span>
               <button
                 :if={selected_count > 0}
@@ -419,4 +420,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   defp visible_ids_selected?(events, selected_occurrences_ids) do
     Enum.all?(events, &MapSet.member?(selected_occurrences_ids, &1.id))
   end
+
+  defp item_label(1), do: "item"
+  defp item_label(_count), do: "items"
 end
