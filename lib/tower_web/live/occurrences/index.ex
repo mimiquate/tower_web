@@ -243,7 +243,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
               >
                 #{event.id}
               </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-1">{event.normalized_reason}</span>
+              <div class="flex items-start gap-3 w-full">
+                <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
+                <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
+              </div>
               <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
                 {last_stacktrace_line}
               </span>
