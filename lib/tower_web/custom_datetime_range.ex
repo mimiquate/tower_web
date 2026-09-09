@@ -16,7 +16,7 @@ defmodule TowerWeb.CustomDatetimeRange do
 
   def range_for(from, to) do
     with {:ok, from_dt} <- bound(from, ~T[00:00:00], fn -> ~U[1970-01-01 00:00:00Z] end),
-         {:ok, to_dt} <- bound(to, ~T[23:59:59], fn -> DateTime.utc_now() end),
+         {:ok, to_dt} <- bound(to, ~T[23:59:59], fn -> default_to(from_dt) end),
          true <- DateTime.compare(from_dt, to_dt) != :gt do
       {clamp_from(from_dt, to_dt), to_dt}
     else
@@ -71,6 +71,13 @@ defmodule TowerWeb.CustomDatetimeRange do
     min_from_dt = DateTime.add(to_dt, -@max_days, :day)
 
     if DateTime.compare(from_dt, min_from_dt) == :lt, do: min_from_dt, else: from_dt
+  end
+
+  defp default_to(from_dt) do
+    now = DateTime.utc_now()
+    from_plus_max_days = DateTime.add(from_dt, @max_days, :day)
+
+    if DateTime.compare(from_plus_max_days, now) == :gt, do: now, else: from_plus_max_days
   end
 
   defp format_input(datetime), do: Calendar.strftime(datetime, "%Y-%m-%d %H:%M:%S")
