@@ -27,7 +27,7 @@ defmodule TowerWeb.CustomDatetimeRange do
   def format_bound(value) do
     trimmed = String.trim(value)
 
-    case parse_flexible_naive_datetime(trimmed) do
+    case NaiveDateTime.from_iso8601(trimmed) do
       {:ok, naive} ->
         Calendar.strftime(naive, "%b %-d, %H:%M")
 
@@ -57,14 +57,10 @@ defmodule TowerWeb.CustomDatetimeRange do
   end
 
   defp full_datetime(value) do
-    case parse_flexible_naive_datetime(value) do
+    case NaiveDateTime.from_iso8601(value) do
       {:ok, naive} -> DateTime.from_naive(naive, "Etc/UTC")
       error -> error
     end
-  end
-
-  defp parse_flexible_naive_datetime(value) do
-    NaiveDateTime.from_iso8601(String.replace(value, " ", "T", global: false))
   end
 
   defp clamp_from(from_dt, to_dt) do
