@@ -228,6 +228,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             />
           </td>
           <td class="py-3 pl-6 max-w-0">
+            <% last_stacktrace_line = last_stacktrace_line(event.stacktrace) %>
             <div class="flex flex-col overflow-hidden">
               <.link
                 navigate={
@@ -242,7 +243,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
               >
                 #{event.id}
               </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-2">{event.normalized_reason}</span>
+              <span class="text-sm text-tower-text-secondary line-clamp-1">{event.normalized_reason}</span>
+              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary/70 font-mono line-clamp-1">
+                {last_stacktrace_line}
+              </span>
             </div>
           </td>
           <td class="py-3 pl-6">
@@ -427,4 +431,29 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp occurrence_label(1), do: "occurrence"
   defp occurrence_label(_count), do: "occurrences"
+
+  defp last_stacktrace_line(nil), do: nil
+  defp last_stacktrace_line([]), do: nil
+
+  defp last_stacktrace_line(stacktrace) when is_list(stacktrace) do
+    stacktrace
+    |> Enum.filter(&tower_stacktrace_entry?/1)
+    |> List.first()
+    |> format_mfa_entry()
+  end
+
+  defp last_stacktrace_line(_stacktrace), do: nil
+
+  defp format_mfa_entry(nil), do: nil
+
+  defp format_mfa_entry({module, function, arity_or_args, _location}) do
+    arity = if is_list(arity_or_args), do: length(arity_or_args), else: arity_or_args
+    Exception.format_mfa(module, function, arity)
+  end
+
+  defp tower_stacktrace_entry?({module, _fun, _arity, _location}) when is_atom(module) do
+    module |> Atom.to_string() |> String.starts_with?("Elixir.Tower")
+  end
+
+  defp tower_stacktrace_entry?(_entry), do: false
 end
