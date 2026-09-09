@@ -181,7 +181,7 @@ defmodule TowerWeb.Live.Issues.Index do
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
               <% last_stacktrace_line = last_stacktrace_line(issue.last_event.stacktrace) %>
-              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary/70 font-mono line-clamp-1">
+              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
                 {last_stacktrace_line}
               </span>
             </div>

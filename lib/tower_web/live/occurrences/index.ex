@@ -244,7 +244,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
                 #{event.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-1">{event.normalized_reason}</span>
-              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary/70 font-mono line-clamp-1">
+              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
                 {last_stacktrace_line}
               </span>
             </div>
