@@ -440,7 +440,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp last_stacktrace_line(stacktrace) when is_list(stacktrace) do
     stacktrace
-    |> Enum.filter(&tower_stacktrace_entry?/1)
     |> List.first()
     |> format_mfa_entry()
   end
@@ -453,10 +452,4 @@ defmodule TowerWeb.Live.Occurrences.Index do
     arity = if is_list(arity_or_args), do: length(arity_or_args), else: arity_or_args
     Exception.format_mfa(module, function, arity)
   end
-
-  defp tower_stacktrace_entry?({module, _fun, _arity, _location}) when is_atom(module) do
-    module |> Atom.to_string() |> String.starts_with?("Elixir.Tower")
-  end
-
-  defp tower_stacktrace_entry?(_entry), do: false
 end
