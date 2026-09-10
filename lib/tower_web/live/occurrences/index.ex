@@ -7,6 +7,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
   @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
@@ -228,7 +229,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             />
           </td>
           <td class="py-3 pl-6 max-w-0">
-            <% last_stacktrace_line = last_stacktrace_line(event.stacktrace) %>
+            <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(event.stacktrace) %>
             <div class="flex flex-col overflow-hidden">
               <.link
                 navigate={
@@ -434,22 +435,4 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   defp occurrence_label(1), do: "occurrence"
   defp occurrence_label(_count), do: "occurrences"
-
-  defp last_stacktrace_line(nil), do: nil
-  defp last_stacktrace_line([]), do: nil
-
-  defp last_stacktrace_line(stacktrace) when is_list(stacktrace) do
-    stacktrace
-    |> List.first()
-    |> format_mfa_entry()
-  end
-
-  defp last_stacktrace_line(_stacktrace), do: nil
-
-  defp format_mfa_entry(nil), do: nil
-
-  defp format_mfa_entry({module, function, arity_or_args, _location}) do
-    arity = if is_list(arity_or_args), do: length(arity_or_args), else: arity_or_args
-    Exception.format_mfa(module, function, arity)
-  end
 end

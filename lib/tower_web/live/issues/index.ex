@@ -7,6 +7,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
   @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
@@ -180,7 +181,7 @@ defmodule TowerWeb.Live.Issues.Index do
                 #{issue.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
-              <% last_stacktrace_line = last_stacktrace_line(issue.last_event.stacktrace) %>
+              <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(issue.last_event.stacktrace) %>
               <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
                 {last_stacktrace_line}
               </span>
@@ -305,23 +306,5 @@ defmodule TowerWeb.Live.Issues.Index do
       datetime_range: socket.assigns.datetime_range_param
     ]
     |> Keyword.merge(overrides)
-  end
-
-  defp last_stacktrace_line(nil), do: nil
-  defp last_stacktrace_line([]), do: nil
-
-  defp last_stacktrace_line(stacktrace) when is_list(stacktrace) do
-    stacktrace
-    |> List.first()
-    |> format_mfa_entry()
-  end
-
-  defp last_stacktrace_line(_stacktrace), do: nil
-
-  defp format_mfa_entry(nil), do: nil
-
-  defp format_mfa_entry({module, function, arity_or_args, _location}) do
-    arity = if is_list(arity_or_args), do: length(arity_or_args), else: arity_or_args
-    Exception.format_mfa(module, function, arity)
   end
 end
