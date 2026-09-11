@@ -59,6 +59,7 @@ defmodule TowerWeb.Layouts do
               :for={item <- @items}
               href={item.href}
               active={@current_view in item.views}
+              disabled={@current_view == hd(item.views)}
             >
               {item.icon.(%{})}
               <span class="ml-3 text-sm">{item.label}</span>
@@ -117,20 +118,24 @@ defmodule TowerWeb.Layouts do
 
   attr(:href, :string, required: true)
   attr(:active, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
   slot(:inner_block, required: true)
 
   def sidebar_item(assigns) do
     ~H"""
     <li>
       <.link
-        :if={not @active}
+        :if={not @disabled}
         navigate={@href}
-        class="flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm"
+        class={[
+          "flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm",
+          @active && "bg-tower-active"
+        ]}
       >
         {render_slot(@inner_block)}
       </.link>
       <a
-        :if={@active}
+        :if={@disabled}
         onclick="return false"
         class="flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm bg-tower-active"
       >
