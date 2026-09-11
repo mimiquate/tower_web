@@ -58,6 +58,7 @@ defmodule TowerWeb.Live.Issues.Show do
            base_path: base_path,
            issues_base_path: issues_base_path,
            occurrences_base_path: "#{base_path}/occurrences",
+           show_delete_modal: false,
            reason_expanded: false
          )}
     end
@@ -79,6 +80,25 @@ defmodule TowerWeb.Live.Issues.Show do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  def handle_event("cancel_delete", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  def handle_event("confirm_delete", _params, socket) do
+    {_count, _} = Issues.delete_issue(socket.assigns.issue.id)
+
+    socket =
+      socket
+      |> put_flash(:info, "Issue deleted successfully")
+      |> push_navigate(to: socket.assigns.issues_base_path)
+
+    {:noreply, socket}
+  end
+
   def handle_event("toggle_reason", _params, socket) do
     {:noreply, assign(socket, reason_expanded: !socket.assigns.reason_expanded)}
   end
@@ -87,7 +107,24 @@ defmodule TowerWeb.Live.Issues.Show do
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
-      <.back_button navigate={@back_path} />
+      <div class="flex justify-between mb-4">
+        <.back_button navigate={@back_path} />
+        <button
+          type="button"
+          phx-click="show_delete_modal"
+          class="font-inter text-sm text-red-500 border border-red-500 w-24 h-8 px-2 py-1 mb-6 hover:bg-red-400/10"
+        >
+          Delete
+        </button>
+      </div>
+
+      <.confirm_modal
+        show={@show_delete_modal}
+        title="Delete issue?"
+        description="Are you sure you want to delete this issue? This action cannot be undone."
+        cancel_event="cancel_delete"
+        confirm_event="confirm_delete"
+      />
 
       <div class="flex flex-col gap-3 mb-8">
         <span class="inline-flex bg-tower-active font-mono text-lg text-white px-2 w-fit">ID: #{@issue.id}</span>

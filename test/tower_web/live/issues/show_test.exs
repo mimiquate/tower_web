@@ -4,6 +4,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
   import Phoenix.LiveViewTest
 
   alias TowerDB.Events
+  alias TowerDB.Issues
   alias TowerWeb.Live.Issues.Show
 
   describe "index to show navigation" do
@@ -82,6 +83,77 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
       # Verify unrelated issue is NOT displayed
       refute html =~ "Unrelated issue message"
+    end
+  end
+
+  describe "delete issue" do
+    test "deletes all of the issue's events and redirects to list page with success flash" do
+      {:ok, _event1} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            level: :error,
+            kind: :message,
+            reason: "Occurrence to delete 1"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _event2} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:30:00Z],
+            level: :error,
+            kind: :message,
+            reason: "Occurrence to delete 2"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, kept_event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 2,
+            datetime: ~U[2024-03-15 12:30:00Z],
+            level: :error,
+            kind: :message,
+            reason: "Unrelated occurrence"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      issue = Issues.get_issue(1, repo: TowerWeb.TestRepo)
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{
+          issue: issue,
+          base_path: "/tower",
+          issues_base_path: "/tower/issues",
+          show_delete_modal: true,
+          flash: %{},
+          __changed__: %{}
+        },
+        redirected: nil
+      }
+
+      {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
+
+      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.TestRepo) == []
+
+      remaining_ids =
+        Events.list_events(repo: TowerWeb.TestRepo) |> Enum.map(& &1.id)
+
+      assert remaining_ids == [kept_event.id]
+
+      assert updated_socket.redirected ==
+               {:live, :redirect, %{to: "/tower/issues", kind: :push}}
+
+      assert updated_socket.assigns.flash["info"] == "Issue deleted successfully"
     end
   end
 
