@@ -7,6 +7,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.Selection
   alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
@@ -28,7 +29,9 @@ defmodule TowerWeb.Live.Issues.Index do
        issues_base_path: "#{base_path}/issues",
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
-       levels: Level.levels()
+       levels: Level.levels(),
+       selected_issue_ids: MapSet.new(),
+       show_delete_modal: false
      )}
   end
 
@@ -136,6 +139,19 @@ defmodule TowerWeb.Live.Issues.Index do
       </div>
     </div>
 
+    <% selected_count = MapSet.size(@selected_issue_ids) %>
+    <% selected_item_label = Selection.item_label(selected_count) %>
+    <% selected_issue_label = issue_label(selected_count) %>
+
+    <.confirm_modal
+      show={@show_delete_modal}
+      title={"Delete #{selected_issue_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_issue_label}? This action cannot be undone."}
+      cancel_event="cancel_delete_selected"
+      confirm_event="delete_selected"
+      confirm_label="Delete"
+    />
+
     <div
       :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
@@ -152,7 +168,31 @@ defmodule TowerWeb.Live.Issues.Index do
     <table :if={@issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
-          <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
+          <th class="py-2 pl-2 w-8">
+            <input
+              type="checkbox"
+              phx-click="toggle_select_all"
+              checked={Selection.all_selected?(@issues, @selected_issue_ids)}
+              class="accent-tower-active [color-scheme:dark]"
+            />
+          </th>
+
+          <th class="py-2 pl-6 text-base font-light">
+            <div class="flex items-center gap-3">
+              <span>Reason (error message)</span>
+              <span :if={selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
+                {selected_count} {selected_item_label} selected
+              </span>
+              <button
+                :if={selected_count > 0}
+                type="button"
+                phx-click="show_delete_modal"
+                class="font-inter text-sm font-normal text-red-500 border border-red-500 px-2 hover:bg-red-400/10"
+              >
+                Delete
+              </button>
+            </div>
+          </th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
           <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
@@ -160,6 +200,18 @@ defmodule TowerWeb.Live.Issues.Index do
       </thead>
       <tbody class="font-inter">
         <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
+          <td class="py-3 pl-2 w-8">
+            <input
+              type="checkbox"
+              phx-click="toggle_select"
+              phx-value-id={issue.id}
+              checked={MapSet.member?(@selected_issue_ids, issue.id)}
+              class={[
+                "accent-tower-active [color-scheme:dark]",
+                MapSet.member?(@selected_issue_ids, issue.id) && "opacity-100"
+              ]}
+            />
+          </td>
           <td class="py-3 pl-6 max-w-0">
             <div class="flex flex-col overflow-hidden">
               <.link
@@ -294,6 +346,51 @@ defmodule TowerWeb.Live.Issues.Index do
     {:noreply, push_patch(socket, to: build_path(socket, filters))}
   end
 
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select", %{"id" => id}, socket) do
+    selected_issue_ids =
+      Selection.toggle(socket.assigns.selected_issue_ids, String.to_integer(id))
+
+    {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select_all", _params, socket) do
+    visible_ids = MapSet.new(socket.assigns.issues, & &1.id)
+
+    selected_issue_ids =
+      Selection.toggle_all(socket.assigns.selected_issue_ids, visible_ids)
+
+    {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_delete_selected", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("delete_selected", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected_issue_ids)
+    {deleted_count, _} = Issues.delete_issues(ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_issue_ids: MapSet.new(), show_delete_modal: false)
+     |> put_flash(:info, "Deleted #{deleted_count} #{issue_label(deleted_count)}.")
+     |> push_patch(
+       to:
+         "#{socket.assigns.issues_base_path}#{Paths.page_path(socket.assigns.page, current_filters(socket, []))}"
+     )}
+  end
+
   defp build_path(socket, filters) do
     Paths.index_path(socket.assigns.issues_base_path, filters)
   end
@@ -307,4 +404,7 @@ defmodule TowerWeb.Live.Issues.Index do
     ]
     |> Keyword.merge(overrides)
   end
+
+  defp issue_label(1), do: "issue"
+  defp issue_label(_count), do: "issues"
 end
