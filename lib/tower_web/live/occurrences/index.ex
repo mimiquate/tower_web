@@ -21,6 +21,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
 
     base_path = session["base_path"]
+    IO.inspect(socket.endpoint.config(:otp_app), label: "???")
 
     {:ok,
      assign(socket,
@@ -29,7 +30,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
        selected_occurrences_ids: MapSet.new(),
-       show_delete_modal: false
+       show_delete_modal: false,
+       host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
 
@@ -229,7 +231,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             />
           </td>
           <td class="py-3 pl-6 max-w-0">
-            <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(event.stacktrace) %>
+            <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(event.stacktrace, @host_otp_app) %>
             <div class="flex flex-col overflow-hidden">
               <.link
                 navigate={

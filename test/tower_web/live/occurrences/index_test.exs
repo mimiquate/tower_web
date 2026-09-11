@@ -27,7 +27,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_param: "",
           datetime_range_menu_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ "No occurrences recorded yet."
@@ -83,7 +84,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_param: "",
           datetime_range_menu_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ "<table"
@@ -152,7 +154,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_param: "",
           datetime_range_menu_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       # Error = red, Warning = yellow, Info = gray
@@ -194,7 +197,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_param: "",
           datetime_range_menu_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ "15/03/2024"
@@ -723,7 +727,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         base_path: "/tower",
         occurrences_base_path: "/tower/occurrences",
         datetime_range_options: Filters.datetime_range_options(),
-        datetime_range_menu_open: false
+        datetime_range_menu_open: false,
+        host_otp_app: :tower_web
       }
     }
   end
@@ -797,7 +802,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
         selected_occurrences_ids: MapSet.new(),
-        show_delete_modal: false
+        show_delete_modal: false,
+        host_otp_app: :tower_web
       }
     }
   end

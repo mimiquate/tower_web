@@ -28,7 +28,8 @@ defmodule TowerWeb.Live.Issues.Index do
        issues_base_path: "#{base_path}/issues",
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
-       levels: Level.levels()
+       levels: Level.levels(),
+       host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
 
@@ -181,7 +182,7 @@ defmodule TowerWeb.Live.Issues.Index do
                 #{issue.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
-              <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(issue.last_event.stacktrace) %>
+              <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(issue.last_event.stacktrace, @host_otp_app) %>
               <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
                 {last_stacktrace_line}
               </span>
