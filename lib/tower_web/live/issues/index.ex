@@ -7,6 +7,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
   @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
@@ -180,6 +181,10 @@ defmodule TowerWeb.Live.Issues.Index do
                 #{issue.id}
               </.link>
               <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
+              <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(issue.last_event.stacktrace) %>
+              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
+                {last_stacktrace_line}
+              </span>
             </div>
           </td>
           <td class="py-3 pl-6">

@@ -7,6 +7,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
   @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
@@ -228,6 +229,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
             />
           </td>
           <td class="py-3 pl-6 max-w-0">
+            <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(event.stacktrace) %>
             <div class="flex flex-col overflow-hidden">
               <.link
                 navigate={
@@ -242,7 +244,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
               >
                 #{event.id}
               </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-2">{event.normalized_reason}</span>
+              <div class="flex items-start gap-3 w-full">
+                <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
+                <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
+              </div>
+              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
+                {last_stacktrace_line}
+              </span>
             </div>
           </td>
           <td class="py-3 pl-6">
