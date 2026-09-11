@@ -22,7 +22,11 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
           levels: Level.levels(),
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
-          datetime_range_menu_open: false
+          datetime_range_from: "",
+          datetime_range_to: "",
+          datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
+          flash: %{}
         })
 
       assert html =~ "Total Errors"
@@ -156,8 +160,14 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
   end
 
   describe "allowed_filter_keys/0" do
-    test "supports search, level, and datetime_range, but not issue_ids" do
-      assert Dashboard.allowed_filter_keys() == [:search, :level, :datetime_range]
+    test "supports search, level, datetime_range, and datetime_range_from/to, but not issue_ids" do
+      assert Dashboard.allowed_filter_keys() == [
+               :search,
+               :level,
+               :datetime_range,
+               :datetime_range_from,
+               :datetime_range_to
+             ]
     end
   end
 
@@ -173,7 +183,9 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       assert socket.assigns.current_filters == [
                search: "timeout",
                level: "error",
-               datetime_range: "last_30d"
+               datetime_range: "last_30d",
+               datetime_range_from: "",
+               datetime_range_to: ""
              ]
     end
 
@@ -181,7 +193,36 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       {:noreply, socket} =
         Dashboard.handle_params(%{}, "/tower/dashboard", socket_with_dashboard())
 
-      assert socket.assigns.current_filters == [search: "", level: nil, datetime_range: "last_7d"]
+      assert socket.assigns.current_filters == [
+               search: "",
+               level: nil,
+               datetime_range: "last_7d",
+               datetime_range_from: "",
+               datetime_range_to: ""
+             ]
+    end
+
+    test "assigns current_filters with datetime_range_from/to when datetime_range is custom" do
+      {:noreply, socket} =
+        Dashboard.handle_params(
+          %{
+            "datetime_range" => "custom",
+            "datetime_range_from" => "2026-01-01",
+            "datetime_range_to" => "2026-01-31"
+          },
+          "/tower/dashboard",
+          socket_with_dashboard()
+        )
+
+      assert socket.assigns.current_filters == [
+               search: "",
+               level: nil,
+               datetime_range: "custom",
+               datetime_range_from: "2026-01-01",
+               datetime_range_to: "2026-01-31"
+             ]
+
+      assert socket.assigns.datetime_range_custom_open
     end
   end
 

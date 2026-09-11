@@ -133,6 +133,9 @@ defmodule TowerWeb.CoreComponents do
 
   attr(:datetime_range_options, :list, required: true)
   attr(:datetime_range_param, :string, required: true)
+  attr(:datetime_range_from, :string, default: "")
+  attr(:datetime_range_to, :string, default: "")
+  attr(:datetime_range_custom_open, :boolean, default: false)
   attr(:datetime_range_menu_open, :boolean, required: true)
 
   def date_range_filter(assigns) do
@@ -145,7 +148,7 @@ defmodule TowerWeb.CoreComponents do
         phx-click="toggle_datetime_menu"
         class="flex items-center gap-2 bg-tower-active font-inter font-light text-sm text-white px-2 py-1 cursor-pointer whitespace-nowrap shrink-0"
       >
-        {Filters.datetime_range_label(@datetime_range_param)}
+        {Filters.datetime_range_label(@datetime_range_param, @datetime_range_from, @datetime_range_to)}
         <.chevron_down_icon class="size-[16px]" />
       </button>
 
@@ -162,8 +165,56 @@ defmodule TowerWeb.CoreComponents do
         >
           {label}
         </button>
+
+        <div class="relative">
+          <button
+            type="button"
+            phx-click="toggle_custom_range"
+            class={[
+              "flex items-center justify-between gap-2 w-full text-left px-2 py-1 font-inter font-light text-sm text-white cursor-pointer whitespace-nowrap",
+              if(@datetime_range_param == "custom", do: "bg-tower-active", else: "bg-transparent hover:bg-tower-line-color")
+            ]}
+          >
+            Custom
+            <.chevron_down_icon class={"size-[14px] -rotate-90#{if @datetime_range_custom_open, do: " rotate-0", else: ""}"} />
+          </button>
+
+          <form
+            :if={@datetime_range_custom_open}
+            phx-submit="filter_datetime_range_custom"
+            class="absolute left-full top-0 ml-1 z-10 flex flex-col gap-3 p-3 min-w-max bg-tower-bg border border-tower-line-color"
+          >
+            <div class="flex items-start gap-3">
+              <.custom_date_input label="Start Date" name="from" value={@datetime_range_from} />
+              <.custom_date_input label="End Date" name="to" value={@datetime_range_to} />
+            </div>
+            <button type="submit" class="font-inter font-light text-sm text-white bg-tower-line-color hover:bg-tower-active py-1 px-2 cursor-pointer">
+              Apply
+            </button>
+          </form>
+        </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:label, :string, required: true)
+  attr(:name, :string, required: true)
+  attr(:value, :string, required: true)
+
+  defp custom_date_input(assigns) do
+    ~H"""
+    <label class="flex flex-col gap-1">
+      <span class="font-inter font-light text-xs text-tower-text-secondary">{@label}</span>
+      <input
+        type="text"
+        name={@name}
+        value={@value}
+        placeholder="YYYY-MM-DD HH:MM:SS"
+        autocomplete="off"
+        class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1.5 px-2 outline-none focus:border-tower-active w-[190px]"
+      />
+    </label>
     """
   end
 
@@ -172,38 +223,44 @@ defmodule TowerWeb.CoreComponents do
 
   def level_filter(assigns) do
     ~H"""
-    <span class="font-inter font-light text-sm text-white">Level:</span>
-    <div class="flex items-center gap-4">
-      <button
-        :for={level <- @levels}
-        type="button"
-        phx-click="filter_level"
-        phx-value-level={level}
-        class={[
-          "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
-          if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
-        ]}
-      >
-        {level}
-      </button>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="font-inter font-light text-sm text-white">Level:</span>
+      <div class="flex items-center gap-4">
+        <button
+          :for={level <- @levels}
+          type="button"
+          phx-click="filter_level"
+          phx-value-level={level}
+          class={[
+            "font-inter font-light text-sm text-white border border-tower-line-color py-1 px-2 cursor-pointer capitalize",
+            if(@selected_level == level, do: "bg-tower-active", else: "bg-transparent")
+          ]}
+        >
+          {level}
+        </button>
+      </div>
     </div>
     """
   end
 
   attr(:label, :string, default: "Issue ID")
+  attr(:issue_ids_filtered, :list, default: [])
 
   def issue_id_filter(assigns) do
     ~H"""
-    <span class="font-inter font-light text-sm text-white">{@label}:</span>
-    <form phx-submit="filter_issue_id" class="flex items-center">
-      <input
-        type="text"
-        placeholder={"Type #{@label} and press Enter"}
-        name="issue_id_filter"
-        value=""
-        class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
-      />
-    </form>
+    <div class="flex items-center gap-2 shrink-0">
+      <span class="font-inter font-light text-sm text-white whitespace-nowrap">{@label}:</span>
+      <form phx-submit="filter_issue_id" class="flex items-center">
+        <input
+          type="text"
+          id={"issue-id-filter-input-#{Enum.join(@issue_ids_filtered, ",")}"}
+          placeholder={"Type #{@label} and press Enter"}
+          name="issue_id_filter"
+          value=""
+          class="font-inter font-light text-sm text-white placeholder-tower-text-secondary bg-transparent border border-tower-line-color py-1 px-2 outline-none w-[180px]"
+        />
+      </form>
+    </div>
     """
   end
 
@@ -214,20 +271,34 @@ defmodule TowerWeb.CoreComponents do
 
   def active_filters_row(assigns) do
     ~H"""
-    <div :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []} class="flex flex-wrap items-center gap-x-3 gap-y-2 min-h-7">
-      <span class="font-inter font-light text-sm text-white">Active filters:</span>
+    <div
+      :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []}
+      class="flex items-center gap-2 shrink-0"
+    >
+      <span class="font-inter font-light text-sm text-white whitespace-nowrap">Active filters:</span>
       <div class="border-l border-tower-line-color h-7"></div>
-      <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
-      <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
-      <span :if={@issue_ids_filtered != []} class="font-inter font-light text-sm text-white">{@issue_id_label}:</span>
-      <div :if={@issue_ids_filtered != []} class="border-l border-tower-line-color h-7"></div>
-      <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
+    </div>
+
+    <.active_filter_tag :if={@search_query != ""} value={@search_query} type="search" />
+    <.active_filter_tag :if={@selected_level != nil} value={@selected_level} type="level" class="capitalize" />
+
+    <div :if={@issue_ids_filtered != []} class="flex items-center gap-2 shrink-0">
+      <span class="font-inter font-light text-sm text-white whitespace-nowrap">{@issue_id_label}:</span>
+      <div class="border-l border-tower-line-color h-7"></div>
+    </div>
+
+    <.active_filter_tag :for={issue_id <- @issue_ids_filtered} value={issue_id} type="issue_id" id={issue_id} />
+
+    <div
+      :if={@search_query != "" or @selected_level != nil or @issue_ids_filtered != []}
+      class="flex items-center gap-2 shrink-0"
+    >
       <div class="border-l border-tower-line-color h-7"></div>
       <button
         type="button"
         phx-click="clear_filter"
         phx-value-type="all"
-        class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1"
+        class="font-inter font-light text-sm text-white cursor-pointer flex items-center gap-1 whitespace-nowrap"
       >
         Clear filter
         <.close_icon />
@@ -248,7 +319,7 @@ defmodule TowerWeb.CoreComponents do
       phx-click="clear_filter"
       phx-value-type={@type}
       phx-value-id={@id}
-      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer", @class]}
+      class={["font-inter font-light text-sm text-white bg-tower-line-color max-w-[130px] h-7 py-1 px-2 flex items-center justify-center gap-1 cursor-pointer shrink-0", @class]}
     >
       <span class="truncate">{@value}</span>
       <.close_icon />
@@ -417,7 +488,7 @@ defmodule TowerWeb.CoreComponents do
 
     chart_max = counts |> Enum.max() |> chart_max_value()
 
-    x_labels = build_x_labels(starts, grid_from, duration_us, plot)
+    x_labels = build_x_labels(starts, grid_from, duration_us, axis_label_mode(from, to), plot)
     y_labels = build_y_labels(chart_max, plot)
     points = build_points(starts, counts, grid_from, duration_us, step, chart_max, plot)
 
@@ -472,25 +543,53 @@ defmodule TowerWeb.CoreComponents do
     for index <- 0..(count - 1), do: Map.get(frequencies, index, 0)
   end
 
-  # calculates the X-axis position and label for each time bucket.
-  defp build_x_labels(bucket_starts, grid_from, duration_us, plot) do
-    Enum.map(bucket_starts, fn start ->
-      x = time_to_x(start, grid_from, duration_us, plot)
-      %{x: Float.round(x, 2), label: axis_label(start, duration_us)}
-    end)
+  @one_day_in_seconds 86_400
+  @five_days_in_seconds 5 * 86_400
+
+  defp axis_label_mode(from, to) do
+    duration = DateTime.diff(to, from, :second)
+    same_date? = DateTime.to_date(from) == DateTime.to_date(to)
+
+    cond do
+      duration < @one_day_in_seconds and same_date? -> :hours_only
+      duration < @five_days_in_seconds -> :date_and_hour
+      true -> :date_only
+    end
   end
 
-  @one_day_in_microseconds 86_400 * 1_000_000
+  defp build_x_labels(bucket_starts, grid_from, duration_us, mode, plot) do
+    bucket_starts
+    |> Enum.map_reduce(nil, fn start, previous_date ->
+      date = DateTime.to_date(start)
+      x = time_to_x(start, grid_from, duration_us, plot)
+      label = axis_label(start, mode, date, previous_date)
 
-  # axis text: just the date for multi-day ranges, just the time otherwise
-  defp axis_label(datetime, duration_us) when duration_us > @one_day_in_microseconds,
+      {%{x: Float.round(x, 2), label: label}, date}
+    end)
+    |> elem(0)
+  end
+
+  defp axis_label(datetime, :hours_only, _date, _previous_date),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_and_hour, _date, nil),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_and_hour, date, date),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_and_hour, _date, _previous_date),
     do: Calendar.strftime(datetime, "%b %d")
 
-  defp axis_label(datetime, _duration_us), do: Calendar.strftime(datetime, "%-I:%M %p")
+  defp axis_label(datetime, :date_only, date, date),
+    do: Calendar.strftime(datetime, "%-I:%M %p")
+
+  defp axis_label(datetime, :date_only, _date, _previous_date),
+    do: Calendar.strftime(datetime, "%b %d")
 
   # tooltip text: always show the date too when buckets are sub-day, so
   # hovering a point on a multi-day chart isn't ambiguous about which day
-  defp tooltip_label(datetime, step) when step < 86_400,
+  defp tooltip_label(datetime, step) when step < @one_day_in_seconds,
     do: Calendar.strftime(datetime, "%b %d, %-I:%M %p")
 
   defp tooltip_label(datetime, _step), do: Calendar.strftime(datetime, "%b %d")

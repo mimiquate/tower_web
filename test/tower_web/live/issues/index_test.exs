@@ -52,7 +52,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           issues_base_path: "/tower/issues",
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           flash: %{}
         })
 
@@ -248,8 +251,15 @@ defmodule TowerWeb.Live.Issues.IndexTest do
   end
 
   describe "allowed_filter_keys/0" do
-    test "supports search, level, datetime_range, and issue_ids" do
-      assert IssuesIndex.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
+    test "supports search, level, datetime_range, datetime_range_from/to, and issue_ids" do
+      assert IssuesIndex.allowed_filter_keys() == [
+               :search,
+               :level,
+               :datetime_range,
+               :datetime_range_from,
+               :datetime_range_to,
+               :issue_ids
+             ]
     end
   end
 
@@ -279,8 +289,42 @@ defmodule TowerWeb.Live.Issues.IndexTest do
                search: "timeout",
                level: "error",
                datetime_range: "last_30d",
+               datetime_range_from: "",
+               datetime_range_to: "",
                issue_ids: ["1", "2"]
              ]
+    end
+
+    test "assigns current_filters with datetime_range_from/to when datetime_range is custom" do
+      {:noreply, redirected_socket} =
+        IssuesIndex.handle_params(
+          %{
+            "datetime_range" => "custom",
+            "datetime_range_from" => "2026-01-01",
+            "datetime_range_to" => "2026-01-31"
+          },
+          "/tower/issues",
+          socket_with_issues()
+        )
+
+      assert {:live, :patch, %{to: to}} = redirected_socket.redirected
+
+      %URI{query: query} = URI.parse(to)
+      redirected_params = URI.decode_query(query)
+
+      {:noreply, socket} =
+        IssuesIndex.handle_params(redirected_params, "/tower/issues", socket_with_issues())
+
+      assert socket.assigns.current_filters == [
+               search: "",
+               level: nil,
+               datetime_range: "custom",
+               datetime_range_from: "2026-01-01",
+               datetime_range_to: "2026-01-31",
+               issue_ids: []
+             ]
+
+      assert socket.assigns.datetime_range_custom_open
     end
   end
 
@@ -295,6 +339,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         issues_base_path: "/tower/issues",
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
+        datetime_range_custom_open: false,
         flash: %{}
       }
     }
