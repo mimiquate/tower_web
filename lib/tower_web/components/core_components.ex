@@ -462,6 +462,41 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:reason, :string, required: true)
+  attr(:expanded, :boolean, required: true)
+  attr(:max_length, :integer, default: 500)
+
+  def expandable_reason(assigns) do
+    ~H"""
+    <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @expanded, do: @reason, else: truncate_reason(@reason, @max_length)}</pre>
+    <button
+      :if={String.length(@reason) > @max_length}
+      phx-click="toggle_reason"
+      class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
+    >
+      <span class="underline">{if @expanded, do: "Show less", else: "Show more"}</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class={["size-4 transition-transform", @expanded && "rotate-180"]}
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      </svg>
+    </button>
+    """
+  end
+
+  defp truncate_reason(reason, max_length) do
+    if String.length(reason) > max_length do
+      String.slice(reason, 0, max_length) <> "..."
+    else
+      reason
+    end
+  end
+
   attr(:checked, :boolean, required: true)
 
   def select_all_checkbox(assigns) do
