@@ -180,17 +180,7 @@ defmodule TowerWeb.Live.Issues.Index do
           <th class="py-2 pl-6 text-base font-light">
             <div class="flex items-center gap-3">
               <span>Reason (error message)</span>
-              <span :if={selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
-                {selected_count} {selected_item_label} selected
-              </span>
-              <button
-                :if={selected_count > 0}
-                type="button"
-                phx-click="show_delete_modal"
-                class="font-inter text-sm font-normal text-red-500 border border-red-500 px-2 hover:bg-red-400/10"
-              >
-                Delete
-              </button>
+              <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
             </div>
           </th>
           <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>

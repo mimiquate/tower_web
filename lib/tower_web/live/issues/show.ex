@@ -109,13 +109,7 @@ defmodule TowerWeb.Live.Issues.Show do
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
-        <button
-          type="button"
-          phx-click="show_delete_modal"
-          class="font-inter text-sm text-red-500 border border-red-500 w-24 h-8 px-2 py-1 mb-6 hover:bg-red-400/10"
-        >
-          Delete
-        </button>
+        <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
       </div>
 
       <.confirm_modal

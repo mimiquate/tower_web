@@ -332,6 +332,39 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:size, :atom, values: [:sm, :lg], default: :sm)
+  attr(:rest, :global, include: ~w(phx-click))
+  slot(:inner_block, required: true)
+
+  def delete_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={[
+        "font-inter text-sm font-normal text-red-500 border border-red-500 hover:bg-red-400/10",
+        @size == :sm && "px-2",
+        @size == :lg && "w-24 h-8 px-2 py-1"
+      ]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  attr(:selected_count, :integer, required: true)
+  attr(:item_label, :string, required: true)
+  attr(:delete_event, :string, default: "show_delete_modal")
+
+  def bulk_delete_toolbar(assigns) do
+    ~H"""
+    <span :if={@selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
+      {@selected_count} {@item_label} selected
+    </span>
+    <.delete_button :if={@selected_count > 0} phx-click={@delete_event}>Delete</.delete_button>
+    """
+  end
+
   attr(:class, :string, default: nil)
 
   def chevron_down_icon(assigns) do
