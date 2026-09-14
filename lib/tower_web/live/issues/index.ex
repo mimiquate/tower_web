@@ -200,7 +200,12 @@ defmodule TowerWeb.Live.Issues.Index do
       page={@page}
       total_pages={@total_pages}
       page_path={
-        &Paths.page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)
+        &Paths.page_path(&1,
+          search: @search_query,
+          level: @selected_level,
+          datetime_range: @datetime_range_param,
+          issue_ids: @issue_ids_filtered
+        )
       }
     />
     """
