@@ -236,6 +236,48 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:search_query, :string, required: true)
+  attr(:datetime_range_options, :list, required: true)
+  attr(:datetime_range_param, :string, required: true)
+  attr(:datetime_range_menu_open, :boolean, required: true)
+  attr(:levels, :list, required: true)
+  attr(:selected_level, :string, default: nil)
+  attr(:issue_ids_filtered, :list, default: [])
+  attr(:issue_id_label, :string, default: "Issue ID")
+
+  def filters_panel(assigns) do
+    ~H"""
+    <div class="flex flex-col gap-3 mb-4">
+      <.search_filter search_query={@search_query} />
+
+      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
+        <div class="flex items-center gap-3">
+          <.date_range_filter
+            datetime_range_options={@datetime_range_options}
+            datetime_range_param={@datetime_range_param}
+            datetime_range_menu_open={@datetime_range_menu_open}
+          />
+
+          <div class="border-l border-tower-line-color h-7"></div>
+
+          <.level_filter levels={@levels} selected_level={@selected_level} />
+
+          <div class="border-l border-tower-line-color h-full"></div>
+
+          <.issue_id_filter label={@issue_id_label} />
+        </div>
+
+        <.active_filters_row
+          search_query={@search_query}
+          selected_level={@selected_level}
+          issue_ids_filtered={@issue_ids_filtered}
+          issue_id_label={@issue_id_label}
+        />
+      </div>
+    </div>
+    """
+  end
+
   attr(:value, :any, required: true)
   attr(:type, :string, required: true)
   attr(:class, :string, default: "")
