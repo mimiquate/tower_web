@@ -2,13 +2,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Events
-  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.Selection
-  alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
   @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
@@ -183,79 +181,53 @@ defmodule TowerWeb.Live.Occurrences.Index do
       No matching occurrences found.
     </div>
 
-    <table :if={@filtered_events != []} class="w-full text-left">
-      <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
-        <tr>
-          <th class="py-2 pl-2 w-8">
-            <input
-              type="checkbox"
-              phx-click="toggle_select_all"
-              checked={Selection.all_selected?(@filtered_events, @selected_occurrences_ids)}
-              class="accent-tower-active [color-scheme:dark]"
-            />
-          </th>
+    <.data_table rows={@filtered_events}>
+      <:header>
+        <th class="py-2 pl-2 w-8">
+          <.select_all_checkbox checked={Selection.all_selected?(@filtered_events, @selected_occurrences_ids)} />
+        </th>
 
-          <th class="py-2 pl-6 text-base font-light">
-            <div class="flex items-center gap-3">
-              <span>Related Occurrence</span>
-              <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
-            </div>
-          </th>
-          <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
-          <th class="py-2 pl-6 text-base font-light w-[180px]">Timestamp</th>
-        </tr>
-      </thead>
-      <tbody class="font-inter">
-        <tr :for={event <- @filtered_events} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
-          <td class="py-3 pl-2 w-8">
-            <input
-              type="checkbox"
-              phx-click="toggle_select"
-              phx-value-id={event.id}
-              checked={MapSet.member?(@selected_occurrences_ids, event.id)}
-              class={[
-                "accent-tower-active [color-scheme:dark]",
-                MapSet.member?(@selected_occurrences_ids, event.id) && "opacity-100"
-              ]}
+        <th class="py-2 pl-6 text-base font-light">
+          <div class="flex items-center gap-3">
+            <span>Related Occurrence</span>
+            <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
+          </div>
+        </th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
+        <th class="py-2 pl-6 text-base font-light w-[180px]">Timestamp</th>
+      </:header>
+      <:row :let={event}>
+        <td class="py-3 pl-2 w-8">
+          <.row_checkbox id={event.id} checked={MapSet.member?(@selected_occurrences_ids, event.id)} />
+        </td>
+        <td class="py-3 pl-6 max-w-0">
+          <div class="flex flex-col overflow-hidden">
+            <.id_link
+              id={event.id}
+              navigate={
+                Paths.show_path(
+                  @occurrences_base_path,
+                  event.id,
+                  [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered],
+                  %{page: @page}
+                )
+              }
             />
-          </td>
-          <td class="py-3 pl-6 max-w-0">
-            <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(event.stacktrace) %>
-            <div class="flex flex-col overflow-hidden">
-              <.link
-                navigate={
-                  Paths.show_path(
-                    @occurrences_base_path,
-                    event.id,
-                    [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered],
-                    %{page: @page}
-                  )
-                }
-                class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline"
-              >
-                #{event.id}
-              </.link>
-              <div class="flex items-start gap-3 w-full">
-                <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
-                <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
-              </div>
-              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
-                {last_stacktrace_line}
-              </span>
+            <div class="flex items-start gap-3 w-full">
+              <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
+              <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
             </div>
-          </td>
-          <td class="py-3 pl-6">
-            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(event.level)]}>{event.level}</span>
-          </td>
-          <td class="py-3 pl-6">
-            <div class="flex flex-col">
-              <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(event.datetime)}</span>
-              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(event.datetime)}</span>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <.last_stacktrace_line stacktrace={event.stacktrace} />
+          </div>
+        </td>
+        <td class="py-3 pl-6">
+          <.level_badge level={event.level} />
+        </td>
+        <td class="py-3 pl-6">
+          <.datetime_stack datetime={event.datetime} />
+        </td>
+      </:row>
+    </.data_table>
 
     <.pagination
       page={@page}

@@ -2,13 +2,11 @@ defmodule TowerWeb.Live.Issues.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Issues
-  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.Selection
-  alias TowerWeb.Live.StacktraceFormatter
 
   @per_page 20
   @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
@@ -165,87 +163,59 @@ defmodule TowerWeb.Live.Issues.Index do
       No matching issues found.
     </div>
 
-    <table :if={@issues != []} class="w-full text-left">
-      <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
-        <tr>
-          <th class="py-2 pl-2 w-8">
-            <input
-              type="checkbox"
-              phx-click="toggle_select_all"
-              checked={Selection.all_selected?(@issues, @selected_issue_ids)}
-              class="accent-tower-active [color-scheme:dark]"
-            />
-          </th>
+    <.data_table rows={@issues}>
+      <:header>
+        <th class="py-2 pl-2 w-8">
+          <.select_all_checkbox checked={Selection.all_selected?(@issues, @selected_issue_ids)} />
+        </th>
 
-          <th class="py-2 pl-6 text-base font-light">
-            <div class="flex items-center gap-3">
-              <span>Reason (error message)</span>
-              <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
-            </div>
-          </th>
-          <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
-          <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
-          <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
-        </tr>
-      </thead>
-      <tbody class="font-inter">
-        <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
-          <td class="py-3 pl-2 w-8">
-            <input
-              type="checkbox"
-              phx-click="toggle_select"
-              phx-value-id={issue.id}
-              checked={MapSet.member?(@selected_issue_ids, issue.id)}
-              class={[
-                "accent-tower-active [color-scheme:dark]",
-                MapSet.member?(@selected_issue_ids, issue.id) && "opacity-100"
-              ]}
+        <th class="py-2 pl-6 text-base font-light">
+          <div class="flex items-center gap-3">
+            <span>Reason (error message)</span>
+            <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
+          </div>
+        </th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
+        <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
+      </:header>
+      <:row :let={issue}>
+        <td class="py-3 pl-2 w-8">
+          <.row_checkbox id={issue.id} checked={MapSet.member?(@selected_issue_ids, issue.id)} />
+        </td>
+        <td class="py-3 pl-6 max-w-0">
+          <div class="flex flex-col overflow-hidden">
+            <.id_link
+              id={issue.id}
+              navigate={
+                Paths.show_path(
+                  @issues_base_path,
+                  issue.id,
+                  [
+                    search: @search_query,
+                    level: @selected_level,
+                    datetime_range: @datetime_range_param,
+                    issue_ids: @issue_ids_filtered
+                  ],
+                  %{page: @page}
+                )
+              }
             />
-          </td>
-          <td class="py-3 pl-6 max-w-0">
-            <div class="flex flex-col overflow-hidden">
-              <.link
-                navigate={
-                  Paths.show_path(
-                    @issues_base_path,
-                    issue.id,
-                    [
-                      search: @search_query,
-                      level: @selected_level,
-                      datetime_range: @datetime_range_param,
-                      issue_ids: @issue_ids_filtered
-                    ],
-                    %{page: @page}
-                  )
-                }
-                class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline"
-              >
-                #{issue.id}
-              </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
-              <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(issue.last_event.stacktrace) %>
-              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
-                {last_stacktrace_line}
-              </span>
-            </div>
-          </td>
-          <td class="py-3 pl-6">
-            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(issue.last_event.level)]}>
-              {issue.last_event.level}
-            </span>
-          </td>
-          <td class="py-3 pl-6">
-            <span class="text-sm text-white">{issue.count_events}</span>
-          </td>
-          <td class="py-3 pl-6">
-            <div class="flex flex-col">
-              <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(issue.last_seen)}</span>
-              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(issue.last_seen)}</span>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
+            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} />
+          </div>
+        </td>
+        <td class="py-3 pl-6">
+          <.level_badge level={issue.last_event.level} />
+        </td>
+        <td class="py-3 pl-6">
+          <span class="text-sm text-white">{issue.count_events}</span>
+        </td>
+        <td class="py-3 pl-6">
+          <.datetime_stack datetime={issue.last_seen} />
+        </td>
+      </:row>
+    </.data_table>
 
     <.pagination
       page={@page}

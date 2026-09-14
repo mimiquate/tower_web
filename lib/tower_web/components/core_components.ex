@@ -3,8 +3,11 @@ defmodule TowerWeb.CoreComponents do
 
   use Phoenix.Component
 
+  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
+  alias TowerWeb.Live.StacktraceFormatter
 
   attr(:page, :integer, required: true)
   attr(:total_pages, :integer, required: true)
@@ -362,6 +365,93 @@ defmodule TowerWeb.CoreComponents do
       {@selected_count} {@item_label} selected
     </span>
     <.delete_button :if={@selected_count > 0} phx-click={@delete_event}>Delete</.delete_button>
+    """
+  end
+
+  attr(:rows, :list, required: true)
+  slot(:header, required: true)
+  slot(:row, required: true)
+
+  def data_table(assigns) do
+    ~H"""
+    <table :if={@rows != []} class="w-full text-left">
+      <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
+        <tr>{render_slot(@header)}</tr>
+      </thead>
+      <tbody class="font-inter">
+        <tr
+          :for={row <- @rows}
+          class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]"
+        >
+          {render_slot(@row, row)}
+        </tr>
+      </tbody>
+    </table>
+    """
+  end
+
+  attr(:checked, :boolean, required: true)
+
+  def select_all_checkbox(assigns) do
+    ~H"""
+    <input type="checkbox" phx-click="toggle_select_all" checked={@checked} class="accent-tower-active [color-scheme:dark]" />
+    """
+  end
+
+  attr(:id, :any, required: true)
+  attr(:checked, :boolean, required: true)
+
+  def row_checkbox(assigns) do
+    ~H"""
+    <input
+      type="checkbox"
+      phx-click="toggle_select"
+      phx-value-id={@id}
+      checked={@checked}
+      class={["accent-tower-active [color-scheme:dark]", @checked && "opacity-100"]}
+    />
+    """
+  end
+
+  attr(:level, :string, required: true)
+
+  def level_badge(assigns) do
+    ~H"""
+    <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(@level)]}>
+      {@level}
+    </span>
+    """
+  end
+
+  attr(:datetime, :any, required: true)
+
+  def datetime_stack(assigns) do
+    ~H"""
+    <div class="flex flex-col">
+      <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@datetime)}</span>
+      <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(@datetime)}</span>
+    </div>
+    """
+  end
+
+  attr(:navigate, :string, required: true)
+  attr(:id, :any, required: true)
+
+  def id_link(assigns) do
+    ~H"""
+    <.link navigate={@navigate} class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline">
+      #{@id}
+    </.link>
+    """
+  end
+
+  attr(:stacktrace, :any, required: true)
+
+  def last_stacktrace_line(assigns) do
+    assigns = assign(assigns, :line, StacktraceFormatter.last_stacktrace_line(assigns.stacktrace))
+
+    ~H"""
+    <span :if={@line} class="text-xs text-tower-text-secondary line-clamp-1">{@line}</span>
     """
   end
 
