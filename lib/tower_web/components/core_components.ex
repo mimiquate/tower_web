@@ -278,6 +278,36 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:empty, :boolean, required: true)
+  attr(:search_query, :string, required: true)
+  attr(:selected_level, :string, default: nil)
+  attr(:datetime_range_param, :string, required: true)
+  attr(:issue_ids_filtered, :list, default: [])
+  attr(:label, :string, required: true)
+
+  def list_empty_state(assigns) do
+    ~H"""
+    <div
+      :if={
+        @empty and
+          not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
+      No {@label} recorded yet.
+    </div>
+    <div
+      :if={
+        @empty and
+          Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
+      No matching {@label} found.
+    </div>
+    """
+  end
+
   attr(:value, :any, required: true)
   attr(:type, :string, required: true)
   attr(:class, :string, default: "")

@@ -145,24 +145,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
       confirm_label="Delete"
     />
 
-    <div
-      :if={
-        @filtered_events == [] and
-          not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, similarity_id: @issue_ids_filtered)
-      }
-      class="text-gray-400"
-    >
-      No occurrences recorded yet.
-    </div>
-    <div
-      :if={
-        @filtered_events == [] and
-          Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, similarity_id: @issue_ids_filtered)
-      }
-      class="text-gray-400"
-    >
-      No matching occurrences found.
-    </div>
+    <.list_empty_state
+      empty={@filtered_events == []}
+      search_query={@search_query}
+      selected_level={@selected_level}
+      datetime_range_param={@datetime_range_param}
+      issue_ids_filtered={@issue_ids_filtered}
+      label="occurrences"
+    />
 
     <table :if={@filtered_events != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">

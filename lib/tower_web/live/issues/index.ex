@@ -118,18 +118,27 @@ defmodule TowerWeb.Live.Issues.Index do
       issue_id_label="ID"
     />
 
-    <div
-      :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
-      class="text-gray-400"
-    >
-      No issues recorded yet.
-    </div>
-    <div
-      :if={@issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
-      class="text-gray-400"
-    >
-      No matching issues found.
-    </div>
+    <% selected_count = MapSet.size(@selected_issue_ids) %>
+    <% selected_item_label = Selection.item_label(selected_count) %>
+    <% selected_issue_label = issue_label(selected_count) %>
+
+    <.confirm_modal
+      show={@show_delete_modal}
+      title={"Delete #{selected_issue_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_issue_label}? This action cannot be undone."}
+      cancel_event="cancel_delete_selected"
+      confirm_event="delete_selected"
+      confirm_label="Delete"
+    />
+
+    <.list_empty_state
+      empty={@issues == []}
+      search_query={@search_query}
+      selected_level={@selected_level}
+      datetime_range_param={@datetime_range_param}
+      issue_ids_filtered={@issue_ids_filtered}
+      label="issues"
+    />
 
     <table :if={@issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
