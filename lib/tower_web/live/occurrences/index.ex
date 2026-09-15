@@ -284,8 +284,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
      |> assign(datetime_range_menu_open: false)
      |> push_patch(
        to:
-         build_path(
-           socket,
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
            Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
          )
      )}
@@ -295,7 +295,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
   def handle_event("search", %{"query" => query}, socket) do
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, Filters.current_filters(socket.assigns, search: query))
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.current_filters(socket.assigns, search: query)
+         )
      )}
   end
 
@@ -305,7 +309,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, Filters.current_filters(socket.assigns, level: new_level))
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.current_filters(socket.assigns, level: new_level)
+         )
      )}
   end
 
@@ -323,7 +331,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
         {:noreply,
          push_patch(socket,
            to:
-             build_path(socket, Filters.current_filters(socket.assigns, issue_ids: new_issue_ids))
+             Paths.build_path(
+               socket.assigns.occurrences_base_path,
+               Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
+             )
          )}
 
       _ ->
@@ -336,13 +347,23 @@ defmodule TowerWeb.Live.Occurrences.Index do
   def handle_event("clear_filter", %{"type" => "issue_id", "id" => id}, socket) do
     {:noreply,
      push_patch(socket,
-       to: build_path(socket, Filters.clear_filter(socket.assigns, "issue_id", id))
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.clear_filter(socket.assigns, "issue_id", id)
+         )
      )}
   end
 
   def handle_event("clear_filter", %{"type" => type}, socket) do
     {:noreply,
-     push_patch(socket, to: build_path(socket, Filters.clear_filter(socket.assigns, type)))}
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.clear_filter(socket.assigns, type)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -396,10 +417,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
        to:
          "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
      )}
-  end
-
-  defp build_path(socket, filters) do
-    Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: 1})
   end
 
   defp visible_ids_selected?(events, selected_occurrences_ids) do
