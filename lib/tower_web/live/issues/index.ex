@@ -73,7 +73,7 @@ defmodule TowerWeb.Live.Issues.Index do
 
           {:noreply,
            assign(socket,
-             issues: issues,
+             filtered_issues: issues,
              page: page,
              total_pages: total_pages,
              total_count: total_count,
@@ -134,19 +134,19 @@ defmodule TowerWeb.Live.Issues.Index do
     </div>
 
     <div
-      :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
+      :if={@filtered_issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
     >
       No issues recorded yet.
     </div>
     <div
-      :if={@issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
+      :if={@filtered_issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
     >
       No matching issues found.
     </div>
 
-    <table :if={@issues != []} class="w-full text-left">
+    <table :if={@filtered_issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
           <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
@@ -156,7 +156,7 @@ defmodule TowerWeb.Live.Issues.Index do
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
+        <tr :for={issue <- @filtered_issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
           <td class="py-3 pl-6 max-w-0">
             <div class="flex flex-col overflow-hidden">
               <.link

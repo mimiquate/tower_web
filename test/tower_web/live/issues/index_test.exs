@@ -41,7 +41,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
 
       html =
         render_component(&IssuesIndex.render/1, %{
-          issues: issues,
+          filtered_issues: issues,
           search_query: "",
           selected_level: nil,
           issue_ids_filtered: [],
@@ -99,7 +99,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:noreply, socket} =
         IssuesIndex.handle_params(%{"page" => "1", "search" => "database"}, "/tower", socket)
 
-      assert length(socket.assigns.issues) == 1
+      assert length(socket.assigns.filtered_issues) == 1
       assert socket.assigns.search_query == "database"
 
       html = render_component(&IssuesIndex.render/1, socket.assigns)
@@ -143,7 +143,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:noreply, socket} =
         IssuesIndex.handle_params(%{"page" => "1", "level" => "error"}, "/tower", socket)
 
-      assert length(socket.assigns.issues) == 1
+      assert length(socket.assigns.filtered_issues) == 1
       assert socket.assigns.selected_level == "error"
 
       html = render_component(&IssuesIndex.render/1, socket.assigns)
@@ -191,7 +191,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           socket
         )
 
-      assert length(socket.assigns.issues) == 1
+      assert length(socket.assigns.filtered_issues) == 1
     end
   end
 
@@ -243,7 +243,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:noreply, socket} =
         IssuesIndex.handle_params(%{"page" => "1", "issue_ids" => "1"}, "/tower", socket)
 
-      assert length(socket.assigns.issues) == 1
+      assert length(socket.assigns.filtered_issues) == 1
     end
   end
 
