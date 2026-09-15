@@ -136,6 +136,21 @@ defmodule TowerWeb.Live.Occurrences.Show do
         <h2 class="text-lg font-roboto-slab text-white mb-4 font-light">Metadata</h2>
         <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_metadata(@event.metadata)}</pre>
       </div>
+
+      <div :if={@event.request_data} class="mb-8 border border-tower-line-color p-4">
+        <h2 class="text-lg font-roboto-slab text-white mb-4 font-light">Request</h2>
+        <pre class="text-sm font-mono text-tower-text-secondary whitespace-pre-wrap">{format_request_summary(@event.request_data)}</pre>
+
+        <div :if={has_entries?(@event.request_data["headers"])} class="mt-4">
+          <h3 class="text-sm font-roboto-slab text-white mb-2 font-light">Headers</h3>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_key_value(@event.request_data["headers"])}</pre>
+        </div>
+
+        <div :if={has_entries?(@event.request_data["params"])} class="mt-4">
+          <h3 class="text-sm font-roboto-slab text-white mb-2 font-light">Params</h3>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_key_value(@event.request_data["params"])}</pre>
+        </div>
+      </div>
     </div>
     """
   end
@@ -175,4 +190,23 @@ defmodule TowerWeb.Live.Occurrences.Show do
   defp format_metadata(metadata) do
     inspect(metadata, pretty: true)
   end
+
+  defp has_entries?(map) when is_map(map), do: map != %{}
+  defp has_entries?(_), do: false
+
+  defp format_request_summary(request_data) do
+    [
+      "#{request_data["method"]} #{request_data["url"]}",
+      "IP: #{request_data["user_ip"]}"
+    ]
+    |> Enum.join("\n")
+  end
+
+  defp format_key_value(map) when is_map(map) do
+    map
+    |> Enum.map(fn {k, v} -> "#{k}: #{inspect(v)}" end)
+    |> Enum.join("\n")
+  end
+
+  defp format_key_value(_), do: ""
 end
