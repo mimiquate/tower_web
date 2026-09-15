@@ -18,12 +18,11 @@ defmodule TowerWeb.Live.Issues.Index do
     base_path = session["base_path"]
 
     {:ok,
-     assign(socket,
+     socket
+     |> assign(Filters.default_assigns())
+     |> assign(
        base_path: base_path,
-       issues_base_path: "#{base_path}/issues",
-       datetime_range_options: Filters.datetime_range_options(),
-       datetime_range_menu_open: false,
-       levels: Level.levels()
+       issues_base_path: "#{base_path}/issues"
      )}
   end
 

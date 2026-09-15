@@ -19,6 +19,14 @@ defmodule TowerWeb.Live.Filters do
 
   def datetime_range_options, do: @datetime_range_options
 
+  def default_assigns do
+    %{
+      datetime_range_options: @datetime_range_options,
+      datetime_range_menu_open: false,
+      levels: Level.levels()
+    }
+  end
+
   def datetime_range(datetime_range_param) do
     case DatetimePresets.cast(datetime_range_param) do
       nil -> []
