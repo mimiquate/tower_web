@@ -9,11 +9,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.StacktraceFormatter
 
-  @per_page 20
-  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
-
-  def allowed_filter_keys, do: @allowed_filter_keys
-
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
     if connected?(socket) do
@@ -64,8 +59,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
             datetime_range: datetime_range
           )
 
+        per_page = Pagination.per_page()
         total_count = Events.count_events(filters: filters)
-        total_pages = Pagination.total_pages(total_count, @per_page)
+        total_pages = Pagination.total_pages(total_count, per_page)
 
         if page > total_pages do
           {:noreply,
@@ -74,9 +70,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
                "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
            )}
         else
-          offset = (page - 1) * @per_page
+          offset = (page - 1) * per_page
 
-          events = Events.list_events(limit: @per_page, offset: offset, filters: filters)
+          events = Events.list_events(limit: per_page, offset: offset, filters: filters)
 
           {:noreply,
            assign(socket,

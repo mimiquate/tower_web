@@ -4,6 +4,10 @@ defmodule TowerWeb.Live.Filters do
   alias TowerWeb.DatetimePresets
   alias TowerWeb.Live.Level
 
+  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
+
+  def allowed_filter_keys, do: @allowed_filter_keys
+
   @datetime_range_options [
     {"Last hour", "last_hour"},
     {"Last 24 hours", "last_24h"},
