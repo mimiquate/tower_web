@@ -34,11 +34,13 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
-    search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> Level.validate_level()
-    datetime_range_param = params["datetime_range"] || "last_7d"
-    datetime_range = Filters.datetime_range(datetime_range_param)
-    issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
+    %{
+      search: search,
+      level: level,
+      datetime_range_param: datetime_range_param,
+      datetime_range: datetime_range,
+      issue_ids: issue_ids
+    } = Filters.parse_params(params)
 
     case Map.get(params, "page") do
       nil ->
@@ -233,13 +235,20 @@ defmodule TowerWeb.Live.Issues.Index do
      socket
      |> assign(datetime_range_menu_open: false)
      |> push_patch(
-       to: build_path(socket, current_filters(socket, datetime_range: datetime_range_param))
+       to:
+         build_path(
+           socket,
+           Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
+         )
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, search: query)))}
+    {:noreply,
+     push_patch(socket,
+       to: build_path(socket, Filters.current_filters(socket.assigns, search: query))
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -247,7 +256,9 @@ defmodule TowerWeb.Live.Issues.Index do
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
     {:noreply,
-     push_patch(socket, to: build_path(socket, current_filters(socket, level: new_level)))}
+     push_patch(socket,
+       to: build_path(socket, Filters.current_filters(socket.assigns, level: new_level))
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -263,7 +274,8 @@ defmodule TowerWeb.Live.Issues.Index do
 
         {:noreply,
          push_patch(socket,
-           to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids))
+           to:
+             build_path(socket, Filters.current_filters(socket.assigns, issue_ids: new_issue_ids))
          )}
 
       _ ->
@@ -273,38 +285,20 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("clear_filter", %{"type" => "issue_id", "id" => issue_id_to_remove}, socket) do
-    new_issue_ids = Enum.reject(socket.assigns.issue_ids_filtered, &(&1 == issue_id_to_remove))
-
+  def handle_event("clear_filter", %{"type" => "issue_id", "id" => id}, socket) do
     {:noreply,
-     push_patch(socket, to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids)))}
+     push_patch(socket,
+       to: build_path(socket, Filters.clear_filter(socket.assigns, "issue_id", id))
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("clear_filter", %{"type" => type}, socket) do
-    datetime_range_filter = [datetime_range: socket.assigns.datetime_range_param]
-
-    filters =
-      case type do
-        "all" -> [search: "", level: nil, datetime_range: "", issue_ids: []]
-        "search" -> current_filters(socket, search: "") ++ datetime_range_filter
-        "level" -> current_filters(socket, level: nil) ++ datetime_range_filter
-      end
-
-    {:noreply, push_patch(socket, to: build_path(socket, filters))}
+    {:noreply,
+     push_patch(socket, to: build_path(socket, Filters.clear_filter(socket.assigns, type)))}
   end
 
   defp build_path(socket, filters) do
-    Paths.index_path(socket.assigns.issues_base_path, filters)
-  end
-
-  defp current_filters(socket, overrides) do
-    [
-      search: socket.assigns.search_query,
-      level: socket.assigns.selected_level,
-      issue_ids: socket.assigns.issue_ids_filtered,
-      datetime_range: socket.assigns.datetime_range_param
-    ]
-    |> Keyword.merge(overrides)
+    Paths.index_path(socket.assigns.issues_base_path, filters, %{page: 1})
   end
 end
