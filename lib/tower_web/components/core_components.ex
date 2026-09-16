@@ -3,8 +3,11 @@ defmodule TowerWeb.CoreComponents do
 
   use Phoenix.Component
 
+  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
+  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
+  alias TowerWeb.Live.StacktraceFormatter
 
   attr(:page, :integer, required: true)
   attr(:total_pages, :integer, required: true)
@@ -236,6 +239,78 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:search_query, :string, required: true)
+  attr(:datetime_range_options, :list, required: true)
+  attr(:datetime_range_param, :string, required: true)
+  attr(:datetime_range_menu_open, :boolean, required: true)
+  attr(:levels, :list, required: true)
+  attr(:selected_level, :string, default: nil)
+  attr(:issue_ids_filtered, :list, default: [])
+  attr(:issue_id_label, :string, default: "Issue ID")
+
+  def filters_panel(assigns) do
+    ~H"""
+    <div class="flex flex-col gap-3 mb-4">
+      <.search_filter search_query={@search_query} />
+
+      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
+        <div class="flex items-center gap-3">
+          <.date_range_filter
+            datetime_range_options={@datetime_range_options}
+            datetime_range_param={@datetime_range_param}
+            datetime_range_menu_open={@datetime_range_menu_open}
+          />
+
+          <div class="border-l border-tower-line-color h-7"></div>
+
+          <.level_filter levels={@levels} selected_level={@selected_level} />
+
+          <div class="border-l border-tower-line-color h-full"></div>
+
+          <.issue_id_filter label={@issue_id_label} />
+        </div>
+
+        <.active_filters_row
+          search_query={@search_query}
+          selected_level={@selected_level}
+          issue_ids_filtered={@issue_ids_filtered}
+          issue_id_label={@issue_id_label}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  attr(:empty, :boolean, required: true)
+  attr(:search_query, :string, required: true)
+  attr(:selected_level, :string, default: nil)
+  attr(:datetime_range_param, :string, required: true)
+  attr(:issue_ids_filtered, :list, default: [])
+  attr(:label, :string, required: true)
+
+  def list_empty_state(assigns) do
+    ~H"""
+    <div
+      :if={
+        @empty and
+          not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
+      No {@label} recorded yet.
+    </div>
+    <div
+      :if={
+        @empty and
+          Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
+      No matching {@label} found.
+    </div>
+    """
+  end
+
   attr(:value, :any, required: true)
   attr(:type, :string, required: true)
   attr(:class, :string, default: "")
@@ -329,6 +404,162 @@ defmodule TowerWeb.CoreComponents do
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr(:size, :atom, values: [:sm, :lg], default: :sm)
+  attr(:rest, :global, include: ~w(phx-click))
+  slot(:inner_block, required: true)
+
+  def delete_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class={[
+        "font-inter text-sm font-normal text-red-500 border border-red-500 hover:bg-red-400/10",
+        @size == :sm && "px-2",
+        @size == :lg && "w-24 h-8 px-2 py-1"
+      ]}
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
+  attr(:selected_count, :integer, required: true)
+  attr(:item_label, :string, required: true)
+  attr(:delete_event, :string, default: "show_delete_modal")
+
+  def bulk_delete_toolbar(assigns) do
+    ~H"""
+    <span :if={@selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
+      {@selected_count} {@item_label} selected
+    </span>
+    <.delete_button :if={@selected_count > 0} phx-click={@delete_event}>Delete</.delete_button>
+    """
+  end
+
+  attr(:rows, :list, required: true)
+  slot(:header, required: true)
+  slot(:row, required: true)
+
+  def data_table(assigns) do
+    ~H"""
+    <table :if={@rows != []} class="w-full text-left">
+      <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
+        <tr>{render_slot(@header)}</tr>
+      </thead>
+      <tbody class="font-inter">
+        <tr
+          :for={row <- @rows}
+          class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]"
+        >
+          {render_slot(@row, row)}
+        </tr>
+      </tbody>
+    </table>
+    """
+  end
+
+  attr(:reason, :string, required: true)
+  attr(:expanded, :boolean, required: true)
+  attr(:max_length, :integer, default: 500)
+
+  def expandable_reason(assigns) do
+    ~H"""
+    <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @expanded, do: @reason, else: truncate_reason(@reason, @max_length)}</pre>
+    <button
+      :if={String.length(@reason) > @max_length}
+      phx-click="toggle_reason"
+      class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
+    >
+      <span class="underline">{if @expanded, do: "Show less", else: "Show more"}</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class={["size-4 transition-transform", @expanded && "rotate-180"]}
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      </svg>
+    </button>
+    """
+  end
+
+  defp truncate_reason(reason, max_length) do
+    if String.length(reason) > max_length do
+      String.slice(reason, 0, max_length) <> "..."
+    else
+      reason
+    end
+  end
+
+  attr(:checked, :boolean, required: true)
+
+  def select_all_checkbox(assigns) do
+    ~H"""
+    <input type="checkbox" phx-click="toggle_select_all" checked={@checked} class="accent-tower-active [color-scheme:dark]" />
+    """
+  end
+
+  attr(:id, :any, required: true)
+  attr(:checked, :boolean, required: true)
+
+  def row_checkbox(assigns) do
+    ~H"""
+    <input
+      type="checkbox"
+      phx-click="toggle_select"
+      phx-value-id={@id}
+      checked={@checked}
+      class={["accent-tower-active [color-scheme:dark]", @checked && "opacity-100"]}
+    />
+    """
+  end
+
+  attr(:level, :string, required: true)
+
+  def level_badge(assigns) do
+    ~H"""
+    <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(@level)]}>
+      {@level}
+    </span>
+    """
+  end
+
+  attr(:datetime, :any, required: true)
+
+  def datetime_stack(assigns) do
+    ~H"""
+    <div class="flex flex-col">
+      <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@datetime)}</span>
+      <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(@datetime)}</span>
+    </div>
+    """
+  end
+
+  attr(:navigate, :string, required: true)
+  attr(:id, :any, required: true)
+
+  def id_link(assigns) do
+    ~H"""
+    <.link navigate={@navigate} class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline">
+      #{@id}
+    </.link>
+    """
+  end
+
+  attr(:stacktrace, :any, required: true)
+  attr(:host_otp_app, :atom, required: true)
+
+  def last_stacktrace_line(assigns) do
+    assigns = assign(assigns, :line, StacktraceFormatter.last_stacktrace_line(assigns.stacktrace, assigns.host_otp_app))
+
+    ~H"""
+    <span :if={@line} class="text-xs text-tower-text-secondary line-clamp-1">{@line}</span>
     """
   end
 

@@ -1,6 +1,10 @@
 defmodule TowerWeb.Live.Pagination do
   @moduledoc false
 
+  @per_page 20
+
+  def per_page, do: @per_page
+
   def parse_page(page) when is_binary(page) do
     case Integer.parse(page) do
       {num, _} when num > 0 -> num
