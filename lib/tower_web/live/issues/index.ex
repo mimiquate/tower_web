@@ -2,12 +2,9 @@ defmodule TowerWeb.Live.Issues.Index do
   use TowerWeb.Web, :live_view
 
   alias TowerDB.Issues
-  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
-  alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
-  alias TowerWeb.Live.StacktraceFormatter
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -104,109 +101,78 @@ defmodule TowerWeb.Live.Issues.Index do
 
     <.page_header title="Issues" subtitle="Track and manage application errors" />
 
-    <div class="flex flex-col gap-3 mb-4">
-      <.search_filter search_query={@search_query} />
+    <.filters_panel
+      search_query={@search_query}
+      datetime_range_options={@datetime_range_options}
+      datetime_range_param={@datetime_range_param}
+      datetime_range_menu_open={@datetime_range_menu_open}
+      levels={@levels}
+      selected_level={@selected_level}
+      issue_ids_filtered={@issue_ids_filtered}
+      issue_id_label="ID"
+    />
 
-      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
-        <div class="flex items-center gap-[12px]">
-          <.date_range_filter
-            datetime_range_options={@datetime_range_options}
-            datetime_range_param={@datetime_range_param}
-            datetime_range_menu_open={@datetime_range_menu_open}
-          />
+    <.list_empty_state
+      empty={@filtered_issues == []}
+      search_query={@search_query}
+      selected_level={@selected_level}
+      datetime_range_param={@datetime_range_param}
+      issue_ids_filtered={@issue_ids_filtered}
+      label="issues"
+    />
 
-          <div class="border-l border-tower-line-color h-7"></div>
-
-          <.level_filter levels={@levels} selected_level={@selected_level} />
-
-          <div class="border-l border-tower-line-color h-full"></div>
-
-          <.issue_id_filter label="ID" />
-        </div>
-
-        <.active_filters_row
-          search_query={@search_query}
-          selected_level={@selected_level}
-          issue_ids_filtered={@issue_ids_filtered}
-          issue_id_label="ID"
-        />
-      </div>
-    </div>
-
-    <div
-      :if={@filtered_issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
-      class="text-gray-400"
-    >
-      No issues recorded yet.
-    </div>
-    <div
-      :if={@filtered_issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
-      class="text-gray-400"
-    >
-      No matching issues found.
-    </div>
-
-    <table :if={@filtered_issues != []} class="w-full text-left">
-      <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
-        <tr>
-          <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
-          <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
-          <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
-          <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
-        </tr>
-      </thead>
-      <tbody class="font-inter">
-        <tr :for={issue <- @filtered_issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
-          <td class="py-3 pl-6 max-w-0">
-            <div class="flex flex-col overflow-hidden">
-              <.link
-                navigate={
-                  Paths.show_path(
-                    @issues_base_path,
-                    issue.id,
-                    [
-                      search: @search_query,
-                      level: @selected_level,
-                      datetime_range: @datetime_range_param,
-                      issue_ids: @issue_ids_filtered
-                    ],
-                    %{page: @page}
-                  )
-                }
-                class="text-sm text-tower-text-primary transition-all cursor-pointer inline-block w-fit hover:underline"
-              >
-                #{issue.id}
-              </.link>
-              <span class="text-sm text-tower-text-secondary line-clamp-2">{issue.last_event.normalized_reason}</span>
-              <% last_stacktrace_line = StacktraceFormatter.last_stacktrace_line(issue.last_event.stacktrace) %>
-              <span :if={last_stacktrace_line} class="text-xs text-tower-text-secondary line-clamp-1">
-                {last_stacktrace_line}
-              </span>
-            </div>
-          </td>
-          <td class="py-3 pl-6">
-            <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(issue.last_event.level)]}>
-              {issue.last_event.level}
-            </span>
-          </td>
-          <td class="py-3 pl-6">
-            <span class="text-sm text-white">{issue.count_events}</span>
-          </td>
-          <td class="py-3 pl-6">
-            <div class="flex flex-col">
-              <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(issue.last_seen)}</span>
-              <span class="text-xs text-tower-text-secondary">{DatetimeFormatter.format_time(issue.last_seen)}</span>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <.data_table rows={@filtered_issues}>
+      <:header>
+        <th class="py-2 pl-6 text-base font-light"> Reason (error message)</th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
+        <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
+      </:header>
+      <:row :let={issue}>
+        <td class="py-3 pl-6 max-w-0">
+          <div class="flex flex-col overflow-hidden">
+            <.id_link
+              id={issue.id}
+              navigate={
+                Paths.show_path(
+                  @issues_base_path,
+                  issue.id,
+                  [
+                    search: @search_query,
+                    level: @selected_level,
+                    datetime_range: @datetime_range_param,
+                    issue_ids: @issue_ids_filtered
+                  ],
+                  %{page: @page}
+                )
+              }
+            />
+            <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
+            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} />
+          </div>
+        </td>
+        <td class="py-3 pl-6">
+          <.level_badge level={issue.last_event.level} />
+        </td>
+        <td class="py-3 pl-6">
+          <span class="text-sm text-white">{issue.count_events}</span>
+        </td>
+        <td class="py-3 pl-6">
+          <.datetime_stack datetime={issue.last_seen} />
+        </td>
+      </:row>
+    </.data_table>
 
     <.pagination
       page={@page}
       total_pages={@total_pages}
       page_path={
-        &Paths.page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param)
+        &Paths.page_path(&1,
+          search: @search_query,
+          level: @selected_level,
+          datetime_range: @datetime_range_param,
+          issue_ids: @issue_ids_filtered
+        )
       }
     />
     """
