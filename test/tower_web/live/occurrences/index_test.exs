@@ -677,7 +677,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
 
   describe "allowed_filter_keys/0" do
     test "supports search, level, datetime_range, and issue_ids" do
-      assert Occurrences.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
+      assert Filters.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
     end
   end
 

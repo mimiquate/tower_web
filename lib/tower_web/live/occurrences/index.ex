@@ -9,11 +9,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.StacktraceFormatter
 
-  @per_page 20
-  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
-
-  def allowed_filter_keys, do: @allowed_filter_keys
-
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
     if connected?(socket) do
@@ -23,11 +18,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
     base_path = session["base_path"]
 
     {:ok,
-     assign(socket,
+     socket
+     |> assign(Filters.default_assigns())
+     |> assign(
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
-       datetime_range_options: Filters.datetime_range_options(),
-       datetime_range_menu_open: false,
        selected_occurrences_ids: MapSet.new(),
        show_delete_modal: false
      )}
@@ -35,11 +30,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
-    search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> Level.validate_level()
-    datetime_range_param = params["datetime_range"] || "last_7d"
-    datetime_range = Filters.datetime_range(datetime_range_param)
-    issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
+    %{
+      search: search,
+      level: level,
+      datetime_range_param: datetime_range_param,
+      datetime_range: datetime_range,
+      issue_ids: issue_ids
+    } = Filters.parse_params(params)
 
     case Map.get(params, "page") do
       nil ->
@@ -53,18 +50,17 @@ defmodule TowerWeb.Live.Occurrences.Index do
       page_param ->
         page = Pagination.parse_page(page_param)
 
-        total_count =
-          Events.count_events(
-            filters:
-              Filters.compact_filters(
-                search: search,
-                level: level,
-                similarity_id: issue_ids,
-                datetime_range: datetime_range
-              )
+        filters =
+          Filters.compact_filters(
+            search: search,
+            level: level,
+            similarity_id: issue_ids,
+            datetime_range: datetime_range
           )
 
-        total_pages = Pagination.total_pages(total_count, @per_page)
+        per_page = Pagination.per_page()
+        total_count = Events.count_events(filters: filters)
+        total_pages = Pagination.total_pages(total_count, per_page)
 
         if page > total_pages do
           {:noreply,
@@ -73,20 +69,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
                "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
            )}
         else
-          offset = (page - 1) * @per_page
+          offset = (page - 1) * per_page
 
-          events =
-            Events.list_events(
-              limit: @per_page,
-              offset: offset,
-              filters:
-                Filters.compact_filters(
-                  search: search,
-                  level: level,
-                  datetime_range: datetime_range,
-                  similarity_id: issue_ids
-                )
-            )
+          events = Events.list_events(limit: per_page, offset: offset, filters: filters)
 
           {:noreply,
            assign(socket,
@@ -97,7 +82,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
              search_query: search,
              selected_level: level,
              issue_ids_filtered: issue_ids,
-             levels: Level.levels(),
              datetime_range_param: datetime_range_param,
              current_filters: [
                search: search,
@@ -295,17 +279,23 @@ defmodule TowerWeb.Live.Occurrences.Index do
      |> assign(datetime_range_menu_open: false)
      |> push_patch(
        to:
-         build_path(socket,
-           search: socket.assigns.search_query,
-           level: socket.assigns.selected_level,
-           datetime_range: datetime_range_param
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
          )
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, search: query)))}
+    {:noreply,
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.current_filters(socket.assigns, search: query)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -313,7 +303,13 @@ defmodule TowerWeb.Live.Occurrences.Index do
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
     {:noreply,
-     push_patch(socket, to: build_path(socket, current_filters(socket, level: new_level)))}
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.current_filters(socket.assigns, level: new_level)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -329,7 +325,11 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
         {:noreply,
          push_patch(socket,
-           to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids))
+           to:
+             Paths.build_path(
+               socket.assigns.occurrences_base_path,
+               Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
+             )
          )}
 
       _ ->
@@ -339,24 +339,26 @@ defmodule TowerWeb.Live.Occurrences.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("clear_filter", %{"type" => "issue_id", "id" => issue_id_to_remove}, socket) do
-    new_issue_ids = Enum.reject(socket.assigns.issue_ids_filtered, &(&1 == issue_id_to_remove))
-
+  def handle_event("clear_filter", %{"type" => "issue_id", "id" => id}, socket) do
     {:noreply,
-     push_patch(socket, to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids)))}
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.clear_filter(socket.assigns, "issue_id", id)
+         )
+     )}
   end
 
   def handle_event("clear_filter", %{"type" => type}, socket) do
-    datetime_range_filter = [datetime_range: socket.assigns.datetime_range_param]
-
-    filters =
-      case type do
-        "all" -> [search: "", level: nil, datetime_range: "", issue_ids: []]
-        "search" -> current_filters(socket, search: "") ++ datetime_range_filter
-        "level" -> current_filters(socket, level: nil) ++ datetime_range_filter
-      end
-
-    {:noreply, push_patch(socket, to: build_path(socket, filters))}
+    {:noreply,
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.occurrences_base_path,
+           Filters.clear_filter(socket.assigns, type)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -408,22 +410,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
      |> put_flash(:info, "Deleted #{deleted_count} #{occurrence_label(deleted_count)}.")
      |> push_patch(
        to:
-         "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, current_filters(socket, []))}"
+         "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
      )}
-  end
-
-  defp build_path(socket, filters) do
-    Paths.index_path(socket.assigns.occurrences_base_path, filters, %{page: 1})
-  end
-
-  defp current_filters(socket, overrides) do
-    [
-      search: socket.assigns.search_query,
-      level: socket.assigns.selected_level,
-      issue_ids: socket.assigns.issue_ids_filtered,
-      datetime_range: socket.assigns.datetime_range_param
-    ]
-    |> Keyword.merge(overrides)
   end
 
   defp visible_ids_selected?(events, selected_occurrences_ids) do

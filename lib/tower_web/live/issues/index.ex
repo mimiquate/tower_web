@@ -9,11 +9,6 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.StacktraceFormatter
 
-  @per_page 20
-  @allowed_filter_keys [:search, :level, :datetime_range, :issue_ids]
-
-  def allowed_filter_keys, do: @allowed_filter_keys
-
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
     if connected?(socket) do
@@ -23,22 +18,23 @@ defmodule TowerWeb.Live.Issues.Index do
     base_path = session["base_path"]
 
     {:ok,
-     assign(socket,
+     socket
+     |> assign(Filters.default_assigns())
+     |> assign(
        base_path: base_path,
-       issues_base_path: "#{base_path}/issues",
-       datetime_range_options: Filters.datetime_range_options(),
-       datetime_range_menu_open: false,
-       levels: Level.levels()
+       issues_base_path: "#{base_path}/issues"
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_params(params, _uri, socket) do
-    search = Map.get(params, "search", "")
-    level = params |> Map.get("level", "") |> Level.validate_level()
-    datetime_range_param = params["datetime_range"] || "last_7d"
-    datetime_range = Filters.datetime_range(datetime_range_param)
-    issue_ids = params |> Map.get("issue_ids", "") |> Filters.parse_issue_ids()
+    %{
+      search: search,
+      level: level,
+      datetime_range_param: datetime_range_param,
+      datetime_range: datetime_range,
+      issue_ids: issue_ids
+    } = Filters.parse_params(params)
 
     case Map.get(params, "page") do
       nil ->
@@ -60,8 +56,9 @@ defmodule TowerWeb.Live.Issues.Index do
             similarity_id: issue_ids
           )
 
+        per_page = Pagination.per_page()
         total_count = Issues.count_issues(filters: filters)
-        total_pages = Pagination.total_pages(total_count, @per_page)
+        total_pages = Pagination.total_pages(total_count, per_page)
 
         if page > total_pages do
           {:noreply,
@@ -70,13 +67,13 @@ defmodule TowerWeb.Live.Issues.Index do
                "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
            )}
         else
-          offset = (page - 1) * @per_page
+          offset = (page - 1) * per_page
 
-          issues = Issues.list_issues(limit: @per_page, offset: offset, filters: filters)
+          issues = Issues.list_issues(limit: per_page, offset: offset, filters: filters)
 
           {:noreply,
            assign(socket,
-             issues: issues,
+             filtered_issues: issues,
              page: page,
              total_pages: total_pages,
              total_count: total_count,
@@ -137,19 +134,19 @@ defmodule TowerWeb.Live.Issues.Index do
     </div>
 
     <div
-      :if={@issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
+      :if={@filtered_issues == [] and not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
     >
       No issues recorded yet.
     </div>
     <div
-      :if={@issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
+      :if={@filtered_issues == [] and Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)}
       class="text-gray-400"
     >
       No matching issues found.
     </div>
 
-    <table :if={@issues != []} class="w-full text-left">
+    <table :if={@filtered_issues != []} class="w-full text-left">
       <thead class="text-tower-text-primary font-roboto-slab border-b border-tower-line-color">
         <tr>
           <th class="py-2 pl-6 text-base font-light">Reason (error message)</th>
@@ -159,7 +156,7 @@ defmodule TowerWeb.Live.Issues.Index do
         </tr>
       </thead>
       <tbody class="font-inter">
-        <tr :for={issue <- @issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
+        <tr :for={issue <- @filtered_issues} class="border-b border-tower-line-color h-24 overflow-hidden hover:border-b-[0.5px] hover:border-[#444] hover:bg-[rgba(74,88,120,0.15)]">
           <td class="py-3 pl-6 max-w-0">
             <div class="flex flex-col overflow-hidden">
               <.link
@@ -233,13 +230,24 @@ defmodule TowerWeb.Live.Issues.Index do
      socket
      |> assign(datetime_range_menu_open: false)
      |> push_patch(
-       to: build_path(socket, current_filters(socket, datetime_range: datetime_range_param))
+       to:
+         Paths.build_path(
+           socket.assigns.issues_base_path,
+           Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
+         )
      )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, push_patch(socket, to: build_path(socket, current_filters(socket, search: query)))}
+    {:noreply,
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.issues_base_path,
+           Filters.current_filters(socket.assigns, search: query)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -247,7 +255,13 @@ defmodule TowerWeb.Live.Issues.Index do
     new_level = if socket.assigns.selected_level == level, do: nil, else: level
 
     {:noreply,
-     push_patch(socket, to: build_path(socket, current_filters(socket, level: new_level)))}
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.issues_base_path,
+           Filters.current_filters(socket.assigns, level: new_level)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
@@ -263,7 +277,11 @@ defmodule TowerWeb.Live.Issues.Index do
 
         {:noreply,
          push_patch(socket,
-           to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids))
+           to:
+             Paths.build_path(
+               socket.assigns.issues_base_path,
+               Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
+             )
          )}
 
       _ ->
@@ -273,38 +291,26 @@ defmodule TowerWeb.Live.Issues.Index do
   end
 
   @impl Phoenix.LiveView
-  def handle_event("clear_filter", %{"type" => "issue_id", "id" => issue_id_to_remove}, socket) do
-    new_issue_ids = Enum.reject(socket.assigns.issue_ids_filtered, &(&1 == issue_id_to_remove))
-
+  def handle_event("clear_filter", %{"type" => "issue_id", "id" => id}, socket) do
     {:noreply,
-     push_patch(socket, to: build_path(socket, current_filters(socket, issue_ids: new_issue_ids)))}
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.issues_base_path,
+           Filters.clear_filter(socket.assigns, "issue_id", id)
+         )
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("clear_filter", %{"type" => type}, socket) do
-    datetime_range_filter = [datetime_range: socket.assigns.datetime_range_param]
-
-    filters =
-      case type do
-        "all" -> [search: "", level: nil, datetime_range: "", issue_ids: []]
-        "search" -> current_filters(socket, search: "") ++ datetime_range_filter
-        "level" -> current_filters(socket, level: nil) ++ datetime_range_filter
-      end
-
-    {:noreply, push_patch(socket, to: build_path(socket, filters))}
-  end
-
-  defp build_path(socket, filters) do
-    Paths.index_path(socket.assigns.issues_base_path, filters)
-  end
-
-  defp current_filters(socket, overrides) do
-    [
-      search: socket.assigns.search_query,
-      level: socket.assigns.selected_level,
-      issue_ids: socket.assigns.issue_ids_filtered,
-      datetime_range: socket.assigns.datetime_range_param
-    ]
-    |> Keyword.merge(overrides)
+    {:noreply,
+     push_patch(socket,
+       to:
+         Paths.build_path(
+           socket.assigns.issues_base_path,
+           Filters.clear_filter(socket.assigns, type)
+         )
+     )}
   end
 end
