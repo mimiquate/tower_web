@@ -34,6 +34,16 @@ defmodule TowerWeb.Live.Filters do
     end
   end
 
+  def validate_datetime_range(""), do: ""
+
+  def validate_datetime_range(value) do
+    if Enum.any?(@datetime_range_options, fn {_label, option_value} -> option_value == value end) do
+      value
+    else
+      "last_7d"
+    end
+  end
+
   def datetime_range_label(value) do
     Enum.find_value(@datetime_range_options, value, fn {label, option_value} ->
       if option_value == value, do: label
@@ -46,7 +56,7 @@ defmodule TowerWeb.Live.Filters do
     issue_ids_string
     |> String.split(",")
     |> Enum.map(&String.trim/1)
-    |> Enum.filter(&(&1 != ""))
+    |> Enum.filter(&(&1 =~ ~r/^\d+$/))
   end
 
   def compact_filters(filters) do
@@ -62,7 +72,7 @@ defmodule TowerWeb.Live.Filters do
   end
 
   def parse_params(params) do
-    datetime_range_param = params["datetime_range"] || "last_7d"
+    datetime_range_param = validate_datetime_range(params["datetime_range"])
 
     %{
       search: Map.get(params, "search", ""),
