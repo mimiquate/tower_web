@@ -100,25 +100,8 @@ defmodule TowerWeb.Live.Occurrences.Show do
       <div class="font-mono text-white mb-8">
         <div class="text-lg line-clamp-1">{@event.normalized_reason}</div>
         <div class="mt-4">
-          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: @event.normalized_reason, else: truncate_reason(@event.normalized_reason, 500)}</pre>
+          <.expandable_reason reason={@event.normalized_reason} expanded={@reason_expanded} />
         </div>
-        <button
-          :if={reason_exceeds_limit?(@event.normalized_reason, 500)}
-          phx-click="toggle_reason"
-          class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
-        >
-          <span class="underline">{if @reason_expanded, do: "Show less", else: "Show more"}</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="2"
-            stroke="currentColor"
-            class={["size-4 transition-transform", @reason_expanded && "rotate-180"]}
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-          </svg>
-        </button>
       </div>
 
       <div class="mb-8 border border-tower-line-color p-4">
@@ -132,18 +115,6 @@ defmodule TowerWeb.Live.Occurrences.Show do
       </div>
     </div>
     """
-  end
-
-  defp truncate_reason(reason, max_length) do
-    if String.length(reason) > max_length do
-      String.slice(reason, 0, max_length) <> "..."
-    else
-      reason
-    end
-  end
-
-  defp reason_exceeds_limit?(reason, limit) do
-    String.length(reason) > limit
   end
 
   defp format_stacktrace(nil), do: "No stacktrace available"

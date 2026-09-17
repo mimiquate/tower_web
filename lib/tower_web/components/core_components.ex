@@ -239,6 +239,78 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:search_query, :string, required: true)
+  attr(:datetime_range_options, :list, required: true)
+  attr(:datetime_range_param, :string, required: true)
+  attr(:datetime_range_menu_open, :boolean, required: true)
+  attr(:levels, :list, required: true)
+  attr(:selected_level, :string, default: nil)
+  attr(:issue_ids_filtered, :list, default: [])
+  attr(:issue_id_label, :string, default: "Issue ID")
+
+  def filters_panel(assigns) do
+    ~H"""
+    <div class="flex flex-col gap-3 mb-4">
+      <.search_filter search_query={@search_query} />
+
+      <div class="w-full px-3 py-2 flex flex-col gap-3 border border-tower-line-color">
+        <div class="flex items-center gap-3">
+          <.date_range_filter
+            datetime_range_options={@datetime_range_options}
+            datetime_range_param={@datetime_range_param}
+            datetime_range_menu_open={@datetime_range_menu_open}
+          />
+
+          <div class="border-l border-tower-line-color h-7"></div>
+
+          <.level_filter levels={@levels} selected_level={@selected_level} />
+
+          <div class="border-l border-tower-line-color h-full"></div>
+
+          <.issue_id_filter label={@issue_id_label} />
+        </div>
+
+        <.active_filters_row
+          search_query={@search_query}
+          selected_level={@selected_level}
+          issue_ids_filtered={@issue_ids_filtered}
+          issue_id_label={@issue_id_label}
+        />
+      </div>
+    </div>
+    """
+  end
+
+  attr(:empty, :boolean, required: true)
+  attr(:search_query, :string, required: true)
+  attr(:selected_level, :string, default: nil)
+  attr(:datetime_range_param, :string, required: true)
+  attr(:issue_ids_filtered, :list, default: [])
+  attr(:label, :string, required: true)
+
+  def list_empty_state(assigns) do
+    ~H"""
+    <div
+      :if={
+        @empty and
+          not Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
+      No {@label} recorded yet.
+    </div>
+    <div
+      :if={
+        @empty and
+          Filters.any_active?(search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, id: @issue_ids_filtered)
+      }
+      class="text-gray-400"
+    >
+      No matching {@label} found.
+    </div>
+    """
+  end
+
   attr(:value, :any, required: true)
   attr(:type, :string, required: true)
   attr(:class, :string, default: "")
@@ -388,6 +460,41 @@ defmodule TowerWeb.CoreComponents do
       </tbody>
     </table>
     """
+  end
+
+  attr(:reason, :string, required: true)
+  attr(:expanded, :boolean, required: true)
+  attr(:max_length, :integer, default: 500)
+
+  def expandable_reason(assigns) do
+    ~H"""
+    <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @expanded, do: @reason, else: truncate_reason(@reason, @max_length)}</pre>
+    <button
+      :if={String.length(@reason) > @max_length}
+      phx-click="toggle_reason"
+      class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
+    >
+      <span class="underline">{if @expanded, do: "Show less", else: "Show more"}</span>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2"
+        stroke="currentColor"
+        class={["size-4 transition-transform", @expanded && "rotate-180"]}
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      </svg>
+    </button>
+    """
+  end
+
+  defp truncate_reason(reason, max_length) do
+    if String.length(reason) > max_length do
+      String.slice(reason, 0, max_length) <> "..."
+    else
+      reason
+    end
   end
 
   attr(:checked, :boolean, required: true)

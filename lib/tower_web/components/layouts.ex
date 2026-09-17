@@ -93,7 +93,7 @@ defmodule TowerWeb.Layouts do
         href:
           Paths.index_path(
             "#{base_path}/issues",
-            Filters.for_path(current_filters, TowerWeb.Live.Issues.Index.allowed_filter_keys())
+            Filters.for_path(current_filters, Filters.allowed_filter_keys())
           ),
         label: "Issues",
         views: [TowerWeb.Live.Issues.Index, TowerWeb.Live.Issues.Show],
@@ -103,10 +103,7 @@ defmodule TowerWeb.Layouts do
         href:
           Paths.index_path(
             "#{base_path}/occurrences",
-            Filters.for_path(
-              current_filters,
-              TowerWeb.Live.Occurrences.Index.allowed_filter_keys()
-            )
+            Filters.for_path(current_filters, Filters.allowed_filter_keys())
           ),
         label: "Occurrences",
         views: [TowerWeb.Live.Occurrences.Index, TowerWeb.Live.Occurrences.Show],

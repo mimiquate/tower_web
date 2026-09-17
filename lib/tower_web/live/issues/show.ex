@@ -133,24 +133,7 @@ defmodule TowerWeb.Live.Issues.Show do
           </span>
         </div>
         <div class="mb-6">
-          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: @issue.last_event.normalized_reason, else: truncate_reason(@issue.last_event.normalized_reason, 500)}</pre>
-          <button
-            :if={reason_exceeds_limit?(@issue.last_event.normalized_reason, 500)}
-            phx-click="toggle_reason"
-            class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
-          >
-            <span class="underline">{if @reason_expanded, do: "Show less", else: "Show more"}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-              class={["size-4 transition-transform", @reason_expanded && "rotate-180"]}
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
+          <.expandable_reason reason={@issue.last_event.normalized_reason} expanded={@reason_expanded} />
         </div>
         <div class="flex gap-12">
           <div class="flex flex-col gap-1">
@@ -216,17 +199,5 @@ defmodule TowerWeb.Live.Issues.Show do
     range_us = diff_us |> max(@min_chart_range_us) |> min(@max_chart_range_us)
 
     {DateTime.add(issue.last_seen, -range_us, :microsecond), issue.last_seen}
-  end
-
-  defp truncate_reason(reason, max_length) do
-    if String.length(reason) > max_length do
-      String.slice(reason, 0, max_length) <> "..."
-    else
-      reason
-    end
-  end
-
-  defp reason_exceeds_limit?(reason, limit) do
-    String.length(reason) > limit
   end
 end
