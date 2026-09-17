@@ -268,7 +268,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
        |> push_patch(
          to:
            Paths.build_path(
-             socket,
+             socket.assigns.occurrences_base_path,
              Filters.current_filters(socket.assigns,
                datetime_range: "custom",
                datetime_range_from: from,

@@ -250,8 +250,8 @@ defmodule TowerWeb.Live.Issues.Index do
        |> push_patch(
          to:
            Paths.build_path(
-             socket,
-             Filters.current_filters(socket,
+             socket.assigns.issues_base_path,
+             Filters.current_filters(socket.assigns,
                datetime_range: "custom",
                datetime_range_from: from,
                datetime_range_to: to
