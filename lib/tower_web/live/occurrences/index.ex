@@ -13,6 +13,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
 
     base_path = session["base_path"]
+    IO.inspect(socket.endpoint.config(:otp_app), label: "???")
 
     {:ok,
      socket
@@ -21,7 +22,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
        selected_occurrences_ids: MapSet.new(),
-       show_delete_modal: false
+       show_delete_modal: false,
+       host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
 
@@ -171,7 +173,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
               <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
             </div>
-            <.last_stacktrace_line stacktrace={event.stacktrace} />
+            <.last_stacktrace_line stacktrace={event.stacktrace} host_otp_app={@host_otp_app} />
           </div>
         </td>
         <td class="py-3 pl-6">
