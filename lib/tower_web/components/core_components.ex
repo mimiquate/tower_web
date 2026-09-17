@@ -556,7 +556,12 @@ defmodule TowerWeb.CoreComponents do
   attr(:host_otp_app, :atom, required: true)
 
   def last_stacktrace_line(assigns) do
-    assigns = assign(assigns, :line, StacktraceFormatter.last_stacktrace_line(assigns.stacktrace, assigns.host_otp_app))
+    assigns =
+      assign(
+        assigns,
+        :line,
+        StacktraceFormatter.last_stacktrace_line(assigns.stacktrace, assigns.host_otp_app)
+      )
 
     ~H"""
     <span :if={@line} class="text-xs text-tower-text-secondary line-clamp-1">{@line}</span>
