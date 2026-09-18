@@ -53,6 +53,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
           datetime_range_menu_open: false,
+          selected_issue_ids: MapSet.new(),
+          show_delete_modal: false,
           flash: %{},
           host_otp_app: :tower_web
         })
@@ -285,6 +287,66 @@ defmodule TowerWeb.Live.Issues.IndexTest do
     end
   end
 
+  describe "handle_event selection and bulk delete" do
+    test "delete_selected deletes all events for the selected issue and reports the issue count, not the event count" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Some error"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Some error, second occurrence"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, kept_event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 2,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Unrelated error"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      socket = socket_with_issues()
+      {:noreply, socket} = IssuesIndex.handle_params(%{"page" => "1"}, "/tower", socket)
+
+      {:noreply, socket} = IssuesIndex.handle_event("toggle_select", %{"id" => "1"}, socket)
+
+      {:noreply, socket} = IssuesIndex.handle_event("delete_selected", %{}, socket)
+
+      assert socket.assigns.selected_issue_ids == MapSet.new()
+      assert socket.assigns.flash["info"] == "Deleted 1 issue."
+
+      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.TestRepo) == []
+
+      remaining_ids =
+        Events.list_events(repo: TowerWeb.TestRepo) |> Enum.map(& &1.id)
+
+      assert remaining_ids == [kept_event.id]
+    end
+  end
+
   defp socket_with_issues do
     %Phoenix.LiveView.Socket{
       assigns: %{
@@ -296,6 +358,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         issues_base_path: "/tower/issues",
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
+        selected_issue_ids: MapSet.new(),
+        show_delete_modal: false,
         flash: %{},
         host_otp_app: :tower_web
       }
