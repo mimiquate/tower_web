@@ -19,7 +19,10 @@ defmodule TowerWeb.Live.Issues.Index do
      |> assign(Filters.default_assigns())
      |> assign(
        base_path: base_path,
-       issues_base_path: "#{base_path}/issues"
+       issues_base_path: "#{base_path}/issues",
+       datetime_range_options: Filters.datetime_range_options(),
+       datetime_range_menu_open: false,
+       host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
 
@@ -162,7 +165,7 @@ defmodule TowerWeb.Live.Issues.Index do
               }
             />
             <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
-            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} />
+            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} host_otp_app={@host_otp_app} />
           </div>
         </td>
         <td class="py-3 pl-6">

@@ -56,7 +56,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime_range_to: "",
           datetime_range_menu_open: false,
           datetime_range_custom_open: false,
-          flash: %{}
+          flash: %{},
+          host_otp_app: :tower_web
         })
 
       assert html =~ "<table"
@@ -340,7 +341,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
         datetime_range_custom_open: false,
-        flash: %{}
+        flash: %{},
+        host_otp_app: :tower_web
       }
     }
   end
