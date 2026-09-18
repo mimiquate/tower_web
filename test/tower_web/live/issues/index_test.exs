@@ -55,7 +55,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime_range_menu_open: false,
           selected_issue_ids: MapSet.new(),
           show_delete_modal: false,
-          flash: %{}
+          flash: %{},
+          host_otp_app: :tower_web
         })
 
       assert html =~ "<table"
@@ -359,7 +360,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         datetime_range_menu_open: false,
         selected_issue_ids: MapSet.new(),
         show_delete_modal: false,
-        flash: %{}
+        flash: %{},
+        host_otp_app: :tower_web
       }
     }
   end
