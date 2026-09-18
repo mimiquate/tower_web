@@ -32,16 +32,20 @@ defmodule TowerWeb.Live.Issues.Index do
       search: search,
       level: level,
       datetime_range_param: datetime_range_param,
-      datetime_range: datetime_range,
+      datetime_range_from: datetime_range_from,
+      datetime_range_to: datetime_range_to,
       issue_ids: issue_ids
     } = Filters.parse_params(params)
+
+    datetime_range =
+      Filters.datetime_range(datetime_range_param, datetime_range_from, datetime_range_to)
 
     case Map.get(params, "page") do
       nil ->
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}",
+             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}",
            replace: true
          )}
 
@@ -64,7 +68,7 @@ defmodule TowerWeb.Live.Issues.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
+               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}"
            )}
         else
           offset = (page - 1) * per_page
@@ -81,10 +85,15 @@ defmodule TowerWeb.Live.Issues.Index do
              search_query: search,
              selected_level: level,
              datetime_range_param: datetime_range_param,
+             datetime_range_from: datetime_range_from,
+             datetime_range_to: datetime_range_to,
+             datetime_range_custom_open: datetime_range_param == "custom",
              current_filters: [
                search: search,
                level: level,
                datetime_range: datetime_range_param,
+               datetime_range_from: datetime_range_from,
+               datetime_range_to: datetime_range_to,
                issue_ids: issue_ids
              ]
            )}
@@ -108,7 +117,10 @@ defmodule TowerWeb.Live.Issues.Index do
       search_query={@search_query}
       datetime_range_options={@datetime_range_options}
       datetime_range_param={@datetime_range_param}
+      datetime_range_from={@datetime_range_from}
+      datetime_range_to={@datetime_range_to}
       datetime_range_menu_open={@datetime_range_menu_open}
+      datetime_range_custom_open={@datetime_range_custom_open}
       levels={@levels}
       selected_level={@selected_level}
       issue_ids_filtered={@issue_ids_filtered}
@@ -144,6 +156,8 @@ defmodule TowerWeb.Live.Issues.Index do
                     search: @search_query,
                     level: @selected_level,
                     datetime_range: @datetime_range_param,
+                      datetime_range_from: @datetime_range_from,
+                      datetime_range_to: @datetime_range_to,
                     issue_ids: @issue_ids_filtered
                   ],
                   %{page: @page}
@@ -174,6 +188,8 @@ defmodule TowerWeb.Live.Issues.Index do
           search: @search_query,
           level: @selected_level,
           datetime_range: @datetime_range_param,
+          datetime_range_from: @datetime_range_from,
+          datetime_range_to: @datetime_range_to,
           issue_ids: @issue_ids_filtered
         )
       }
@@ -183,12 +199,24 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: !socket.assigns.datetime_range_menu_open)}
+    datetime_range_menu_open = !socket.assigns.datetime_range_menu_open
+
+    {:noreply,
+     assign(socket,
+       datetime_range_menu_open: datetime_range_menu_open,
+       datetime_range_custom_open:
+         datetime_range_menu_open and socket.assigns.datetime_range_custom_open
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("close_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: false)}
+    {:noreply, assign(socket, datetime_range_menu_open: false, datetime_range_custom_open: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_custom_range", _params, socket) do
+    {:noreply, assign(socket, Filters.toggle_custom_range(socket.assigns))}
   end
 
   @impl Phoenix.LiveView
@@ -197,14 +225,43 @@ defmodule TowerWeb.Live.Issues.Index do
 
     {:noreply,
      socket
-     |> assign(datetime_range_menu_open: false)
+     |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
      |> push_patch(
        to:
          Paths.build_path(
            socket.assigns.issues_base_path,
-           Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
+           Filters.current_filters(socket.assigns,
+             datetime_range: datetime_range_param,
+             datetime_range_from: "",
+             datetime_range_to: ""
+           )
          )
      )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
+    if Filters.datetime_range("custom", from, to) == [] do
+      Process.send_after(self(), :clear_flash, 3000)
+
+      {:noreply,
+       put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
+    else
+      {:noreply,
+       socket
+       |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
+       |> push_patch(
+         to:
+           Paths.build_path(
+             socket.assigns.issues_base_path,
+             Filters.current_filters(socket.assigns,
+               datetime_range: "custom",
+               datetime_range_from: from,
+               datetime_range_to: to
+             )
+           )
+       )}
+    end
   end
 
   @impl Phoenix.LiveView
