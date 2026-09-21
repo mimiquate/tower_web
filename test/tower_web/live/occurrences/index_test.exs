@@ -684,8 +684,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           %{
             "page" => "1",
             "level" => "not_a_real_level",
-            "datetime_range" => "testing url filter input",
-            "issue_ids" => "w33s2f"
+            "datetime_range" => "testing url filter input"
           },
           "/tower/occurrences",
           socket
