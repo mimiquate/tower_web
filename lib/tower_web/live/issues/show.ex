@@ -58,6 +58,7 @@ defmodule TowerWeb.Live.Issues.Show do
            base_path: base_path,
            issues_base_path: issues_base_path,
            occurrences_base_path: "#{base_path}/occurrences",
+           show_delete_modal: false,
            reason_expanded: false
          )}
     end
@@ -71,6 +72,8 @@ defmodule TowerWeb.Live.Issues.Show do
       search: Map.get(params, "search", ""),
       level: Map.get(params, "level", ""),
       datetime_range: Map.get(params, "datetime_range", ""),
+      datetime_range_from: Map.get(params, "datetime_range_from", ""),
+      datetime_range_to: Map.get(params, "datetime_range_to", ""),
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
@@ -79,6 +82,25 @@ defmodule TowerWeb.Live.Issues.Show do
   end
 
   @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  def handle_event("cancel_delete", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  def handle_event("confirm_delete", _params, socket) do
+    {_count, _} = Issues.delete_issue(socket.assigns.issue.id)
+
+    socket =
+      socket
+      |> put_flash(:info, "Issue deleted successfully")
+      |> push_navigate(to: socket.assigns.issues_base_path)
+
+    {:noreply, socket}
+  end
+
   def handle_event("toggle_reason", _params, socket) do
     {:noreply, assign(socket, reason_expanded: !socket.assigns.reason_expanded)}
   end
@@ -87,7 +109,18 @@ defmodule TowerWeb.Live.Issues.Show do
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
-      <.back_button navigate={@back_path} />
+      <div class="flex justify-between mb-4">
+        <.back_button navigate={@back_path} />
+        <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
+      </div>
+
+      <.confirm_modal
+        show={@show_delete_modal}
+        title="Delete issue?"
+        description="Are you sure you want to delete this issue? This action cannot be undone."
+        cancel_event="cancel_delete"
+        confirm_event="confirm_delete"
+      />
 
       <div class="flex flex-col gap-3 mb-8">
         <span class="inline-flex bg-tower-active font-mono text-lg text-white px-2 w-fit">ID: #{@issue.id}</span>
@@ -102,24 +135,7 @@ defmodule TowerWeb.Live.Issues.Show do
           </span>
         </div>
         <div class="mb-6">
-          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{if @reason_expanded, do: @issue.last_event.normalized_reason, else: truncate_reason(@issue.last_event.normalized_reason, 500)}</pre>
-          <button
-            :if={reason_exceeds_limit?(@issue.last_event.normalized_reason, 500)}
-            phx-click="toggle_reason"
-            class="inline-flex items-center gap-1 text-sm text-tower-text-secondary hover:text-white mt-2 transition-colors"
-          >
-            <span class="underline">{if @reason_expanded, do: "Show less", else: "Show more"}</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-              class={["size-4 transition-transform", @reason_expanded && "rotate-180"]}
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-            </svg>
-          </button>
+          <.expandable_reason reason={@issue.last_event.normalized_reason} expanded={@reason_expanded} />
         </div>
         <div class="flex gap-12">
           <div class="flex flex-col gap-1">
@@ -185,17 +201,5 @@ defmodule TowerWeb.Live.Issues.Show do
     range_us = diff_us |> max(@min_chart_range_us) |> min(@max_chart_range_us)
 
     {DateTime.add(issue.last_seen, -range_us, :microsecond), issue.last_seen}
-  end
-
-  defp truncate_reason(reason, max_length) do
-    if String.length(reason) > max_length do
-      String.slice(reason, 0, max_length) <> "..."
-    else
-      reason
-    end
-  end
-
-  defp reason_exceeds_limit?(reason, limit) do
-    String.length(reason) > limit
   end
 end

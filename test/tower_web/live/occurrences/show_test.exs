@@ -49,9 +49,13 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           flash: %{},
           datetime_range_options: @datetime_range_options,
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ ~s(href="/tower/occurrences/#{event.id}?page=1")

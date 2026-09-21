@@ -25,9 +25,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           flash: %{},
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ "No occurrences recorded yet."
@@ -81,9 +85,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           flash: %{},
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ "<table"
@@ -150,9 +158,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           flash: %{},
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       # Error = red, Warning = yellow, Info = gray
@@ -192,9 +204,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           flash: %{},
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ "15/03/2024"
@@ -676,8 +692,15 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
   end
 
   describe "allowed_filter_keys/0" do
-    test "supports search, level, datetime_range, and issue_ids" do
-      assert Occurrences.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
+    test "supports search, level, datetime_range, datetime_range_from/to, and issue_ids" do
+      assert Filters.allowed_filter_keys() == [
+               :search,
+               :level,
+               :datetime_range,
+               :datetime_range_from,
+               :datetime_range_to,
+               :issue_ids
+             ]
     end
   end
 
@@ -711,8 +734,46 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
                search: "timeout",
                level: "error",
                datetime_range: "last_30d",
+               datetime_range_from: "",
+               datetime_range_to: "",
                issue_ids: ["1", "2"]
              ]
+    end
+
+    test "assigns current_filters with datetime_range_from/to when datetime_range is custom" do
+      {:noreply, redirected_socket} =
+        Occurrences.handle_params(
+          %{
+            "datetime_range" => "custom",
+            "datetime_range_from" => "2026-01-01",
+            "datetime_range_to" => "2026-01-31"
+          },
+          "/tower/occurrences",
+          socket_with_occurrences()
+        )
+
+      assert {:live, :patch, %{to: to}} = redirected_socket.redirected
+
+      %URI{query: query} = URI.parse(to)
+      redirected_params = URI.decode_query(query)
+
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          redirected_params,
+          "/tower/occurrences",
+          socket_with_occurrences()
+        )
+
+      assert socket.assigns.current_filters == [
+               search: "",
+               level: nil,
+               datetime_range: "custom",
+               datetime_range_from: "2026-01-01",
+               datetime_range_to: "2026-01-31",
+               issue_ids: []
+             ]
+
+      assert socket.assigns.datetime_range_custom_open
     end
   end
 
@@ -723,7 +784,8 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         base_path: "/tower",
         occurrences_base_path: "/tower/occurrences",
         datetime_range_options: Filters.datetime_range_options(),
-        datetime_range_menu_open: false
+        datetime_range_menu_open: false,
+        host_otp_app: :tower_web
       }
     }
   end
@@ -795,9 +857,13 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         flash: %{},
         occurrences_base_path: "/tower/occurrences",
         datetime_range_options: Filters.datetime_range_options(),
+        datetime_range_from: "",
+        datetime_range_to: "",
         datetime_range_menu_open: false,
+        datetime_range_custom_open: false,
         selected_occurrences_ids: MapSet.new(),
-        show_delete_modal: false
+        show_delete_modal: false,
+        host_otp_app: :tower_web
       }
     }
   end

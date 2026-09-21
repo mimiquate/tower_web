@@ -59,6 +59,7 @@ defmodule TowerWeb.Layouts do
               :for={item <- @items}
               href={item.href}
               active={@current_view in item.views}
+              disabled={@current_view == hd(item.views)}
             >
               {item.icon.(%{})}
               <span class="ml-3 text-sm">{item.label}</span>
@@ -93,7 +94,7 @@ defmodule TowerWeb.Layouts do
         href:
           Paths.index_path(
             "#{base_path}/issues",
-            Filters.for_path(current_filters, TowerWeb.Live.Issues.Index.allowed_filter_keys())
+            Filters.for_path(current_filters, Filters.allowed_filter_keys())
           ),
         label: "Issues",
         views: [TowerWeb.Live.Issues.Index, TowerWeb.Live.Issues.Show],
@@ -103,10 +104,7 @@ defmodule TowerWeb.Layouts do
         href:
           Paths.index_path(
             "#{base_path}/occurrences",
-            Filters.for_path(
-              current_filters,
-              TowerWeb.Live.Occurrences.Index.allowed_filter_keys()
-            )
+            Filters.for_path(current_filters, Filters.allowed_filter_keys())
           ),
         label: "Occurrences",
         views: [TowerWeb.Live.Occurrences.Index, TowerWeb.Live.Occurrences.Show],
@@ -117,20 +115,24 @@ defmodule TowerWeb.Layouts do
 
   attr(:href, :string, required: true)
   attr(:active, :boolean, default: false)
+  attr(:disabled, :boolean, default: false)
   slot(:inner_block, required: true)
 
   def sidebar_item(assigns) do
     ~H"""
     <li>
       <.link
-        :if={not @active}
+        :if={not @disabled}
         navigate={@href}
-        class="flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm"
+        class={[
+          "flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm",
+          @active && "bg-tower-active"
+        ]}
       >
         {render_slot(@inner_block)}
       </.link>
       <a
-        :if={@active}
+        :if={@disabled}
         onclick="return false"
         class="flex items-center w-[240px] h-[36px] py-2 px-3 text-white font-roboto-slab font-light text-sm bg-tower-active"
       >
