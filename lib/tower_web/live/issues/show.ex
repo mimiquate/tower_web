@@ -71,6 +71,8 @@ defmodule TowerWeb.Live.Issues.Show do
       search: Map.get(params, "search", ""),
       level: Map.get(params, "level", ""),
       datetime_range: Map.get(params, "datetime_range", ""),
+      datetime_range_from: Map.get(params, "datetime_range_from", ""),
+      datetime_range_to: Map.get(params, "datetime_range_to", ""),
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
