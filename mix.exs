@@ -27,8 +27,9 @@ defmodule TowerWeb.MixProject do
 
   defp deps do
     [
-      {:tower_db, "~> 0.8"},
-      {:phoenix_live_view, "~> 1.1"}
+      {:tower_db, "~> 0.9"},
+      {:phoenix_live_view, "~> 1.1"},
+      {:jason, "~> 1.4", optional: true}
     ]
   end
 
