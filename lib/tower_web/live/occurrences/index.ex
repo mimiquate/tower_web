@@ -5,6 +5,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.Selection
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -128,7 +129,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     />
 
     <% selected_count = MapSet.size(@selected_occurrences_ids) %>
-    <% selected_item_label = item_label(selected_count) %>
+    <% selected_item_label = Selection.item_label(selected_count) %>
     <% selected_occurrence_label = occurrence_label(selected_count) %>
 
     <.confirm_modal
@@ -152,7 +153,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <.data_table rows={@filtered_events}>
       <:header>
         <th class="py-2 pl-2 w-8">
-          <.select_all_checkbox checked={visible_ids_selected?(@filtered_events, @selected_occurrences_ids)} />
+          <.select_all_checkbox checked={Selection.all_selected?(@filtered_events, @selected_occurrences_ids)} />
         </th>
 
         <th class="py-2 pl-6 text-base font-light">
@@ -358,12 +359,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_select", %{"id" => id}, socket) do
-    selected_occurrences_ids =
-      if MapSet.member?(socket.assigns.selected_occurrences_ids, id) do
-        MapSet.delete(socket.assigns.selected_occurrences_ids, id)
-      else
-        MapSet.put(socket.assigns.selected_occurrences_ids, id)
-      end
+    selected_occurrences_ids = Selection.toggle(socket.assigns.selected_occurrences_ids, id)
 
     {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
   end
@@ -373,11 +369,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     visible_ids = MapSet.new(socket.assigns.filtered_events, & &1.id)
 
     selected_occurrences_ids =
-      if MapSet.subset?(visible_ids, socket.assigns.selected_occurrences_ids) do
-        MapSet.difference(socket.assigns.selected_occurrences_ids, visible_ids)
-      else
-        MapSet.union(socket.assigns.selected_occurrences_ids, visible_ids)
-      end
+      Selection.toggle_all(socket.assigns.selected_occurrences_ids, visible_ids)
 
     {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
   end
@@ -408,13 +400,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
          "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
      )}
   end
-
-  defp visible_ids_selected?(events, selected_occurrences_ids) do
-    Enum.all?(events, &MapSet.member?(selected_occurrences_ids, &1.id))
-  end
-
-  defp item_label(1), do: "item"
-  defp item_label(_count), do: "items"
 
   defp occurrence_label(1), do: "occurrence"
   defp occurrence_label(_count), do: "occurrences"

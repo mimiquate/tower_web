@@ -5,6 +5,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.Selection
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -20,6 +21,8 @@ defmodule TowerWeb.Live.Issues.Index do
      |> assign(
        base_path: base_path,
        issues_base_path: "#{base_path}/issues",
+       selected_issue_ids: MapSet.new(),
+       show_delete_modal: false,
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
        host_otp_app: socket.endpoint.config(:otp_app)
@@ -136,14 +139,39 @@ defmodule TowerWeb.Live.Issues.Index do
       label="issues"
     />
 
+    <% selected_count = MapSet.size(@selected_issue_ids) %>
+    <% selected_item_label = Selection.item_label(selected_count) %>
+    <% selected_issue_label = issue_label(selected_count) %>
+
+    <.confirm_modal
+      show={@show_delete_modal}
+      title={"Delete #{selected_issue_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_issue_label}? This action cannot be undone."}
+      cancel_event="cancel_delete_selected"
+      confirm_event="delete_selected"
+      confirm_label="Delete"
+    />
+
     <.data_table rows={@filtered_issues}>
       <:header>
-        <th class="py-2 pl-6 text-base font-light"> Reason (error message)</th>
+        <th class="py-2 pl-2 w-8">
+          <.select_all_checkbox checked={Selection.all_selected?(@filtered_issues, @selected_issue_ids)} />
+        </th>
+
+        <th class="py-2 pl-6 text-base font-light">
+          <div class="flex items-center gap-3">
+            <span>Reason (error message)</span>
+            <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
+          </div>
+        </th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
         <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
       </:header>
       <:row :let={issue}>
+        <td class="py-3 pl-2 w-8">
+          <.row_checkbox id={issue.id} checked={MapSet.member?(@selected_issue_ids, issue.id)} />
+        </td>
         <td class="py-3 pl-6 max-w-0">
           <div class="flex flex-col overflow-hidden">
             <.id_link
@@ -339,4 +367,53 @@ defmodule TowerWeb.Live.Issues.Index do
          )
      )}
   end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select", %{"id" => id}, socket) do
+    selected_issue_ids =
+      Selection.toggle(socket.assigns.selected_issue_ids, String.to_integer(id))
+
+    {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select_all", _params, socket) do
+    visible_ids = MapSet.new(socket.assigns.filtered_issues, & &1.id)
+
+    selected_issue_ids =
+      Selection.toggle_all(socket.assigns.selected_issue_ids, visible_ids)
+
+    {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_delete_selected", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("delete_selected", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected_issue_ids)
+    {_events_deleted_count, _} = Issues.delete_issues(ids)
+    deleted_count = length(ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_issue_ids: MapSet.new(), show_delete_modal: false)
+     |> put_flash(:info, "Deleted #{deleted_count} #{issue_label(deleted_count)}.")
+     |> push_patch(
+       to:
+         "#{socket.assigns.issues_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
+     )}
+  end
+
+  defp issue_label(1), do: "issue"
+  defp issue_label(_count), do: "issues"
 end
