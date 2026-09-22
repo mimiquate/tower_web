@@ -27,7 +27,10 @@ defmodule TowerWeb.MixProject do
 
   defp deps do
     [
-      {:tower_db, "~> 0.9"},
+      {:tower_db, "~> 0.8"},
+      {:ecto_sql, "~> 3.12"},
+      {:postgrex, "~> 0.17"},
+      {:uuid_v7, "~> 0.6"},
       {:phoenix_live_view, "~> 1.1"},
       {:jason, "~> 1.4", optional: true}
     ]
