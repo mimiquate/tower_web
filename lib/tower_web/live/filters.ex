@@ -59,6 +59,18 @@ defmodule TowerWeb.Live.Filters do
     end
   end
 
+  def normalize_datetime_range(""), do: ""
+
+  def normalize_datetime_range("custom"), do: "custom"
+
+  def normalize_datetime_range(value) do
+    if Enum.any?(@datetime_range_options, fn {_label, option_value} -> option_value == value end) do
+      value
+    else
+      "last_7d"
+    end
+  end
+
   def datetime_range_label(value, from \\ nil, to \\ nil)
 
   def datetime_range_label("custom", from, to)
@@ -93,6 +105,15 @@ defmodule TowerWeb.Live.Filters do
     |> Enum.filter(&(&1 != ""))
   end
 
+  def valid_issue_ids?(""), do: true
+
+  def valid_issue_ids?(issue_ids_string) do
+    issue_ids_string
+    |> String.split(",")
+    |> Enum.map(&String.trim/1)
+    |> Enum.all?(&(&1 =~ ~r/^\d+$/))
+  end
+
   def compact_filters(filters) do
     Enum.reject(filters, fn {_key, value} -> value in ["", []] end)
   end
@@ -106,7 +127,7 @@ defmodule TowerWeb.Live.Filters do
   end
 
   def parse_params(params) do
-    datetime_range_param = params["datetime_range"] || "last_7d"
+    datetime_range_param = normalize_datetime_range(params["datetime_range"])
 
     %{
       search: Map.get(params, "search", ""),

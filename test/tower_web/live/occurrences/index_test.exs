@@ -691,6 +691,27 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     end
   end
 
+  describe "handle_params with invalid filter values" do
+    test "falls back to defaults without crashing" do
+      socket = socket_with_events([])
+
+      {:noreply, socket} =
+        Occurrences.handle_params(
+          %{
+            "page" => "1",
+            "level" => "not_a_real_level",
+            "datetime_range" => "testing url filter input"
+          },
+          "/tower/occurrences",
+          socket
+        )
+
+      assert socket.assigns.selected_level == nil
+      assert socket.assigns.datetime_range_param == "last_7d"
+      assert socket.assigns.issue_ids_filtered == []
+    end
+  end
+
   describe "allowed_filter_keys/0" do
     test "supports search, level, datetime_range, datetime_range_from/to, and issue_ids" do
       assert Filters.allowed_filter_keys() == [

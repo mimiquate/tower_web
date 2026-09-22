@@ -157,6 +157,17 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       assert socket.assigns.total_occurrences == 1
       assert socket.assigns.datetime_range_param == "last_hour"
     end
+
+    test "falls back to default when datetime_range is invalid" do
+      {:noreply, socket} =
+        Dashboard.handle_params(
+          %{"datetime_range" => "testing url filter input"},
+          "/tower/dashboard",
+          socket_with_dashboard()
+        )
+
+      assert socket.assigns.datetime_range_param == "last_7d"
+    end
   end
 
   describe "allowed_filter_keys/0" do
