@@ -49,9 +49,13 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           flash: %{},
           datetime_range_options: @datetime_range_options,
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
-          show_delete_modal: false
+          show_delete_modal: false,
+          host_otp_app: :tower_web
         })
 
       assert html =~ ~s(href="/tower/occurrences/#{event.id}?page=1")
@@ -110,6 +114,80 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       # Verify other occurrence is NOT displayed
       refute html =~ "Second error message"
+    end
+
+    test "show page displays request data when present" do
+      {:ok, event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 3,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            level: :error,
+            kind: :error,
+            reason: %RuntimeError{message: "Request error"},
+            request_data: %{
+              "method" => "GET",
+              "url" => "https://example.com/users/1",
+              "user_ip" => "127.0.0.1",
+              "headers" => %{"user-agent" => "curl/8.0"},
+              "params" => %{"id" => "1"}
+            }
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      event = Events.get_event(event.id, repo: TowerWeb.TestRepo)
+
+      html =
+        render_component(&Show.render/1, %{
+          event: event,
+          base_path: "/tower",
+          back_path: "/tower/occurrences?page=1",
+          occurrences_base_path: "/tower/occurrences",
+          issues_base_path: "/tower/issues",
+          show_delete_modal: false,
+          reason_expanded: false
+        })
+
+      assert html =~ "Request"
+      assert html =~ "GET https://example.com/users/1"
+      assert html =~ "127.0.0.1"
+      assert html =~ "Headers"
+      assert html =~ "user-agent"
+      assert html =~ "curl/8.0"
+      assert html =~ "Params"
+      assert html =~ "id: &quot;1&quot;"
+    end
+
+    test "show page hides request section when request data is absent" do
+      {:ok, event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 4,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            level: :error,
+            kind: :error,
+            reason: %RuntimeError{message: "No request error"}
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      event = Events.get_event(event.id, repo: TowerWeb.TestRepo)
+
+      html =
+        render_component(&Show.render/1, %{
+          event: event,
+          base_path: "/tower",
+          back_path: "/tower/occurrences?page=1",
+          occurrences_base_path: "/tower/occurrences",
+          issues_base_path: "/tower/issues",
+          show_delete_modal: false,
+          reason_expanded: false
+        })
+
+      refute html =~ "Request</h2>"
     end
   end
 

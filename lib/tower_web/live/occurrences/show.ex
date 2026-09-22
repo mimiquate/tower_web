@@ -64,6 +64,8 @@ defmodule TowerWeb.Live.Occurrences.Show do
       search: Map.get(params, "search", ""),
       level: Map.get(params, "level", ""),
       datetime_range: Map.get(params, "datetime_range", ""),
+      datetime_range_from: Map.get(params, "datetime_range_from", ""),
+      datetime_range_to: Map.get(params, "datetime_range_to", ""),
       issue_ids: Map.get(params, "issue_ids", "")
     ]
 
@@ -78,13 +80,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
-        <button
-          type="button"
-          phx-click="show_delete_modal"
-          class="font-inter text-sm text-red-500 border border-red-500 w-24 h-8 px-2 py-1 mb-6 hover:bg-red-400/10"
-        >
-          Delete
-        </button>
+        <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
       </div>
 
       <.confirm_modal
@@ -119,6 +115,21 @@ defmodule TowerWeb.Live.Occurrences.Show do
         <h2 class="text-lg font-roboto-slab text-white mb-4 font-light">Metadata</h2>
         <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_metadata(@event.metadata)}</pre>
       </div>
+
+      <div :if={@event.request_data} class="mb-8 border border-tower-line-color p-4">
+        <h2 class="text-lg font-roboto-slab text-white mb-4 font-light">Request</h2>
+        <pre class="text-sm font-mono text-tower-text-secondary whitespace-pre-wrap">{format_request_summary(@event.request_data)}</pre>
+
+        <div :if={has_entries?(@event.request_data["headers"])} class="mt-4">
+          <h3 class="text-sm font-roboto-slab text-white mb-2 font-light">Headers</h3>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_key_value(@event.request_data["headers"])}</pre>
+        </div>
+
+        <div :if={has_entries?(@event.request_data["params"])} class="mt-4">
+          <h3 class="text-sm font-roboto-slab text-white mb-2 font-light">Params</h3>
+          <pre class="text-sm font-inter text-tower-text-secondary whitespace-pre-wrap">{format_key_value(@event.request_data["params"])}</pre>
+        </div>
+      </div>
     </div>
     """
   end
@@ -146,4 +157,23 @@ defmodule TowerWeb.Live.Occurrences.Show do
   defp format_metadata(metadata) do
     inspect(metadata, pretty: true)
   end
+
+  defp has_entries?(map) when is_map(map), do: map != %{}
+  defp has_entries?(_), do: false
+
+  defp format_request_summary(request_data) do
+    [
+      "#{request_data["method"]} #{request_data["url"]}",
+      "IP: #{request_data["user_ip"]}"
+    ]
+    |> Enum.join("\n")
+  end
+
+  defp format_key_value(map) when is_map(map) do
+    map
+    |> Enum.map(fn {k, v} -> "#{k}: #{inspect(v)}" end)
+    |> Enum.join("\n")
+  end
+
+  defp format_key_value(_), do: ""
 end

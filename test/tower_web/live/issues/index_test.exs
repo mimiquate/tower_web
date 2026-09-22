@@ -52,8 +52,14 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           issues_base_path: "/tower/issues",
           datetime_range_options: Filters.datetime_range_options(),
           datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
           datetime_range_menu_open: false,
-          flash: %{}
+          datetime_range_custom_open: false,
+          selected_issue_ids: MapSet.new(),
+          show_delete_modal: false,
+          flash: %{},
+          host_otp_app: :tower_web
         })
 
       assert html =~ "<table"
@@ -269,8 +275,15 @@ defmodule TowerWeb.Live.Issues.IndexTest do
   end
 
   describe "allowed_filter_keys/0" do
-    test "supports search, level, datetime_range, and issue_ids" do
-      assert Filters.allowed_filter_keys() == [:search, :level, :datetime_range, :issue_ids]
+    test "supports search, level, datetime_range, datetime_range_from/to, and issue_ids" do
+      assert Filters.allowed_filter_keys() == [
+               :search,
+               :level,
+               :datetime_range,
+               :datetime_range_from,
+               :datetime_range_to,
+               :issue_ids
+             ]
     end
   end
 
@@ -300,8 +313,102 @@ defmodule TowerWeb.Live.Issues.IndexTest do
                search: "timeout",
                level: "error",
                datetime_range: "last_30d",
+               datetime_range_from: "",
+               datetime_range_to: "",
                issue_ids: ["1", "2"]
              ]
+    end
+
+    test "assigns current_filters with datetime_range_from/to when datetime_range is custom" do
+      {:noreply, redirected_socket} =
+        IssuesIndex.handle_params(
+          %{
+            "datetime_range" => "custom",
+            "datetime_range_from" => "2026-01-01",
+            "datetime_range_to" => "2026-01-31"
+          },
+          "/tower/issues",
+          socket_with_issues()
+        )
+
+      assert {:live, :patch, %{to: to}} = redirected_socket.redirected
+
+      %URI{query: query} = URI.parse(to)
+      redirected_params = URI.decode_query(query)
+
+      {:noreply, socket} =
+        IssuesIndex.handle_params(redirected_params, "/tower/issues", socket_with_issues())
+
+      assert socket.assigns.current_filters == [
+               search: "",
+               level: nil,
+               datetime_range: "custom",
+               datetime_range_from: "2026-01-01",
+               datetime_range_to: "2026-01-31",
+               issue_ids: []
+             ]
+
+      assert socket.assigns.datetime_range_custom_open
+    end
+  end
+
+  describe "handle_event selection and bulk delete" do
+    test "delete_selected deletes all events for the selected issue and reports the issue count, not the event count" do
+      {:ok, _} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Some error"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, _} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Some error, second occurrence"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      {:ok, kept_event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 2,
+            datetime: ~U[2024-03-15 11:00:00Z],
+            kind: :error,
+            level: :error,
+            reason: "Unrelated error"
+          },
+          repo: TowerWeb.TestRepo
+        )
+
+      socket = socket_with_issues()
+      {:noreply, socket} = IssuesIndex.handle_params(%{"page" => "1"}, "/tower", socket)
+
+      {:noreply, socket} = IssuesIndex.handle_event("toggle_select", %{"id" => "1"}, socket)
+
+      {:noreply, socket} = IssuesIndex.handle_event("delete_selected", %{}, socket)
+
+      assert socket.assigns.selected_issue_ids == MapSet.new()
+      assert socket.assigns.flash["info"] == "Deleted 1 issue."
+
+      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.TestRepo) == []
+
+      remaining_ids =
+        Events.list_events(repo: TowerWeb.TestRepo) |> Enum.map(& &1.id)
+
+      assert remaining_ids == [kept_event.id]
     end
   end
 
@@ -316,7 +423,11 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         issues_base_path: "/tower/issues",
         datetime_range_options: Filters.datetime_range_options(),
         datetime_range_menu_open: false,
-        flash: %{}
+        datetime_range_custom_open: false,
+        selected_issue_ids: MapSet.new(),
+        show_delete_modal: false,
+        flash: %{},
+        host_otp_app: :tower_web
       }
     }
   end

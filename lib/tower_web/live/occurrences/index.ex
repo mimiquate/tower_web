@@ -5,6 +5,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.Selection
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -13,6 +14,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
 
     base_path = session["base_path"]
+    IO.inspect(socket.endpoint.config(:otp_app), label: "???")
 
     {:ok,
      socket
@@ -21,7 +23,8 @@ defmodule TowerWeb.Live.Occurrences.Index do
        base_path: base_path,
        occurrences_base_path: "#{base_path}/occurrences",
        selected_occurrences_ids: MapSet.new(),
-       show_delete_modal: false
+       show_delete_modal: false,
+       host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
 
@@ -31,16 +34,20 @@ defmodule TowerWeb.Live.Occurrences.Index do
       search: search,
       level: level,
       datetime_range_param: datetime_range_param,
-      datetime_range: datetime_range,
+      datetime_range_from: datetime_range_from,
+      datetime_range_to: datetime_range_to,
       issue_ids: issue_ids
     } = Filters.parse_params(params)
+
+    datetime_range =
+      Filters.datetime_range(datetime_range_param, datetime_range_from, datetime_range_to)
 
     case Map.get(params, "page") do
       nil ->
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}",
+             "#{socket.assigns.occurrences_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}",
            replace: true
          )}
 
@@ -63,7 +70,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
+               "#{socket.assigns.occurrences_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}"
            )}
         else
           offset = (page - 1) * per_page
@@ -80,10 +87,15 @@ defmodule TowerWeb.Live.Occurrences.Index do
              selected_level: level,
              issue_ids_filtered: issue_ids,
              datetime_range_param: datetime_range_param,
+             datetime_range_from: datetime_range_from,
+             datetime_range_to: datetime_range_to,
+             datetime_range_custom_open: datetime_range_param == "custom",
              current_filters: [
                search: search,
                level: level,
                datetime_range: datetime_range_param,
+               datetime_range_from: datetime_range_from,
+               datetime_range_to: datetime_range_to,
                issue_ids: issue_ids
              ]
            )}
@@ -107,6 +119,9 @@ defmodule TowerWeb.Live.Occurrences.Index do
       search_query={@search_query}
       datetime_range_options={@datetime_range_options}
       datetime_range_param={@datetime_range_param}
+      datetime_range_from={@datetime_range_from}
+      datetime_range_to={@datetime_range_to}
+      datetime_range_custom_open={@datetime_range_custom_open}
       datetime_range_menu_open={@datetime_range_menu_open}
       levels={@levels}
       selected_level={@selected_level}
@@ -114,7 +129,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     />
 
     <% selected_count = MapSet.size(@selected_occurrences_ids) %>
-    <% selected_item_label = item_label(selected_count) %>
+    <% selected_item_label = Selection.item_label(selected_count) %>
     <% selected_occurrence_label = occurrence_label(selected_count) %>
 
     <.confirm_modal
@@ -138,7 +153,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     <.data_table rows={@filtered_events}>
       <:header>
         <th class="py-2 pl-2 w-8">
-          <.select_all_checkbox checked={visible_ids_selected?(@filtered_events, @selected_occurrences_ids)} />
+          <.select_all_checkbox checked={Selection.all_selected?(@filtered_events, @selected_occurrences_ids)} />
         </th>
 
         <th class="py-2 pl-6 text-base font-light">
@@ -162,7 +177,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
                 Paths.show_path(
                   @occurrences_base_path,
                   event.id,
-                  [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered],
+                  [search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, datetime_range_from: @datetime_range_from, datetime_range_to: @datetime_range_to, issue_ids: @issue_ids_filtered],
                   %{page: @page}
                 )
               }
@@ -171,7 +186,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
               <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
             </div>
-            <.last_stacktrace_line stacktrace={event.stacktrace} />
+            <.last_stacktrace_line stacktrace={event.stacktrace} host_otp_app={@host_otp_app} />
           </div>
         </td>
         <td class="py-3 pl-6">
@@ -187,7 +202,14 @@ defmodule TowerWeb.Live.Occurrences.Index do
       page={@page}
       total_pages={@total_pages}
       page_path={
-        &Paths.page_path(&1, search: @search_query, level: @selected_level, datetime_range: @datetime_range_param, issue_ids: @issue_ids_filtered)
+        &Paths.page_path(&1,
+          search: @search_query,
+          level: @selected_level,
+          datetime_range: @datetime_range_param,
+          datetime_range_from: @datetime_range_from,
+          datetime_range_to: @datetime_range_to,
+          issue_ids: @issue_ids_filtered
+        )
       }
     />
     """
@@ -195,12 +217,24 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: !socket.assigns.datetime_range_menu_open)}
+    datetime_range_menu_open = !socket.assigns.datetime_range_menu_open
+
+    {:noreply,
+     assign(socket,
+       datetime_range_menu_open: datetime_range_menu_open,
+       datetime_range_custom_open:
+         datetime_range_menu_open and socket.assigns.datetime_range_custom_open
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("close_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: false)}
+    {:noreply, assign(socket, datetime_range_menu_open: false, datetime_range_custom_open: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_custom_range", _params, socket) do
+    {:noreply, assign(socket, Filters.toggle_custom_range(socket.assigns))}
   end
 
   @impl Phoenix.LiveView
@@ -209,14 +243,43 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
     {:noreply,
      socket
-     |> assign(datetime_range_menu_open: false)
+     |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
      |> push_patch(
        to:
          Paths.build_path(
            socket.assigns.occurrences_base_path,
-           Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
+           Filters.current_filters(socket.assigns,
+             datetime_range: datetime_range_param,
+             datetime_range_from: "",
+             datetime_range_to: ""
+           )
          )
      )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
+    if Filters.datetime_range("custom", from, to) == [] do
+      Process.send_after(self(), :clear_flash, 3000)
+
+      {:noreply,
+       put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
+    else
+      {:noreply,
+       socket
+       |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
+       |> push_patch(
+         to:
+           Paths.build_path(
+             socket.assigns.occurrences_base_path,
+             Filters.current_filters(socket.assigns,
+               datetime_range: "custom",
+               datetime_range_from: from,
+               datetime_range_to: to
+             )
+           )
+       )}
+    end
   end
 
   @impl Phoenix.LiveView
@@ -296,12 +359,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_select", %{"id" => id}, socket) do
-    selected_occurrences_ids =
-      if MapSet.member?(socket.assigns.selected_occurrences_ids, id) do
-        MapSet.delete(socket.assigns.selected_occurrences_ids, id)
-      else
-        MapSet.put(socket.assigns.selected_occurrences_ids, id)
-      end
+    selected_occurrences_ids = Selection.toggle(socket.assigns.selected_occurrences_ids, id)
 
     {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
   end
@@ -311,11 +369,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
     visible_ids = MapSet.new(socket.assigns.filtered_events, & &1.id)
 
     selected_occurrences_ids =
-      if MapSet.subset?(visible_ids, socket.assigns.selected_occurrences_ids) do
-        MapSet.difference(socket.assigns.selected_occurrences_ids, visible_ids)
-      else
-        MapSet.union(socket.assigns.selected_occurrences_ids, visible_ids)
-      end
+      Selection.toggle_all(socket.assigns.selected_occurrences_ids, visible_ids)
 
     {:noreply, assign(socket, selected_occurrences_ids: selected_occurrences_ids)}
   end
@@ -346,13 +400,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
          "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
      )}
   end
-
-  defp visible_ids_selected?(events, selected_occurrences_ids) do
-    Enum.all?(events, &MapSet.member?(selected_occurrences_ids, &1.id))
-  end
-
-  defp item_label(1), do: "item"
-  defp item_label(_count), do: "items"
 
   defp occurrence_label(1), do: "occurrence"
   defp occurrence_label(_count), do: "occurrences"

@@ -5,6 +5,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
+  alias TowerWeb.Live.Selection
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -19,7 +20,12 @@ defmodule TowerWeb.Live.Issues.Index do
      |> assign(Filters.default_assigns())
      |> assign(
        base_path: base_path,
-       issues_base_path: "#{base_path}/issues"
+       issues_base_path: "#{base_path}/issues",
+       selected_issue_ids: MapSet.new(),
+       show_delete_modal: false,
+       datetime_range_options: Filters.datetime_range_options(),
+       datetime_range_menu_open: false,
+       host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
 
@@ -29,16 +35,20 @@ defmodule TowerWeb.Live.Issues.Index do
       search: search,
       level: level,
       datetime_range_param: datetime_range_param,
-      datetime_range: datetime_range,
+      datetime_range_from: datetime_range_from,
+      datetime_range_to: datetime_range_to,
       issue_ids: issue_ids
     } = Filters.parse_params(params)
+
+    datetime_range =
+      Filters.datetime_range(datetime_range_param, datetime_range_from, datetime_range_to)
 
     case Map.get(params, "page") do
       nil ->
         {:noreply,
          push_patch(socket,
            to:
-             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}",
+             "#{socket.assigns.issues_base_path}#{Paths.page_path(1, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}",
            replace: true
          )}
 
@@ -61,7 +71,7 @@ defmodule TowerWeb.Live.Issues.Index do
           {:noreply,
            push_patch(socket,
              to:
-               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, issue_ids: issue_ids)}"
+               "#{socket.assigns.issues_base_path}#{Paths.page_path(total_pages, search: search, level: level, datetime_range: datetime_range_param, datetime_range_from: datetime_range_from, datetime_range_to: datetime_range_to, issue_ids: issue_ids)}"
            )}
         else
           offset = (page - 1) * per_page
@@ -78,10 +88,15 @@ defmodule TowerWeb.Live.Issues.Index do
              search_query: search,
              selected_level: level,
              datetime_range_param: datetime_range_param,
+             datetime_range_from: datetime_range_from,
+             datetime_range_to: datetime_range_to,
+             datetime_range_custom_open: datetime_range_param == "custom",
              current_filters: [
                search: search,
                level: level,
                datetime_range: datetime_range_param,
+               datetime_range_from: datetime_range_from,
+               datetime_range_to: datetime_range_to,
                issue_ids: issue_ids
              ]
            )}
@@ -105,7 +120,10 @@ defmodule TowerWeb.Live.Issues.Index do
       search_query={@search_query}
       datetime_range_options={@datetime_range_options}
       datetime_range_param={@datetime_range_param}
+      datetime_range_from={@datetime_range_from}
+      datetime_range_to={@datetime_range_to}
       datetime_range_menu_open={@datetime_range_menu_open}
+      datetime_range_custom_open={@datetime_range_custom_open}
       levels={@levels}
       selected_level={@selected_level}
       issue_ids_filtered={@issue_ids_filtered}
@@ -121,14 +139,39 @@ defmodule TowerWeb.Live.Issues.Index do
       label="issues"
     />
 
+    <% selected_count = MapSet.size(@selected_issue_ids) %>
+    <% selected_item_label = Selection.item_label(selected_count) %>
+    <% selected_issue_label = issue_label(selected_count) %>
+
+    <.confirm_modal
+      show={@show_delete_modal}
+      title={"Delete #{selected_issue_label}?"}
+      description={"Are you sure you want to delete #{selected_count} #{selected_issue_label}? This action cannot be undone."}
+      cancel_event="cancel_delete_selected"
+      confirm_event="delete_selected"
+      confirm_label="Delete"
+    />
+
     <.data_table rows={@filtered_issues}>
       <:header>
-        <th class="py-2 pl-6 text-base font-light"> Reason (error message)</th>
+        <th class="py-2 pl-2 w-8">
+          <.select_all_checkbox checked={Selection.all_selected?(@filtered_issues, @selected_issue_ids)} />
+        </th>
+
+        <th class="py-2 pl-6 text-base font-light">
+          <div class="flex items-center gap-3">
+            <span>Reason (error message)</span>
+            <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
+          </div>
+        </th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
         <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
       </:header>
       <:row :let={issue}>
+        <td class="py-3 pl-2 w-8">
+          <.row_checkbox id={issue.id} checked={MapSet.member?(@selected_issue_ids, issue.id)} />
+        </td>
         <td class="py-3 pl-6 max-w-0">
           <div class="flex flex-col overflow-hidden">
             <.id_link
@@ -141,6 +184,8 @@ defmodule TowerWeb.Live.Issues.Index do
                     search: @search_query,
                     level: @selected_level,
                     datetime_range: @datetime_range_param,
+                      datetime_range_from: @datetime_range_from,
+                      datetime_range_to: @datetime_range_to,
                     issue_ids: @issue_ids_filtered
                   ],
                   %{page: @page}
@@ -148,7 +193,7 @@ defmodule TowerWeb.Live.Issues.Index do
               }
             />
             <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
-            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} />
+            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} host_otp_app={@host_otp_app} />
           </div>
         </td>
         <td class="py-3 pl-6">
@@ -171,6 +216,8 @@ defmodule TowerWeb.Live.Issues.Index do
           search: @search_query,
           level: @selected_level,
           datetime_range: @datetime_range_param,
+          datetime_range_from: @datetime_range_from,
+          datetime_range_to: @datetime_range_to,
           issue_ids: @issue_ids_filtered
         )
       }
@@ -180,12 +227,24 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: !socket.assigns.datetime_range_menu_open)}
+    datetime_range_menu_open = !socket.assigns.datetime_range_menu_open
+
+    {:noreply,
+     assign(socket,
+       datetime_range_menu_open: datetime_range_menu_open,
+       datetime_range_custom_open:
+         datetime_range_menu_open and socket.assigns.datetime_range_custom_open
+     )}
   end
 
   @impl Phoenix.LiveView
   def handle_event("close_datetime_menu", _params, socket) do
-    {:noreply, assign(socket, datetime_range_menu_open: false)}
+    {:noreply, assign(socket, datetime_range_menu_open: false, datetime_range_custom_open: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_custom_range", _params, socket) do
+    {:noreply, assign(socket, Filters.toggle_custom_range(socket.assigns))}
   end
 
   @impl Phoenix.LiveView
@@ -194,14 +253,43 @@ defmodule TowerWeb.Live.Issues.Index do
 
     {:noreply,
      socket
-     |> assign(datetime_range_menu_open: false)
+     |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
      |> push_patch(
        to:
          Paths.build_path(
            socket.assigns.issues_base_path,
-           Filters.current_filters(socket.assigns, datetime_range: datetime_range_param)
+           Filters.current_filters(socket.assigns,
+             datetime_range: datetime_range_param,
+             datetime_range_from: "",
+             datetime_range_to: ""
+           )
          )
      )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("filter_datetime_range_custom", %{"from" => from, "to" => to}, socket) do
+    if Filters.datetime_range("custom", from, to) == [] do
+      Process.send_after(self(), :clear_flash, 3000)
+
+      {:noreply,
+       put_flash(socket, :error, "Please enter a valid date/time (YYYY-MM-DD HH:MM:SS)")}
+    else
+      {:noreply,
+       socket
+       |> assign(datetime_range_menu_open: false, datetime_range_custom_open: false)
+       |> push_patch(
+         to:
+           Paths.build_path(
+             socket.assigns.issues_base_path,
+             Filters.current_filters(socket.assigns,
+               datetime_range: "custom",
+               datetime_range_from: from,
+               datetime_range_to: to
+             )
+           )
+       )}
+    end
   end
 
   @impl Phoenix.LiveView
@@ -279,4 +367,53 @@ defmodule TowerWeb.Live.Issues.Index do
          )
      )}
   end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select", %{"id" => id}, socket) do
+    selected_issue_ids =
+      Selection.toggle(socket.assigns.selected_issue_ids, String.to_integer(id))
+
+    {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("toggle_select_all", _params, socket) do
+    visible_ids = MapSet.new(socket.assigns.filtered_issues, & &1.id)
+
+    selected_issue_ids =
+      Selection.toggle_all(socket.assigns.selected_issue_ids, visible_ids)
+
+    {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_delete_modal", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_delete_selected", _params, socket) do
+    {:noreply, assign(socket, show_delete_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("delete_selected", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected_issue_ids)
+    {_events_deleted_count, _} = Issues.delete_issues(ids)
+    deleted_count = length(ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_issue_ids: MapSet.new(), show_delete_modal: false)
+     |> put_flash(:info, "Deleted #{deleted_count} #{issue_label(deleted_count)}.")
+     |> push_patch(
+       to:
+         "#{socket.assigns.issues_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
+     )}
+  end
+
+  defp issue_label(1), do: "issue"
+  defp issue_label(_count), do: "issues"
 end
