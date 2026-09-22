@@ -1,0 +1,14 @@
+defmodule TowerWeb.DB.Issue do
+  use Ecto.Schema
+
+  alias TowerWeb.DB.Event
+
+  @primary_key false
+  embedded_schema do
+    field(:id, :integer)
+    field(:count_events, :integer)
+    field(:first_seen, :utc_datetime_usec)
+    field(:last_seen, :utc_datetime_usec)
+    embeds_one(:last_event, Event)
+  end
+end
