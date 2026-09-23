@@ -1,10 +1,10 @@
 defmodule TowerWeb.Live.Issues.IndexTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
-  alias TowerDB.Issues
+  alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Issues.Index, as: IssuesIndex
@@ -21,7 +21,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Something failed"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -34,10 +34,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :warning,
             reason: "A warning occurred"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      issues = Issues.list_issues(repo: TowerWeb.TestRepo)
+      issues = Issues.list_issues(repo: TowerWeb.DB.TestRepo)
 
       html =
         render_component(&IssuesIndex.render/1, %{
@@ -84,7 +84,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: "Database connection failed"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -97,7 +97,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :warning,
             reason: "Memory usage high"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       socket = socket_with_issues()
@@ -128,7 +128,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Error event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -141,7 +141,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :warning,
             reason: %RuntimeError{message: "Warning event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       socket = socket_with_issues()
@@ -172,7 +172,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: "30 minutes ago"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -185,7 +185,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: "2 hours ago"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       socket = socket_with_issues()
@@ -215,7 +215,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :warning,
             reason: %RuntimeError{message: "Warning event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -228,7 +228,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Error event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -241,7 +241,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :critical,
             reason: %RuntimeError{message: "Critical event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       socket = socket_with_issues()
@@ -343,7 +343,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: "Some error"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -356,7 +356,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: "Some error, second occurrence"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, kept_event} =
@@ -369,7 +369,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             level: :error,
             reason: "Unrelated error"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       socket = socket_with_issues()
@@ -382,10 +382,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       assert socket.assigns.selected_issue_ids == MapSet.new()
       assert socket.assigns.flash["info"] == "Deleted 1 issue."
 
-      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.TestRepo) == []
+      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.DB.TestRepo) == []
 
       remaining_ids =
-        Events.list_events(repo: TowerWeb.TestRepo) |> Enum.map(& &1.id)
+        Events.list_events(repo: TowerWeb.DB.TestRepo) |> Enum.map(& &1.id)
 
       assert remaining_ids == [kept_event.id]
     end

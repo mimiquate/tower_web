@@ -1,8 +1,8 @@
 defmodule TowerWeb.Live.Dashboard.Index do
   use TowerWeb.Web, :live_view
 
-  alias TowerDB.Events
-  alias TowerDB.Issues
+  alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Paths
