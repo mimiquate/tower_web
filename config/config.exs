@@ -26,7 +26,4 @@ config :tower_web, TowerWeb.DB.PartialUpgradeTestRepo,
       "postgres://localhost:5432/tower_web_db_test_partial_upgrade",
   log: false
 
-config :tower_db,
-  repo: TowerWeb.TestRepo
-
 config :logger, level: :warning

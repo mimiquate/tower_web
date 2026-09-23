@@ -1,9 +1,9 @@
 defmodule TowerWeb.Live.Dashboard.IndexTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Dashboard.Index, as: Dashboard
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
@@ -50,7 +50,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
             level: :error,
             reason: "Database connection failed"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -63,7 +63,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
             level: :warning,
             reason: "Memory usage high"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:noreply, socket} =
@@ -91,7 +91,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
             level: :error,
             reason: "Database connection failed"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -104,7 +104,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
             level: :warning,
             reason: "Memory usage high"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:noreply, socket} =
@@ -130,7 +130,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
             level: :error,
             reason: "inside range"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -143,7 +143,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
             level: :warning,
             reason: "outside range"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:noreply, socket} =

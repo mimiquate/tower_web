@@ -21,16 +21,18 @@ defmodule TowerWeb.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
+      mod: {TowerWeb.Application, []},
       extra_applications: [:logger]
     ]
   end
 
   defp deps do
     [
-      {:tower_db, "~> 0.8"},
+      {:tower, "~> 0.7"},
       {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.17"},
       {:uuid_v7, "~> 0.6"},
+      {:plug, "~> 1.14"},
       {:phoenix_live_view, "~> 1.1"},
       {:jason, "~> 1.4", optional: true}
     ]
