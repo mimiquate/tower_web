@@ -1,7 +1,8 @@
 import Config
 
 config :tower_web,
-  ecto_repos: [TowerWeb.TestRepo, TowerWeb.DB.TestRepo, TowerWeb.DB.PartialUpgradeTestRepo]
+  ecto_repos: [TowerWeb.TestRepo, TowerWeb.DB.TestRepo, TowerWeb.DB.PartialUpgradeTestRepo],
+  repo: TowerWeb.DB.TestRepo
 
 config :tower_web, TowerWeb.TestRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
@@ -27,8 +28,5 @@ config :tower_web, TowerWeb.DB.PartialUpgradeTestRepo,
 
 config :tower_db,
   repo: TowerWeb.TestRepo
-
-config :tower_web,
-  repo: TowerWeb.DB.TestRepo
 
 config :logger, level: :warning
