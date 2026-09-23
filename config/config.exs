@@ -2,7 +2,8 @@ import Config
 
 config :tower_web,
   ecto_repos: [TowerWeb.TestRepo, TowerWeb.DB.TestRepo, TowerWeb.DB.PartialUpgradeTestRepo],
-  repo: TowerWeb.DB.TestRepo
+  repo: TowerWeb.DB.TestRepo,
+  pruner: false
 
 config :tower_web, TowerWeb.TestRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
