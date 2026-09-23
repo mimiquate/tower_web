@@ -1,0 +1,67 @@
+defmodule TowerWeb.DB.EventTest do
+  use ExUnit.Case, async: true
+
+  alias TowerWeb.DB.Event
+
+  describe "changeset/2" do
+    test "valid with required fields" do
+      attrs = %{
+        id: UUIDv7.generate(),
+        similarity_id: 12345,
+        datetime: ~U[2026-04-16 12:00:00.000000Z],
+        level: :error,
+        kind: :error,
+        reason: %{message: "Something went wrong"}
+      }
+
+      changeset = Event.changeset(%Event{}, attrs)
+
+      assert changeset.valid?
+      assert changeset.changes.datetime == ~U[2026-04-16 12:00:00.000000Z]
+      assert changeset.changes.level == :error
+      assert changeset.changes.kind == :error
+      assert changeset.changes.reason == %{message: "Something went wrong"}
+      assert changeset.changes.similarity_id == 12345
+    end
+
+    test "accepts request_data" do
+      attrs = %{
+        id: UUIDv7.generate(),
+        similarity_id: 12345,
+        datetime: ~U[2026-04-16 12:00:00.000000Z],
+        level: :error,
+        kind: :error,
+        reason: %{message: "Something went wrong"},
+        request_data: %{
+          "url" => "http://example.com/path",
+          "method" => "GET",
+          "user_ip" => "127.0.0.1",
+          "headers" => %{"user-agent" => "test"},
+          "params" => %{"id" => "1"}
+        }
+      }
+
+      changeset = Event.changeset(%Event{}, attrs)
+
+      assert changeset.valid?
+      assert changeset.changes.request_data == attrs.request_data
+    end
+
+    test "invalid without required fields" do
+      changeset = Event.changeset(%Event{}, %{})
+
+      refute changeset.valid?
+      assert "can't be blank" in errors_on(changeset).id
+      assert "can't be blank" in errors_on(changeset).similarity_id
+      assert "can't be blank" in errors_on(changeset).datetime
+      assert "can't be blank" in errors_on(changeset).level
+      assert "can't be blank" in errors_on(changeset).kind
+      assert "can't be blank" in errors_on(changeset).reason
+      assert "can't be blank" in errors_on(changeset).similarity_id
+    end
+  end
+
+  defp errors_on(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+  end
+end
