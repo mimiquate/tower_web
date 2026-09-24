@@ -1,10 +1,10 @@
 defmodule TowerWeb.Live.Issues.ShowTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
-  alias TowerDB.Issues
+  alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Issues.Show
 
   describe "index to show navigation" do
@@ -21,7 +21,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :throw,
             reason: "First occurrence message"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _latest_event} =
@@ -34,7 +34,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :error,
             reason: %RuntimeError{message: "Latest error message"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _old_event} =
@@ -47,7 +47,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :error,
             reason: "Old occurrence outside chart range"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _other_issue_event} =
@@ -60,7 +60,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :error,
             reason: "Unrelated issue message"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       socket = %Phoenix.LiveView.Socket{assigns: %{flash: %{}, __changed__: %{}}}
@@ -98,7 +98,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :message,
             reason: "Occurrence to delete 1"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _event2} =
@@ -111,7 +111,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :message,
             reason: "Occurrence to delete 2"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, kept_event} =
@@ -124,10 +124,10 @@ defmodule TowerWeb.Live.Issues.ShowTest do
             kind: :message,
             reason: "Unrelated occurrence"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      issue = Issues.get_issue(1, repo: TowerWeb.TestRepo)
+      issue = Issues.get_issue(1, repo: TowerWeb.DB.TestRepo)
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -143,10 +143,10 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.TestRepo) == []
+      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.DB.TestRepo) == []
 
       remaining_ids =
-        Events.list_events(repo: TowerWeb.TestRepo) |> Enum.map(& &1.id)
+        Events.list_events(repo: TowerWeb.DB.TestRepo) |> Enum.map(& &1.id)
 
       assert remaining_ids == [kept_event.id]
 

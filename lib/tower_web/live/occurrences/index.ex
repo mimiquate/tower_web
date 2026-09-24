@@ -1,7 +1,7 @@
 defmodule TowerWeb.Live.Occurrences.Index do
   use TowerWeb.Web, :live_view
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths

@@ -1,9 +1,9 @@
 defmodule TowerWeb.Live.Occurrences.IndexTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
@@ -50,7 +50,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             kind: :error,
             reason: %RuntimeError{message: "Something failed"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, event2} =
@@ -63,11 +63,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             kind: :throw,
             reason: "A warning occurred"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       # Fetch events like the LiveView does
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
 
       # Render with real events
       html =
@@ -112,7 +112,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             kind: :error,
             reason: %RuntimeError{message: "Error event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -125,7 +125,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             kind: :exit,
             reason: "Warning event"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -138,10 +138,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             kind: :message,
             reason: "Info event"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -184,10 +184,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             kind: :message,
             reason: "Test error"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -232,7 +232,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "Database connection failed"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -245,10 +245,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :warning,
             reason: "Memory usage high"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       # Filter by "database"
@@ -284,10 +284,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "DATABASE ERROR"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -312,10 +312,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "Database connection failed"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -341,7 +341,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Error event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -354,7 +354,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :warning,
             reason: %RuntimeError{message: "Warning event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -367,10 +367,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :info,
             reason: %RuntimeError{message: "Info event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -398,7 +398,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Error event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -411,10 +411,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :warning,
             reason: %RuntimeError{message: "Warning event"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -440,7 +440,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Database error"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -453,7 +453,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Network error"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -466,10 +466,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :warning,
             reason: %RuntimeError{message: "Database warning"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -504,7 +504,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "30 minutes ago"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -517,7 +517,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "2 hours ago"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -530,7 +530,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "3 days ago"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -543,10 +543,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "10 days ago"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       %{socket: socket_with_events(events)}
     end
 
@@ -605,7 +605,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "First issue"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -618,10 +618,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Second issue"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -647,7 +647,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "First issue"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -660,7 +660,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Second issue"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _} =
@@ -673,10 +673,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: %RuntimeError{message: "Third issue"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -802,10 +802,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "Some error"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 
@@ -826,10 +826,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
             level: :error,
             reason: "Some error"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
       socket = socket_with_events(events)
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 
@@ -839,7 +839,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:noreply, socket} = Occurrences.handle_event("delete_selected", %{}, socket)
 
       assert socket.assigns.selected_occurrences_ids == MapSet.new()
-      assert Events.get_event(event.id, repo: TowerWeb.TestRepo) == nil
+      assert Events.get_event(event.id, repo: TowerWeb.DB.TestRepo) == nil
     end
   end
 

@@ -1,9 +1,9 @@
 defmodule TowerWeb.Live.Occurrences.ShowTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Occurrences.Index
   alias TowerWeb.Live.Occurrences.Show
 
@@ -29,10 +29,10 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             kind: :error,
             reason: %RuntimeError{message: "Test error"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
 
       html =
         render_component(&Index.render/1, %{
@@ -74,7 +74,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
             metadata: %{user_id: 123, request_id: "abc"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       {:ok, _event2} =
@@ -87,11 +87,11 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             kind: :throw,
             reason: "Second error message"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
       # Reload from database to ensure metadata is loaded properly
-      event1 = Events.get_event(event1.id, repo: TowerWeb.TestRepo)
+      event1 = Events.get_event(event1.id, repo: TowerWeb.DB.TestRepo)
 
       # Render show page with event1
       html =
@@ -134,10 +134,10 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
               "params" => %{"id" => "1"}
             }
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      event = Events.get_event(event.id, repo: TowerWeb.TestRepo)
+      event = Events.get_event(event.id, repo: TowerWeb.DB.TestRepo)
 
       html =
         render_component(&Show.render/1, %{
@@ -171,10 +171,10 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             kind: :error,
             reason: %RuntimeError{message: "No request error"}
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      event = Events.get_event(event.id, repo: TowerWeb.TestRepo)
+      event = Events.get_event(event.id, repo: TowerWeb.DB.TestRepo)
 
       html =
         render_component(&Show.render/1, %{
@@ -203,10 +203,10 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
             kind: :message,
             reason: "Event to delete"
           },
-          repo: TowerWeb.TestRepo
+          repo: TowerWeb.DB.TestRepo
         )
 
-      assert length(Events.list_events(repo: TowerWeb.TestRepo)) == 1
+      assert length(Events.list_events(repo: TowerWeb.DB.TestRepo)) == 1
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -222,7 +222,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(repo: TowerWeb.TestRepo) == []
+      assert Events.list_events(repo: TowerWeb.DB.TestRepo) == []
 
       assert updated_socket.redirected ==
                {:live, :redirect, %{to: "/tower/occurrences", kind: :push}}
