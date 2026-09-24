@@ -124,6 +124,25 @@ config :tower_web,
 
 Set `pruner: false` to disable it entirely.
 
+### Burst protection
+
+TowerWeb drops events once a configured rate is exceeded, protecting storage and the database from sudden error storms (e.g. a crash loop). It's always on; configure `:burst_protection` under `:tower_web` to change its settings:
+
+```elixir
+# config/config.exs
+
+config :tower_web, burst_protection: [max_count: 500, interval: 30]
+```
+
+Available settings, all optional:
+
+| key         | meaning                                    | default |
+| ----------- | -------------------------------------------- | ------- |
+| `max_count` | events allowed per window before dropping    | `100`   |
+| `interval`  | length of each window, in seconds            | `10`    |
+
+Events beyond `max_count` are dropped until the window resets every `interval` seconds. A summary of dropped events, if any, is logged on reset.
+
 ### Enable/disable at runtime
 
 ```elixir
