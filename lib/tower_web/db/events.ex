@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.Events do
   import Ecto.Query
 
   alias TowerWeb.DB.Event
+  alias TowerWeb.DB.Issues
   alias TowerWeb.DB.Repo
 
   @default_limit 20
@@ -60,10 +61,20 @@ defmodule TowerWeb.DB.Events do
 
   def create_event(attrs, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
+    changeset = Event.changeset(%Event{}, attrs)
 
-    %Event{}
-    |> Event.changeset(attrs)
-    |> repo.insert()
+    if changeset.valid? do
+      repo.transaction(fn ->
+        with {:ok, event} <- repo.insert(changeset),
+             {:ok, _issue} <- Issues.upsert_issue(event, repo: repo) do
+          event
+        else
+          {:error, reason} -> repo.rollback(reason)
+        end
+      end)
+    else
+      repo.insert(changeset)
+    end
   end
 
   def delete_event(%Event{} = event, opts \\ []) do
