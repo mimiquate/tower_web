@@ -57,8 +57,8 @@ Fill it with:
 defmodule MyApp.Repo.Migrations.AddTowerWebDB do
   use Ecto.Migration
 
-  def up, do: TowerWeb.DB.Migration.up(from: 0, to: 9)
-  def down, do: TowerWeb.DB.Migration.down(from: 9, to: 0)
+  def up, do: TowerWeb.DB.Migration.up(from: 0, to: 1)
+  def down, do: TowerWeb.DB.Migration.down(from: 1, to: 0)
 end
 ```
 
@@ -89,17 +89,18 @@ end
 
 If your app already depends on the standalone [`tower_db`](https://github.com/mimiquate/tower_db) package, move to `tower_web`'s built-in storage instead of running both:
 
-1. Follow [Setup](#setup) above, but for step 2, run only the new migration step that renames your existing `tower_db_events` table in place (all data is preserved):
+1. `tower_web` doesn't rename your existing `tower_db_events` table for you, so add a migration that does it yourself, generated *before* the one from [Setup](#setup) step 2 so it runs first:
 
    ```elixir
-   defmodule MyApp.Repo.Migrations.AddTowerWebDB do
+   defmodule MyApp.Repo.Migrations.RenameTowerDbEvents do
      use Ecto.Migration
 
-     def up, do: TowerWeb.DB.Migration.up(from: 8, to: 9)
-     def down, do: TowerWeb.DB.Migration.down(from: 9, to: 8)
+     def up, do: execute("ALTER TABLE IF EXISTS tower_db_events RENAME TO tower_web_events")
+     def down, do: execute("ALTER TABLE IF EXISTS tower_web_events RENAME TO tower_db_events")
    end
    ```
 
+   With `tower_web_events` already in place, the Setup migration becomes a no-op for the table itself (it only adds the extension and any missing indexes). Add both migrations, then run `mix ecto.migrate` once — Ecto applies pending migrations in timestamp order, so the rename runs before Setup's.
 2. Replace `TowerDB` with `TowerWeb.DB` everywhere it's referenced in your app: `config :tower, :reporters, [...]`, any `config :tower_db, ...` keys (move them to `config :tower_web, ...`), and any direct calls like `TowerDB.Reporter.report_event/1`.
 3. Remove `{:tower_db, ...}` from your `mix.exs` deps.
 
