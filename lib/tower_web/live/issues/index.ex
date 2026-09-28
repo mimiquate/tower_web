@@ -192,12 +192,12 @@ defmodule TowerWeb.Live.Issues.Index do
                 )
               }
             />
-            <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
-            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} host_otp_app={@host_otp_app} />
+            <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.normalized_reason}</span>
+            <.last_stacktrace_line stacktrace={issue.stacktrace} host_otp_app={@host_otp_app} />
           </div>
         </td>
         <td class="py-3 pl-6">
-          <.level_badge level={issue.last_event.level} />
+          <.level_badge level={issue.level} />
         </td>
         <td class="py-3 pl-6">
           <span class="text-sm text-white">{issue.count_events}</span>
