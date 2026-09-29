@@ -84,6 +84,13 @@ defmodule TowerWeb.Live.Filters do
     end)
   end
 
+  def valid_issue_id?(id) do
+    case Integer.parse(id) do
+      {_int, ""} -> true
+      _ -> false
+    end
+  end
+
   def parse_issue_ids(""), do: []
 
   def parse_issue_ids(issue_ids_string) do
