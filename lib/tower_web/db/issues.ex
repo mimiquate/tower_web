@@ -23,8 +23,21 @@ defmodule TowerWeb.DB.Issues do
 
   def get_issue(id, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
+    recent_occurrences_limit = Keyword.get(opts, :recent_occurrences_limit)
 
-    repo.get(Issue, id)
+    case repo.get(Issue, id) do
+      nil ->
+        nil
+
+      issue when is_integer(recent_occurrences_limit) ->
+        repo.preload(issue,
+          occurrences:
+            from(e in Event, order_by: [desc: e.datetime], limit: ^recent_occurrences_limit)
+        )
+
+      issue ->
+        issue
+    end
   end
 
   def count_issues(opts \\ []) do

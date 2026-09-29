@@ -15,7 +15,7 @@ defmodule TowerWeb.Live.Issues.Show do
     base_path = session["base_path"]
     issues_base_path = "#{base_path}/issues"
 
-    case Issues.get_issue(id) do
+    case Issues.get_issue(id, recent_occurrences_limit: @recent_events_limit) do
       nil ->
         socket =
           socket
@@ -41,16 +41,10 @@ defmodule TowerWeb.Live.Issues.Show do
             []
           end
 
-        recent_events =
-          Events.list_events(
-            limit: @recent_events_limit,
-            filters: [similarity_id: id]
-          )
-
         {:ok,
          assign(socket,
            issue: issue,
-           recent_events: recent_events,
+           recent_events: issue.occurrences,
            recent_events_limit: @recent_events_limit,
            show_chart: show_chart,
            chart_datetimes: chart_datetimes,
