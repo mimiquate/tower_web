@@ -68,18 +68,21 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       {:ok, socket} = Show.mount(%{"id" => "2"}, %{"base_path" => "/tower"}, socket)
       {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/2", socket)
 
+      # The issue's own level/normalized_reason are set once, on the first event,
+      # and never overwritten by later occurrences
+      assert socket.assigns.issue.normalized_reason =~ "First occurrence message"
+      assert socket.assigns.issue.level == :warning
+      assert socket.assigns.issue.count_events == 3
+
       html = render_component(&Show.render/1, socket.assigns)
 
-      # Verify correct issue is displayed (last_event is the most recent one)
       assert html =~ "ID: #2"
-      assert html =~ "Latest error message"
-
-      # count_events includes every event for the issue, even ones outside the 30-day window
       assert html =~ "Occurrences (3)"
 
-      # the recent occurrences list only includes events within the last 30 days
+      # the recent occurrences list shows every event for this issue
       assert html =~ "First occurrence message"
-      refute html =~ "Old occurrence outside 30 day range"
+      assert html =~ "Latest error message"
+      assert html =~ "Old occurrence outside chart range"
 
       # Verify unrelated issue is NOT displayed
       refute html =~ "Unrelated issue message"

@@ -317,6 +317,81 @@ defmodule TowerWeb.DB.IssuesTest do
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
+
+      assert Issues.get_issue(1) == nil
+      assert Issues.get_issue(2) != nil
+    end
+  end
+
+  describe "upsert_issue/2 (via Events.create_event/2)" do
+    test "creates the issue on the first event for a similarity_id" do
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      issue = Issues.get_issue(1)
+
+      assert issue.count_events == 1
+      assert issue.first_seen == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue.last_seen == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue.level == :error
+      assert issue.normalized_reason =~ "first occurrence"
+    end
+
+    test "increments count_events and only extends first_seen/last_seen when a new event goes beyond the current range, without ever overwriting level, normalized_reason or stacktrace" do
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 14:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "later occurrence"}
+        })
+
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "backfilled earlier occurrence"}
+        })
+
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 13:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "occurrence within the existing range"}
+        })
+
+      issue = Issues.get_issue(1)
+
+      assert issue.count_events == 4
+      assert issue.first_seen == ~U[2026-05-08 10:00:00.000000Z]
+      assert issue.last_seen == ~U[2026-05-08 14:00:00.000000Z]
+      assert issue.level == :error
+      assert issue.normalized_reason =~ "first occurrence"
     end
   end
 end
