@@ -167,6 +167,7 @@ defmodule TowerWeb.Live.Issues.Index do
         <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
         <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">State</th>
       </:header>
       <:row :let={issue}>
         <td class="py-3 pl-2 w-8">
@@ -204,6 +205,14 @@ defmodule TowerWeb.Live.Issues.Index do
         </td>
         <td class="py-3 pl-6">
           <.datetime_stack datetime={issue.last_seen} />
+        </td>
+        <td class="py-3 pl-6">
+          <span class={[
+            "inline-flex items-center justify-center w-32 h-7 px-2 py-1 bg-tower-level-bg font-inter font-normal text-sm",
+            if(issue.state == :resolved, do: "text-green-500", else: "text-white")
+          ]}>
+            {issue.state}
+          </span>
         </td>
       </:row>
     </.data_table>
