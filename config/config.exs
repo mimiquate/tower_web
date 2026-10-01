@@ -8,9 +8,7 @@ config :tower_web,
 config :tower_web, TowerWeb.DB.TestRepo,
   pool: Ecto.Adapters.SQL.Sandbox,
   priv: "test/support/db_test_repo",
-  url:
-    System.get_env("TOWER_WEB_DB_POSTGRES_URL") ||
-      "postgres://localhost:5432/tower_web_db_test",
+  url: System.get_env("POSTGRES_URL") || "postgres://localhost:5432/tower_web_test",
   log: false
 
 config :logger, level: :warning
