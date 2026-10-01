@@ -1,4 +1,4 @@
-defmodule TowerWeb.TestRepo.Migrations.CreateEvents do
+defmodule TowerWeb.DB.TestRepo.Migrations.CreateEvents do
   use Ecto.Migration
 
   def up, do: TowerDB.Migration.up(from: 0, to: 8)

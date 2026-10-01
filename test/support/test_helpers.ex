@@ -3,8 +3,8 @@ defmodule TowerWeb.TestHelpers do
 
   def run_migration(direction) do
     Ecto.Migrator.run(
-      TowerWeb.TestRepo,
-      [{0, TowerWeb.TestRepo.Migrations.CreateEvents}],
+      TowerWeb.DB.TestRepo,
+      [{0, TowerWeb.DB.TestRepo.Migrations.CreateEvents}],
       direction,
       all: true
     )
@@ -13,7 +13,7 @@ defmodule TowerWeb.TestHelpers do
   def run_db_migration(direction) do
     Ecto.Migrator.run(
       TowerWeb.DB.TestRepo,
-      [{0, TowerWeb.DB.TestRepo.Migrations.CreateTowerWebDB}],
+      [{1, TowerWeb.DB.TestRepo.Migrations.CreateTowerWebDB}],
       direction,
       all: true
     )
