@@ -17,6 +17,7 @@ defmodule TowerWeb.DB.Issue do
 
     field(:normalized_reason, :string)
     field(:stacktrace, TowerWeb.DB.Types.Term)
+    field(:state, Ecto.Enum, values: [:unresolved, :resolved], default: :unresolved)
 
     has_many(:occurrences, Event, foreign_key: :similarity_id)
 
@@ -32,7 +33,8 @@ defmodule TowerWeb.DB.Issue do
       :last_seen,
       :level,
       :normalized_reason,
-      :stacktrace
+      :stacktrace,
+      :state
     ])
     |> validate_required([
       :id,
