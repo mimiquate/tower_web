@@ -4,11 +4,18 @@ defmodule TowerWeb.Router do
   defmacro tower_dashboard(path, opts \\ []) do
     quote bind_quoted: [path: path, opts: opts] do
       scoped_path = Phoenix.Router.scoped_path(__MODULE__, path)
+      session_name = Keyword.get(opts, :as, :tower_dashboard)
+      pipeline_name = :"#{session_name}_validate_issue_ids"
+
+      pipeline pipeline_name do
+        plug(TowerWeb.Plugs.ValidateIssueIds)
+      end
 
       scope path, alias: false, as: false do
         import Phoenix.LiveView.Router, only: [live: 3, live_session: 3]
 
-        session_name = Keyword.get(opts, :as, :tower_dashboard)
+        pipe_through(pipeline_name)
+
         on_mount = Keyword.get(opts, :on_mount, [])
 
         live_session session_name,
