@@ -67,7 +67,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         )
 
       # Fetch events like the LiveView does
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
 
       # Render with real events
       html =
@@ -141,7 +141,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -187,7 +187,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
 
       html =
         render_component(&Occurrences.render/1, %{

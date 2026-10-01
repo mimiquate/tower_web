@@ -32,7 +32,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
 
       html =
         render_component(&Index.render/1, %{
