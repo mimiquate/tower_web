@@ -9,6 +9,26 @@ defmodule TowerWeb.CoreComponents do
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.StacktraceFormatter
 
+  attr(:class, :string, default: "size-4")
+
+  def check_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class={@class}>
+      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+    </svg>
+    """
+  end
+
+  attr(:class, :string, default: "size-4")
+
+  def undo_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class={@class}>
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+    </svg>
+    """
+  end
+
   attr(:page, :integer, required: true)
   attr(:total_pages, :integer, required: true)
   attr(:page_path, :any, required: true)

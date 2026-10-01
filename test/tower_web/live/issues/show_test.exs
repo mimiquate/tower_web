@@ -158,6 +158,41 @@ defmodule TowerWeb.Live.Issues.ShowTest do
     end
   end
 
+  describe "toggle issue state" do
+    test "marks an unresolved issue as resolved, then back to unresolved" do
+      {:ok, _event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            level: :error,
+            kind: :message,
+            reason: "Some error"
+          },
+          repo: TowerWeb.DB.TestRepo
+        )
+
+      issue = Issues.get_issue(1, repo: TowerWeb.DB.TestRepo)
+      assert issue.state == :unresolved
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{issue: issue, flash: %{}, __changed__: %{}},
+        redirected: nil
+      }
+
+      {:noreply, resolved_socket} = Show.handle_event("toggle_state", %{}, socket)
+
+      assert resolved_socket.assigns.issue.state == :resolved
+      assert resolved_socket.redirected == nil
+      assert Phoenix.Flash.get(resolved_socket.assigns.flash, :info) == nil
+
+      {:noreply, reopened_socket} = Show.handle_event("toggle_state", %{}, resolved_socket)
+
+      assert reopened_socket.assigns.issue.state == :unresolved
+    end
+  end
+
   describe "issue not found" do
     test "redirects to list page with error flash when issue does not exist" do
       socket = %Phoenix.LiveView.Socket{

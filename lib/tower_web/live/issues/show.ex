@@ -109,13 +109,34 @@ defmodule TowerWeb.Live.Issues.Show do
     {:noreply, assign(socket, reason_expanded: !socket.assigns.reason_expanded)}
   end
 
+  def handle_event("toggle_state", _params, socket) do
+    new_state = if socket.assigns.issue.state == :resolved, do: :unresolved, else: :resolved
+    {:ok, issue} = Issues.update_issue(socket.assigns.issue, %{state: new_state})
+
+    {:noreply, assign(socket, issue: issue)}
+  end
+
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
-        <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class={[
+              "font-inter text-sm font-normal text-green-500 border border-green-500 hover:bg-green-400/10",
+              "inline-flex items-center justify-center gap-1.5 w-44 h-8 px-2 py-1 whitespace-nowrap"
+            ]}
+            phx-click="toggle_state"
+          >
+            <.undo_icon :if={@issue.state == :resolved} />
+            <.check_icon :if={@issue.state != :resolved} />
+            {if @issue.state == :resolved, do: "Mark as Unresolved", else: "Mark as Resolved"}
+          </button>
+          <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
+        </div>
       </div>
 
       <.confirm_modal
