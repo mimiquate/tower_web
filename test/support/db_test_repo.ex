@@ -1,4 +1,4 @@
-defmodule TowerWeb.TestRepo do
+defmodule TowerWeb.DB.TestRepo do
   use Ecto.Repo,
     otp_app: :tower_web,
     adapter: Ecto.Adapters.Postgres

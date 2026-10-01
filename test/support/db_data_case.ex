@@ -1,4 +1,4 @@
-defmodule TowerWeb.DataCase do
+defmodule TowerWeb.DB.DataCase do
   use ExUnit.CaseTemplate
 
   setup do
