@@ -1,9 +1,9 @@
 defmodule TowerWeb.Live.Dashboard.IndexTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Dashboard.Index, as: Dashboard
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level

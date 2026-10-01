@@ -1,10 +1,10 @@
 defmodule TowerWeb.Live.Issues.IndexTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
-  alias TowerDB.Issues
+  alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Issues.Index, as: IssuesIndex

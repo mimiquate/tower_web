@@ -1,9 +1,9 @@
 defmodule TowerWeb.Live.Occurrences.IndexTest do
-  use TowerWeb.DataCase
+  use TowerWeb.DB.DataCase
 
   import Phoenix.LiveViewTest
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Occurrences.Index, as: Occurrences
