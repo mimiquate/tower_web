@@ -14,7 +14,6 @@ defmodule TowerWeb.Live.Occurrences.Index do
     end
 
     base_path = session["base_path"]
-    IO.inspect(socket.endpoint.config(:otp_app), label: "???")
 
     {:ok,
      socket

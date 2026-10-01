@@ -35,7 +35,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      TOWER_WEB_DB_POSTGRES_URL: postgres://postgres:postgres@localhost:5432/tower_web_db_test
+      POSTGRES_URL: postgres://postgres:postgres@localhost:5432/tower_web_test
     steps:
       - uses: actions/checkout@v7
       - uses: actions/cache@v6
