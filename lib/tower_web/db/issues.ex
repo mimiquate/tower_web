@@ -70,7 +70,7 @@ defmodule TowerWeb.DB.Issues do
     case repo.get(Issue, similarity_id) do
       nil ->
         %Issue{}
-        |> Issue.changeset(%{id: similarity_id})
+        |> Issue.changeset(%{id: similarity_id, state: :unresolved})
         |> repo.insert()
 
       issue ->
