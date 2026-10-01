@@ -37,7 +37,7 @@ defmodule TowerWeb.Live.Dashboard.Index do
   def handle_params(params, _uri, socket) do
     search = Map.get(params, "search", "")
     level = params |> Map.get("level", "") |> Level.validate_level()
-    datetime_range_param = params["datetime_range"] || "last_7d"
+    datetime_range_param = Filters.normalize_datetime_range(params["datetime_range"])
     datetime_range_from = params["datetime_range_from"] || ""
     datetime_range_to = params["datetime_range_to"] || ""
 
