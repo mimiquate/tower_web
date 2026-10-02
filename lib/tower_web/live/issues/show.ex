@@ -55,7 +55,8 @@ defmodule TowerWeb.Live.Issues.Show do
              issues_base_path: issues_base_path,
              occurrences_base_path: "#{base_path}/occurrences",
              show_delete_modal: false,
-             reason_expanded: false
+             reason_expanded: false,
+             dropdown_open: false
            )}
       end
     else
@@ -105,6 +106,22 @@ defmodule TowerWeb.Live.Issues.Show do
     {:noreply, socket}
   end
 
+  def handle_event("toggle_dropdown", _params, socket) do
+    {:noreply, assign(socket, dropdown_open: !socket.assigns.dropdown_open)}
+  end
+
+  def handle_event("close_dropdown", _params, socket) do
+    {:noreply, assign(socket, dropdown_open: false)}
+  end
+
+  def handle_event("set_issue_state", %{"state" => state}, socket)
+      when state in ["resolved", "unresolved"] do
+    new_state = if state == "resolved", do: :resolved, else: :unresolved
+    {:ok, issue} = Issues.update_issue_state(socket.assigns.issue, new_state)
+
+    {:noreply, assign(socket, issue: issue, dropdown_open: false)}
+  end
+
   def handle_event("toggle_reason", _params, socket) do
     {:noreply, assign(socket, reason_expanded: !socket.assigns.reason_expanded)}
   end
@@ -115,7 +132,45 @@ defmodule TowerWeb.Live.Issues.Show do
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
-        <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
+        <div class="flex gap-2">
+          <div class="relative" phx-click-away="close_dropdown">
+            <button
+              type="button"
+              phx-click="toggle_dropdown"
+              class={[
+                "flex items-center justify-between w-[150px] h-8 px-2 font-inter text-sm font-normal whitespace-nowrap",
+                if(@issue.state == :resolved, do: "bg-green-700 text-white", else: "bg-tower-level-bg text-white")
+              ]}
+            >
+              <span class="flex items-center gap-2">
+                <.state_badge state={@issue.state} />
+              </span>
+              <.chevron_down_icon class="size-4" />
+            </button>
+
+            <div :if={@dropdown_open} class="absolute z-10 w-[150px] bg-tower-bg border border-tower-line-color">
+              <button
+                :if={@issue.state != :resolved}
+                type="button"
+                phx-click="set_issue_state"
+                phx-value-state="resolved"
+                class="flex items-center gap-1 w-full text-left px-2 py-1.5 font-inter text-sm text-white whitespace-nowrap hover:bg-tower-line-color"
+              >
+                <.check_icon class="size-4" /> Mark as resolved
+              </button>
+              <button
+                :if={@issue.state == :resolved}
+                type="button"
+                phx-click="set_issue_state"
+                phx-value-state="unresolved"
+                class="flex items-center gap-2 w-full text-left px-2 py-1.5 font-inter text-sm text-white whitespace-nowrap hover:bg-tower-line-color"
+              >
+                <.undo_icon class="size-4" /> Reopen issue
+              </button>
+            </div>
+          </div>
+          <.delete_button size={:lg} phx-click="show_delete_modal" />
+        </div>
       </div>
 
       <.confirm_modal

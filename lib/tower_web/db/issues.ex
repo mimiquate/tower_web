@@ -62,13 +62,14 @@ defmodule TowerWeb.DB.Issues do
           last_seen: event.datetime,
           level: event.level,
           normalized_reason: event.normalized_reason,
-          stacktrace: event.stacktrace
+          stacktrace: event.stacktrace,
+          state: :unresolved
         })
         |> repo.insert()
 
       issue ->
         issue
-        |> Issue.changeset(%{count_events: issue.count_events + 1})
+        |> Issue.changeset(%{count_events: issue.count_events + 1, state: :unresolved})
         |> put_if(
           DateTime.compare(event.datetime, issue.first_seen) == :lt,
           :first_seen,
@@ -148,6 +149,15 @@ defmodule TowerWeb.DB.Issues do
       })
       |> repo.update()
     end
+  end
+
+  def update_issue_state(%Issue{} = issue, state, opts \\ [])
+      when state in [:unresolved, :resolved] do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+
+    issue
+    |> Issue.changeset(%{state: state})
+    |> repo.update()
   end
 
   def delete_issue(id, opts \\ []) do
