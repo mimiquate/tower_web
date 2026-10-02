@@ -98,20 +98,30 @@ defmodule TowerWeb.DB.Issues do
     else
       first_seen =
         if DateTime.compare(event.datetime, issue.first_seen) != :gt do
-          Event |> where([e], e.similarity_id == ^issue.id) |> select([e], min(e.datetime)) |> repo.one()
+          Event
+          |> where([e], e.similarity_id == ^issue.id)
+          |> select([e], min(e.datetime))
+          |> repo.one()
         else
           issue.first_seen
         end
 
       last_seen =
         if DateTime.compare(event.datetime, issue.last_seen) != :lt do
-          Event |> where([e], e.similarity_id == ^issue.id) |> select([e], max(e.datetime)) |> repo.one()
+          Event
+          |> where([e], e.similarity_id == ^issue.id)
+          |> select([e], max(e.datetime))
+          |> repo.one()
         else
           issue.last_seen
         end
 
       issue
-      |> Issue.changeset(%{count_events: remaining_count, first_seen: first_seen, last_seen: last_seen})
+      |> Issue.changeset(%{
+        count_events: remaining_count,
+        first_seen: first_seen,
+        last_seen: last_seen
+      })
       |> repo.update()
     end
   end
@@ -131,7 +141,11 @@ defmodule TowerWeb.DB.Issues do
         |> repo.one()
 
       issue
-      |> Issue.changeset(%{count_events: remaining_count, first_seen: first_seen, last_seen: last_seen})
+      |> Issue.changeset(%{
+        count_events: remaining_count,
+        first_seen: first_seen,
+        last_seen: last_seen
+      })
       |> repo.update()
     end
   end
