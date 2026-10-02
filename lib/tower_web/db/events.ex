@@ -91,14 +91,38 @@ defmodule TowerWeb.DB.Events do
   def delete_event(%Event{} = event, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    repo.delete(event)
+    repo.transaction(fn ->
+      case repo.delete(event) do
+        {:ok, deleted_event} ->
+          Issues.update_issue_on_event_deletion(event, repo: repo)
+          deleted_event
+
+        {:error, reason} ->
+          repo.rollback(reason)
+      end
+    end)
   end
 
   def delete_events(ids, opts \\ []) when is_list(ids) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    Event
-    |> where([e], e.id in ^ids)
-    |> repo.delete_all()
+    {:ok, result} =
+      repo.transaction(fn ->
+        {count, similarity_ids} =
+          Event
+          |> where([e], e.id in ^ids)
+          |> select([e], e.similarity_id)
+          |> repo.delete_all()
+
+        similarity_ids
+        |> Enum.frequencies()
+        |> Enum.each(fn {similarity_id, deleted_count} ->
+          Issues.recalculate_issue(similarity_id, deleted_count, repo: repo)
+        end)
+
+        {count, nil}
+      end)
+
+    result
   end
 end

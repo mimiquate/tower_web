@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.EventsTest do
   use TowerWeb.DB.DataCase, async: false
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
 
   describe "create_event/1" do
     test "creates an event with valid attrs" do
@@ -554,6 +555,39 @@ defmodule TowerWeb.DB.EventsTest do
       assert deleted_event.id == event.id
       assert Events.list_events() == []
     end
+
+    test "updates the issue's stats, or deletes it once its last event is gone" do
+      {:ok, oldest} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-04-16 10:00:00.000000Z],
+          level: :warning,
+          kind: :message,
+          reason: "oldest"
+        })
+
+      {:ok, newest} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-04-16 12:00:00.000000Z],
+          level: :warning,
+          kind: :message,
+          reason: "newest"
+        })
+
+      {:ok, _} = Events.delete_event(oldest)
+
+      issue = Issues.get_issue(1)
+      assert issue.count_events == 1
+      assert issue.first_seen == newest.datetime
+      assert issue.last_seen == newest.datetime
+
+      {:ok, _} = Events.delete_event(newest)
+
+      assert Issues.get_issue(1) == nil
+    end
   end
 
   describe "delete_events/2" do
@@ -592,6 +626,47 @@ defmodule TowerWeb.DB.EventsTest do
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
+    end
+
+    test "recalculates the stats of each affected issue, deleting those left with no events" do
+      {:ok, oldest} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-04-16 10:00:00.000000Z],
+          level: :warning,
+          kind: :message,
+          reason: "issue 1, oldest"
+        })
+
+      {:ok, remaining} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-04-16 11:00:00.000000Z],
+          level: :warning,
+          kind: :message,
+          reason: "issue 1, remaining"
+        })
+
+      {:ok, only_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2026-04-16 12:00:00.000000Z],
+          level: :warning,
+          kind: :message,
+          reason: "issue 2, only event"
+        })
+
+      assert Events.delete_events([oldest.id, only_event.id]) == {2, nil}
+
+      issue = Issues.get_issue(1)
+      assert issue.count_events == 1
+      assert issue.first_seen == remaining.datetime
+      assert issue.last_seen == remaining.datetime
+
+      assert Issues.get_issue(2) == nil
     end
   end
 end

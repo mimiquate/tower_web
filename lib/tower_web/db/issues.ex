@@ -89,6 +89,68 @@ defmodule TowerWeb.DB.Issues do
 
   defp put_if(changeset, false, _field, _value), do: changeset
 
+  def update_issue_on_event_deletion(%Event{} = event, opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    issue = repo.get(Issue, event.similarity_id)
+    remaining_count = issue.count_events - 1
+
+    if remaining_count == 0 do
+      Issue |> where([i], i.id == ^issue.id) |> repo.delete_all()
+    else
+      first_seen =
+        if DateTime.compare(event.datetime, issue.first_seen) != :gt do
+          Event
+          |> where([e], e.similarity_id == ^issue.id)
+          |> select([e], min(e.datetime))
+          |> repo.one()
+        else
+          issue.first_seen
+        end
+
+      last_seen =
+        if DateTime.compare(event.datetime, issue.last_seen) != :lt do
+          Event
+          |> where([e], e.similarity_id == ^issue.id)
+          |> select([e], max(e.datetime))
+          |> repo.one()
+        else
+          issue.last_seen
+        end
+
+      issue
+      |> Issue.changeset(%{
+        count_events: remaining_count,
+        first_seen: first_seen,
+        last_seen: last_seen
+      })
+      |> repo.update()
+    end
+  end
+
+  def recalculate_issue(id, deleted_count, opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    issue = repo.get(Issue, id)
+    remaining_count = issue.count_events - deleted_count
+
+    if remaining_count == 0 do
+      Issue |> where([i], i.id == ^id) |> repo.delete_all()
+    else
+      %{first_seen: first_seen, last_seen: last_seen} =
+        Event
+        |> where([e], e.similarity_id == ^id)
+        |> select([e], %{first_seen: min(e.datetime), last_seen: max(e.datetime)})
+        |> repo.one()
+
+      issue
+      |> Issue.changeset(%{
+        count_events: remaining_count,
+        first_seen: first_seen,
+        last_seen: last_seen
+      })
+      |> repo.update()
+    end
+  end
+
   def update_issue_state(%Issue{} = issue, state, opts \\ [])
       when state in [:unresolved, :resolved] do
     repo = Keyword.get(opts, :repo) || Repo.repo()
