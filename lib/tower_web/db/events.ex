@@ -26,9 +26,6 @@ defmodule TowerWeb.DB.Events do
       |> repo.all()
 
     case preload_issue do
-      true ->
-        repo.preload(events, :issue)
-
       fields when is_list(fields) ->
         repo.preload(events, issue: from(i in Issue, select: ^fields))
 
