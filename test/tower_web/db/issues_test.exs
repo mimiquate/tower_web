@@ -46,12 +46,12 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue_a.count_events == 2
       assert issue_a.first_seen == ~U[2026-05-08 10:00:00.000000Z]
       assert issue_a.last_seen == ~U[2026-05-08 12:00:00.000000Z]
-      assert issue_a.last_event.normalized_reason =~ "second occurrence of error A"
+      assert issue_a.normalized_reason =~ "first occurrence of error A"
 
       assert issue_b.count_events == 1
       assert issue_b.first_seen == ~U[2026-05-08 11:00:00.000000Z]
       assert issue_b.last_seen == ~U[2026-05-08 11:00:00.000000Z]
-      assert issue_b.last_event.normalized_reason =~ "error B"
+      assert issue_b.normalized_reason =~ "error B"
     end
 
     test "returns all issues without filters and only matching ones with a search filter" do
@@ -200,7 +200,7 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.count_events == 3
       assert issue.first_seen == outside_window
       assert issue.last_seen == inside_window
-      assert issue.last_event.normalized_reason == "Recent occurrence inside the filtered window"
+      assert issue.normalized_reason == "Older occurrence outside the filtered window"
     end
   end
 
@@ -240,7 +240,7 @@ defmodule TowerWeb.DB.IssuesTest do
 
       assert issue.id == 1
       assert issue.count_events == 2
-      assert issue.last_event.normalized_reason =~ "second occurrence of error A"
+      assert issue.normalized_reason =~ "first occurrence of error A"
     end
   end
 
@@ -317,6 +317,81 @@ defmodule TowerWeb.DB.IssuesTest do
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
+
+      assert Issues.get_issue(1) == nil
+      assert Issues.get_issue(2) != nil
+    end
+  end
+
+  describe "upsert_issue/2 (via Events.create_event/2)" do
+    test "creates the issue on the first event for a similarity_id" do
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      issue = Issues.get_issue(1)
+
+      assert issue.count_events == 1
+      assert issue.first_seen == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue.last_seen == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue.level == :error
+      assert issue.normalized_reason =~ "first occurrence"
+    end
+
+    test "increments count_events and only extends first_seen/last_seen when a new event goes beyond the current range, without ever overwriting level, normalized_reason or stacktrace" do
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 14:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "later occurrence"}
+        })
+
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "backfilled earlier occurrence"}
+        })
+
+      {:ok, _} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 13:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "occurrence within the existing range"}
+        })
+
+      issue = Issues.get_issue(1)
+
+      assert issue.count_events == 4
+      assert issue.first_seen == ~U[2026-05-08 10:00:00.000000Z]
+      assert issue.last_seen == ~U[2026-05-08 14:00:00.000000Z]
+      assert issue.level == :error
+      assert issue.normalized_reason =~ "first occurrence"
     end
   end
 end

@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.Events do
   import Ecto.Query
 
   alias TowerWeb.DB.Event
+  alias TowerWeb.DB.Issues
   alias TowerWeb.DB.Repo
 
   @default_limit 20
@@ -60,23 +61,57 @@ defmodule TowerWeb.DB.Events do
 
   def create_event(attrs, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
+    changeset = Event.changeset(%Event{}, attrs)
 
-    %Event{}
-    |> Event.changeset(attrs)
-    |> repo.insert()
+    if changeset.valid? do
+      repo.transaction(fn ->
+        with {:ok, event} <- repo.insert(changeset),
+             {:ok, _issue} <- Issues.upsert_issue(event, repo: repo) do
+          event
+        else
+          {:error, reason} -> repo.rollback(reason)
+        end
+      end)
+    else
+      repo.insert(changeset)
+    end
   end
 
   def delete_event(%Event{} = event, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    repo.delete(event)
+    repo.transaction(fn ->
+      case repo.delete(event) do
+        {:ok, deleted_event} ->
+          Issues.update_issue_on_event_deletion(event, repo: repo)
+          deleted_event
+
+        {:error, reason} ->
+          repo.rollback(reason)
+      end
+    end)
   end
 
   def delete_events(ids, opts \\ []) when is_list(ids) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    Event
-    |> where([e], e.id in ^ids)
-    |> repo.delete_all()
+    {:ok, result} =
+      repo.transaction(fn ->
+        {count, similarity_ids} =
+          Event
+          |> where([e], e.id in ^ids)
+          |> select([e], e.similarity_id)
+          |> repo.delete_all()
+
+        similarity_ids
+        |> Enum.frequencies()
+        |> Enum.each(fn {similarity_id, deleted_count} ->
+          Issues.recalculate_issue(similarity_id, deleted_count, repo: repo)
+        end)
+
+        {count, nil}
+      end)
+
+    result
   end
 end

@@ -192,12 +192,12 @@ defmodule TowerWeb.Live.Issues.Index do
                 )
               }
             />
-            <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
-            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} host_otp_app={@host_otp_app} />
+            <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.normalized_reason}</span>
+            <.last_stacktrace_line stacktrace={issue.stacktrace} host_otp_app={@host_otp_app} />
           </div>
         </td>
         <td class="py-3 pl-6">
-          <.level_badge level={issue.last_event.level} />
+          <.level_badge level={issue.level} />
         </td>
         <td class="py-3 pl-6">
           <span class="text-sm text-white">{issue.count_events}</span>
@@ -320,27 +320,25 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_event("filter_issue_id", %{"issue_id_filter" => issue_id}, socket) do
-    case Integer.parse(issue_id) do
-      {_issue_id_int, ""} ->
-        current_issue_ids = socket.assigns.issue_ids_filtered
+    if Filters.valid_issue_id?(issue_id) do
+      current_issue_ids = socket.assigns.issue_ids_filtered
 
-        new_issue_ids =
-          if issue_id in current_issue_ids,
-            do: current_issue_ids,
-            else: current_issue_ids ++ [issue_id]
+      new_issue_ids =
+        if issue_id in current_issue_ids,
+          do: current_issue_ids,
+          else: current_issue_ids ++ [issue_id]
 
-        {:noreply,
-         push_patch(socket,
-           to:
-             Paths.build_path(
-               socket.assigns.issues_base_path,
-               Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
-             )
-         )}
-
-      _ ->
-        Process.send_after(self(), :clear_flash, 3000)
-        {:noreply, put_flash(socket, :error, "Please enter a valid issue ID")}
+      {:noreply,
+       push_patch(socket,
+         to:
+           Paths.build_path(
+             socket.assigns.issues_base_path,
+             Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
+           )
+       )}
+    else
+      Process.send_after(self(), :clear_flash, 3000)
+      {:noreply, put_flash(socket, :error, "Please enter a valid issue ID")}
     end
   end
 

@@ -3,6 +3,8 @@ defmodule TowerWeb.DB.Event do
 
   import Ecto.Changeset
 
+  alias TowerWeb.DB.Issue
+
   @primary_key {:id, UUIDv7.Type, autogenerate: false}
 
   schema "tower_web_events" do
@@ -19,6 +21,8 @@ defmodule TowerWeb.DB.Event do
     field(:stacktrace, TowerWeb.DB.Types.Term)
     field(:metadata, TowerWeb.DB.Types.Term)
     field(:request_data, :map)
+
+    belongs_to(:issue, Issue, foreign_key: :similarity_id, references: :id, define_field: false)
 
     timestamps(type: :utc_datetime_usec)
   end
