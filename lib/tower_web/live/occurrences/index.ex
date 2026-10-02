@@ -169,7 +169,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
         </th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
         <th class="py-2 pl-6 text-base font-light w-[180px]">Timestamp</th>
-        <th class="py-2 pl-6 text-base font-light w-[132px]">State</th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Status</th>
       </:header>
       <:row :let={event}>
         <td class="py-3 pl-2 w-8">

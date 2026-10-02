@@ -167,7 +167,7 @@ defmodule TowerWeb.Live.Issues.Index do
         <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
         <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
-        <th class="py-2 pl-6 text-base font-light w-[132px]">State</th>
+        <th class="py-2 pl-6 text-base font-light w-[132px]">Status</th>
       </:header>
       <:row :let={issue}>
         <td class="py-3 pl-2 w-8">
