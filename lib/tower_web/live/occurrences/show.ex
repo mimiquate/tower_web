@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
   use TowerWeb.Web, :live_view
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Paths
 
   @impl Phoenix.LiveView
@@ -20,9 +21,12 @@ defmodule TowerWeb.Live.Occurrences.Show do
         {:ok, socket}
 
       event ->
+        issue = Issues.get_issue(event.similarity_id)
+
         {:ok,
          assign(socket,
            event: event,
+           issue: issue,
            base_path: base_path,
            occurrences_base_path: occurrences_base_path,
            issues_base_path: issues_base_path,
@@ -80,7 +84,15 @@ defmodule TowerWeb.Live.Occurrences.Show do
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
-        <.delete_button size={:lg} phx-click="show_delete_modal">Delete</.delete_button>
+        <div class="flex gap-2">
+          <span class={[
+            "inline-flex items-center gap-2 w-[130px] h-8 px-2 font-inter text-sm font-normal whitespace-nowrap",
+            if(@issue.state == :resolved, do: "bg-green-700 text-white", else: "bg-tower-level-bg text-white")
+          ]}>
+            <.state_badge state={@issue.state} />
+          </span>
+          <.delete_button size={:lg} phx-click="show_delete_modal" />
+        </div>
       </div>
 
       <.confirm_modal

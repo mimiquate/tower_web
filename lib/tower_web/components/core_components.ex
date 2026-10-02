@@ -546,7 +546,7 @@ defmodule TowerWeb.CoreComponents do
 
   attr(:size, :atom, values: [:sm, :lg], default: :sm)
   attr(:rest, :global, include: ~w(phx-click))
-  slot(:inner_block, required: true)
+  slot(:inner_block, required: false)
 
   def delete_button(assigns) do
     ~H"""
