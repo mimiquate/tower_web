@@ -61,19 +61,26 @@ defmodule TowerWeb.DB.Events do
 
   def create_event(attrs, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
-    changeset = Event.changeset(%Event{}, attrs)
 
-    if changeset.valid? do
-      repo.transaction(fn ->
-        with {:ok, event} <- repo.insert(changeset),
-             {:ok, _issue} <- Issues.upsert_issue(event, repo: repo) do
-          event
+    case Map.get(attrs, :similarity_id) do
+      similarity_id when is_integer(similarity_id) ->
+        changeset = Event.changeset(%Event{}, Map.put(attrs, :issue_id, similarity_id))
+
+        if changeset.valid? do
+          repo.transaction(fn ->
+            with {:ok, _issue} <- Issues.upsert_issue(similarity_id, repo: repo),
+                 {:ok, event} <- repo.insert(changeset) do
+              event
+            else
+              {:error, reason} -> repo.rollback(reason)
+            end
+          end)
         else
-          {:error, reason} -> repo.rollback(reason)
+          repo.insert(changeset)
         end
-      end)
-    else
-      repo.insert(changeset)
+
+      _ ->
+        repo.insert(Event.changeset(%Event{}, attrs))
     end
   end
 
@@ -83,7 +90,7 @@ defmodule TowerWeb.DB.Events do
     repo.transaction(fn ->
       case repo.delete(event) do
         {:ok, deleted_event} ->
-          Issues.update_issue_on_event_deletion(event, repo: repo)
+          Issues.delete_issue_if_empty(event.issue_id, repo: repo)
           deleted_event
 
         {:error, reason} ->
@@ -97,16 +104,16 @@ defmodule TowerWeb.DB.Events do
 
     {:ok, result} =
       repo.transaction(fn ->
-        {count, similarity_ids} =
+        {count, issue_ids} =
           Event
           |> where([e], e.id in ^ids)
-          |> select([e], e.similarity_id)
+          |> select([e], e.issue_id)
           |> repo.delete_all()
 
-        similarity_ids
-        |> Enum.frequencies()
-        |> Enum.each(fn {similarity_id, deleted_count} ->
-          Issues.recalculate_issue(similarity_id, deleted_count, repo: repo)
+        issue_ids
+        |> Enum.uniq()
+        |> Enum.each(fn issue_id ->
+          Issues.delete_issue_if_empty(issue_id, repo: repo)
         end)
 
         {count, nil}
