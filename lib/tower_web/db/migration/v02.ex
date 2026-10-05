@@ -6,24 +6,35 @@ defmodule TowerWeb.DB.Migration.V02 do
   def up do
     create_if_not_exists table(:tower_web_issues, primary_key: false) do
       add(:id, :integer, primary_key: true)
-      add(:count_events, :integer, null: false)
-      add(:first_seen, :utc_datetime_usec, null: false)
-      add(:last_seen, :utc_datetime_usec, null: false)
-      add(:level, :string, null: false)
-      add(:normalized_reason, :text, null: false)
-      add(:stacktrace, :binary)
-
-      timestamps(type: :utc_datetime_usec)
     end
 
-    create_if_not_exists(index(:tower_web_issues, [:level]))
+    execute("""
+    INSERT INTO tower_web_issues (id)
+    SELECT DISTINCT similarity_id FROM tower_web_events
+    WHERE similarity_id IS NOT NULL
+    ON CONFLICT (id) DO NOTHING
+    """)
 
-    create_if_not_exists(
-      index(:tower_web_issues, ["normalized_reason gin_trgm_ops"], using: :gin)
-    )
+    alter table(:tower_web_events) do
+      add(:issue_id, :integer)
+    end
+
+    execute("UPDATE tower_web_events SET issue_id = similarity_id WHERE issue_id IS NULL")
+
+    alter table(:tower_web_events) do
+      modify(:issue_id, references(:tower_web_issues, column: :id, type: :integer), null: false)
+    end
+
+    create_if_not_exists(index(:tower_web_events, [:issue_id, "datetime DESC"]))
   end
 
   def down do
+    drop_if_exists(index(:tower_web_events, [:issue_id, "datetime DESC"]))
+
+    alter table(:tower_web_events) do
+      remove(:issue_id)
+    end
+
     drop_if_exists(table(:tower_web_issues))
   end
 end

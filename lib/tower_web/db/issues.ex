@@ -13,29 +13,44 @@ defmodule TowerWeb.DB.Issues do
     limit = Keyword.get(opts, :limit, @default_limit)
     offset = Keyword.get(opts, :offset, 0)
 
-    Issue
-    |> where(^filter_where(filters))
-    |> order_by(desc: :last_seen)
-    |> limit(^limit)
-    |> offset(^offset)
-    |> repo.all()
+    ordered_ids =
+      Issue
+      |> where(^filter_where(filters))
+      |> order_by([i],
+        desc:
+          fragment(
+            "(SELECT MAX(datetime) FROM tower_web_events WHERE issue_id = ?)",
+            i.id
+          )
+      )
+      |> limit(^limit)
+      |> offset(^offset)
+      |> select([i], i.id)
+      |> repo.all()
+
+    load_issues(ordered_ids, repo)
   end
 
   def get_issue(id, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
     recent_occurrences_limit = Keyword.get(opts, :recent_occurrences_limit)
+    id = to_integer(id)
 
-    case repo.get(Issue, id) do
-      nil ->
+    case load_issues([id], repo) do
+      [] ->
         nil
 
-      issue when is_integer(recent_occurrences_limit) ->
-        repo.preload(issue,
-          occurrences:
-            from(e in Event, order_by: [desc: e.datetime], limit: ^recent_occurrences_limit)
-        )
+      [issue] when is_integer(recent_occurrences_limit) ->
+        occurrences =
+          Event
+          |> where([e], e.issue_id == ^id)
+          |> order_by(desc: :datetime)
+          |> limit(^recent_occurrences_limit)
+          |> repo.all()
 
-      issue ->
+        Map.put(issue, :occurrences, occurrences)
+
+      [issue] ->
         issue
     end
   end
@@ -49,111 +64,36 @@ defmodule TowerWeb.DB.Issues do
     |> repo.aggregate(:count)
   end
 
-  def upsert_issue(%Event{} = event, opts \\ []) do
+  def upsert_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    case repo.get(Issue, event.similarity_id) do
+    case repo.get(Issue, similarity_id) do
       nil ->
         %Issue{}
-        |> Issue.changeset(%{
-          id: event.similarity_id,
-          count_events: 1,
-          first_seen: event.datetime,
-          last_seen: event.datetime,
-          level: event.level,
-          normalized_reason: event.normalized_reason,
-          stacktrace: event.stacktrace
-        })
+        |> Issue.changeset(%{id: similarity_id})
         |> repo.insert()
 
       issue ->
-        issue
-        |> Issue.changeset(%{count_events: issue.count_events + 1})
-        |> put_if(
-          DateTime.compare(event.datetime, issue.first_seen) == :lt,
-          :first_seen,
-          event.datetime
-        )
-        |> put_if(
-          DateTime.compare(event.datetime, issue.last_seen) == :gt,
-          :last_seen,
-          event.datetime
-        )
-        |> repo.update()
+        {:ok, issue}
     end
   end
 
-  defp put_if(changeset, true, field, value),
-    do: Ecto.Changeset.put_change(changeset, field, value)
-
-  defp put_if(changeset, false, _field, _value), do: changeset
-
-  def update_issue_on_event_deletion(%Event{} = event, opts \\ []) do
+  def delete_issue_if_empty(issue_id, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
-    issue = repo.get(Issue, event.similarity_id)
-    remaining_count = issue.count_events - 1
+
+    remaining_count = Event |> where([e], e.issue_id == ^issue_id) |> repo.aggregate(:count)
 
     if remaining_count == 0 do
-      Issue |> where([i], i.id == ^issue.id) |> repo.delete_all()
-    else
-      first_seen =
-        if DateTime.compare(event.datetime, issue.first_seen) != :gt do
-          Event
-          |> where([e], e.similarity_id == ^issue.id)
-          |> select([e], min(e.datetime))
-          |> repo.one()
-        else
-          issue.first_seen
-        end
-
-      last_seen =
-        if DateTime.compare(event.datetime, issue.last_seen) != :lt do
-          Event
-          |> where([e], e.similarity_id == ^issue.id)
-          |> select([e], max(e.datetime))
-          |> repo.one()
-        else
-          issue.last_seen
-        end
-
-      issue
-      |> Issue.changeset(%{
-        count_events: remaining_count,
-        first_seen: first_seen,
-        last_seen: last_seen
-      })
-      |> repo.update()
+      Issue |> where([i], i.id == ^issue_id) |> repo.delete_all()
     end
-  end
 
-  def recalculate_issue(id, deleted_count, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-    issue = repo.get(Issue, id)
-    remaining_count = issue.count_events - deleted_count
-
-    if remaining_count == 0 do
-      Issue |> where([i], i.id == ^id) |> repo.delete_all()
-    else
-      %{first_seen: first_seen, last_seen: last_seen} =
-        Event
-        |> where([e], e.similarity_id == ^id)
-        |> select([e], %{first_seen: min(e.datetime), last_seen: max(e.datetime)})
-        |> repo.one()
-
-      issue
-      |> Issue.changeset(%{
-        count_events: remaining_count,
-        first_seen: first_seen,
-        last_seen: last_seen
-      })
-      |> repo.update()
-    end
+    :ok
   end
 
   def delete_issue(id, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    result = Event |> where([e], e.similarity_id == ^id) |> repo.delete_all()
+    result = Event |> where([e], e.issue_id == ^id) |> repo.delete_all()
 
     Issue |> where([i], i.id == ^id) |> repo.delete_all()
 
@@ -163,21 +103,53 @@ defmodule TowerWeb.DB.Issues do
   def delete_issues(ids, opts \\ []) when is_list(ids) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    result = Event |> where([e], e.similarity_id in ^ids) |> repo.delete_all()
+    result = Event |> where([e], e.issue_id in ^ids) |> repo.delete_all()
 
     Issue |> where([i], i.id in ^ids) |> repo.delete_all()
 
     result
   end
 
+  defp load_issues(ids, repo) do
+    stats_by_id =
+      Issue
+      |> where([i], i.id in ^ids)
+      |> join(:inner, [i], e in assoc(i, :occurrences))
+      |> distinct([i], i.id)
+      |> order_by([i, e], asc: i.id, asc: e.inserted_at)
+      |> select([i, e], %{
+        id: i.id,
+        count_events: over(count(e.id), partition_by: i.id),
+        first_seen: over(min(e.datetime), partition_by: i.id),
+        last_seen: over(max(e.datetime), partition_by: i.id),
+        level: e.level,
+        normalized_reason: e.normalized_reason,
+        stacktrace: e.stacktrace
+      })
+      |> repo.all()
+      |> Map.new(&{&1.id, &1})
+
+    ids
+    |> Enum.map(&Map.get(stats_by_id, &1))
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp to_integer(id) when is_integer(id), do: id
+  defp to_integer(id) when is_binary(id), do: String.to_integer(id)
+
   defp filter_where(filters) do
     Enum.reduce(filters, dynamic(true), fn
       {:search, value}, dynamic when value != "" ->
         search_term = "%#{value}%"
-        dynamic([i], ^dynamic and ilike(i.normalized_reason, ^search_term))
+
+        matching_ids =
+          from(e in Event, where: ilike(e.normalized_reason, ^search_term), select: e.issue_id)
+
+        dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
       {:level, value}, dynamic when not is_nil(value) ->
-        dynamic([i], ^dynamic and i.level == ^value)
+        matching_ids = from(e in Event, where: e.level == ^value, select: e.issue_id)
+        dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
       {:similarity_id, value}, dynamic
       when is_binary(value) or is_list(value) or is_integer(value) ->
@@ -188,7 +160,7 @@ defmodule TowerWeb.DB.Issues do
         matching_ids =
           from(e in Event,
             where: e.datetime >= ^from and e.datetime <= ^to,
-            select: e.similarity_id
+            select: e.issue_id
           )
 
         dynamic([i], ^dynamic and i.id in subquery(matching_ids))
