@@ -1,7 +1,7 @@
 defmodule TowerWeb.Live.Issues.Index do
   use TowerWeb.Web, :live_view
 
-  alias TowerDB.Issues
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths

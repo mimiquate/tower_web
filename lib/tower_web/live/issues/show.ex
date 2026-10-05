@@ -1,8 +1,8 @@
 defmodule TowerWeb.Live.Issues.Show do
   use TowerWeb.Web, :live_view
 
-  alias TowerDB.Events
-  alias TowerDB.Issues
+  alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Paths

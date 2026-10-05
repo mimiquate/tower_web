@@ -1,7 +1,7 @@
 defmodule TowerWeb.Live.Occurrences.Show do
   use TowerWeb.Web, :live_view
 
-  alias TowerDB.Events
+  alias TowerWeb.DB.Events
   alias TowerWeb.Live.Paths
 
   @impl Phoenix.LiveView
