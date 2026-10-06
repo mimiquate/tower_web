@@ -565,6 +565,21 @@ defmodule TowerWeb.CoreComponents do
     """
   end
 
+  attr(:rest, :global, include: ~w(phx-click))
+  slot(:inner_block, required: true)
+
+  def merge_button(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class="font-inter text-sm font-normal text-blue-500 border border-blue-500 px-2 hover:bg-blue-400/10"
+      {@rest}
+    >
+      {render_slot(@inner_block)}
+    </button>
+    """
+  end
+
   attr(:selected_count, :integer, required: true)
   attr(:item_label, :string, required: true)
   attr(:delete_event, :string, default: "show_delete_modal")

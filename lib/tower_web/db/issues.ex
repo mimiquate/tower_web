@@ -124,6 +124,33 @@ defmodule TowerWeb.DB.Issues do
     result
   end
 
+  def merge_issues(target_id, source_ids, opts \\ []) when is_list(source_ids) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+
+    {:ok, result} =
+      repo.transaction(fn ->
+        any_source_unresolved? =
+          Issue
+          |> where([i], i.id in ^source_ids and i.state == :unresolved)
+          |> repo.exists?()
+
+        if any_source_unresolved? do
+          Issue |> where([i], i.id == ^target_id) |> repo.update_all(set: [state: :unresolved])
+        end
+
+        result =
+          Event
+          |> where([e], e.issue_id in ^source_ids)
+          |> repo.update_all(set: [issue_id: target_id, similarity_id: target_id])
+
+        Enum.each(source_ids, &delete_issue_if_empty(&1, repo: repo))
+
+        result
+      end)
+
+    result
+  end
+
   defp load_issues(ids, repo) do
     stats_by_id =
       Event

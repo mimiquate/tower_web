@@ -23,6 +23,7 @@ defmodule TowerWeb.Live.Issues.Index do
        issues_base_path: "#{base_path}/issues",
        selected_issue_ids: MapSet.new(),
        show_delete_modal: false,
+       show_merge_modal: false,
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
        host_otp_app: socket.endpoint.config(:otp_app)
@@ -152,6 +153,15 @@ defmodule TowerWeb.Live.Issues.Index do
       confirm_label="Delete"
     />
 
+    <.confirm_modal
+      show={@show_merge_modal}
+      title={"Merge #{selected_count} issues?"}
+      description="The selected issues will be merged into the most recently active one; their events will be moved and the other issues deleted. This action cannot be undone."
+      cancel_event="cancel_merge_selected"
+      confirm_event="merge_selected"
+      confirm_label="Merge"
+    />
+
     <.data_table rows={@filtered_issues}>
       <:header>
         <th class="py-2 pl-2 w-8">
@@ -162,6 +172,7 @@ defmodule TowerWeb.Live.Issues.Index do
           <div class="flex items-center gap-3">
             <span>Reason (error message)</span>
             <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
+            <.merge_button :if={selected_count >= 2} phx-click="show_merge_modal">Merge</.merge_button>
           </div>
         </th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
@@ -415,6 +426,40 @@ defmodule TowerWeb.Live.Issues.Index do
      socket
      |> assign(selected_issue_ids: MapSet.new(), show_delete_modal: false)
      |> put_flash(:info, "Deleted #{deleted_count} #{issue_label(deleted_count)}.")
+     |> push_patch(
+       to:
+         "#{socket.assigns.issues_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
+     )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_merge_modal", _params, socket) do
+    {:noreply, assign(socket, show_merge_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_merge_selected", _params, socket) do
+    {:noreply, assign(socket, show_merge_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("merge_selected", _params, socket) do
+    selected_ids = MapSet.to_list(socket.assigns.selected_issue_ids)
+
+    [target | _] =
+      Issues.list_issues(filters: [similarity_id: selected_ids], limit: length(selected_ids))
+
+    source_ids = selected_ids -- [target.id]
+
+    {_events_moved_count, _} = Issues.merge_issues(target.id, source_ids)
+    merged_count = length(selected_ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_issue_ids: MapSet.new(), show_merge_modal: false)
+     |> put_flash(:info, "Merged #{merged_count} issues into ##{target.id}.")
      |> push_patch(
        to:
          "#{socket.assigns.issues_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
