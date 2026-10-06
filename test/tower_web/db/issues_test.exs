@@ -323,6 +323,52 @@ defmodule TowerWeb.DB.IssuesTest do
     end
   end
 
+  describe "merge_issues/3" do
+    test "merges two issues into one, leaving the third issue untouched" do
+      {:ok, target_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "target issue event"}
+        })
+
+      {:ok, source_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "source issue event"}
+        })
+
+      {:ok, untouched_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 3,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "untouched issue event"}
+        })
+
+      assert Issues.merge_issues(1, [2]) == {1, nil}
+
+      events = Events.list_events() |> Map.new(&{&1.id, &1})
+
+      assert events[target_event.id].issue_id == 1
+      assert events[source_event.id].issue_id == 1
+      assert events[untouched_event.id].issue_id == 3
+
+      assert Issues.get_issue(1) != nil
+      assert Issues.get_issue(2) == nil
+      assert Issues.get_issue(3) != nil
+    end
+  end
+
   describe "upsert_issue/2 (via Events.create_event/2)" do
     test "creates the issue on the first event for a similarity_id" do
       {:ok, _} =

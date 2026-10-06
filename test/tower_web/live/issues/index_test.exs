@@ -58,6 +58,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime_range_custom_open: false,
           selected_issue_ids: MapSet.new(),
           show_delete_modal: false,
+          show_merge_modal: false,
           flash: %{},
           host_otp_app: :tower_web
         })
@@ -426,6 +427,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
         datetime_range_custom_open: false,
         selected_issue_ids: MapSet.new(),
         show_delete_modal: false,
+        show_merge_modal: false,
         flash: %{},
         host_otp_app: :tower_web
       }
