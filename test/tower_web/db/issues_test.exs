@@ -344,7 +344,7 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.normalized_reason =~ "first occurrence"
     end
 
-    test "increments count_events and only extends first_seen/last_seen when a new event goes beyond the current range, without ever overwriting level, normalized_reason or stacktrace" do
+    test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the earliest datetime" do
       {:ok, _} =
         Events.create_event(%{
           id: UUIDv7.generate(),
@@ -390,8 +390,8 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.count_events == 4
       assert issue.first_seen == ~U[2026-05-08 10:00:00.000000Z]
       assert issue.last_seen == ~U[2026-05-08 14:00:00.000000Z]
-      assert issue.level == :error
-      assert issue.normalized_reason =~ "first occurrence"
+      assert issue.level == :warning
+      assert issue.normalized_reason =~ "backfilled earlier occurrence"
     end
   end
 end

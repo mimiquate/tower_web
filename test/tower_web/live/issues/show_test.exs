@@ -68,10 +68,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       {:ok, socket} = Show.mount(%{"id" => "2"}, %{"base_path" => "/tower"}, socket)
       {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/2", socket)
 
-      # The issue's own level/normalized_reason are set once, on the first event,
-      # and never overwritten by later occurrences
-      assert socket.assigns.issue.normalized_reason =~ "First occurrence message"
-      assert socket.assigns.issue.level == :warning
+      assert socket.assigns.issue.normalized_reason =~ "Old occurrence outside chart range"
+      assert socket.assigns.issue.level == :error
       assert socket.assigns.issue.count_events == 3
 
       html = render_component(&Show.render/1, socket.assigns)
