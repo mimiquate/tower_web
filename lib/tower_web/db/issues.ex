@@ -73,9 +73,23 @@ defmodule TowerWeb.DB.Issues do
         |> Issue.changeset(%{id: similarity_id, state: :unresolved})
         |> repo.insert()
 
+      %Issue{state: :resolved} = issue ->
+        issue
+        |> Issue.changeset(%{state: :unresolved})
+        |> repo.update()
+
       issue ->
         {:ok, issue}
     end
+  end
+
+  def update_issue(issue, attrs, opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    issue_struct = repo.get(Issue, issue.id)
+
+    issue_struct
+    |> Issue.changeset(attrs)
+    |> repo.update()
   end
 
   def delete_issue_if_empty(issue_id, opts \\ []) do
@@ -114,10 +128,12 @@ defmodule TowerWeb.DB.Issues do
     stats_by_id =
       Event
       |> where([e], e.issue_id in ^ids)
+      |> join(:inner, [e], i in Issue, on: i.id == e.issue_id)
       |> distinct([e], e.issue_id)
       |> order_by([e], asc: e.issue_id, asc: e.datetime)
-      |> select([e], %{
+      |> select([e, i], %{
         id: e.issue_id,
+        state: i.state,
         count_events: over(count(e.id), partition_by: e.issue_id),
         first_seen: over(min(e.datetime), partition_by: e.issue_id),
         last_seen: over(max(e.datetime), partition_by: e.issue_id),

@@ -117,7 +117,9 @@ defmodule TowerWeb.Live.Issues.Show do
   def handle_event("set_issue_state", %{"state" => state}, socket)
       when state in ["resolved", "unresolved"] do
     new_state = if state == "resolved", do: :resolved, else: :unresolved
-    {:ok, issue} = Issues.update_issue(socket.assigns.issue, %{state: new_state})
+    {:ok, _issue} = Issues.update_issue(socket.assigns.issue, %{state: new_state})
+
+    issue = %{socket.assigns.issue | state: new_state}
 
     {:noreply, assign(socket, issue: issue, dropdown_open: false)}
   end
