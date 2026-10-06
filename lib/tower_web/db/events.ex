@@ -76,11 +76,11 @@ defmodule TowerWeb.DB.Events do
             end
           end)
         else
-          repo.insert(changeset)
+          {:error, changeset}
         end
 
       _ ->
-        repo.insert(Event.changeset(%Event{}, attrs))
+        {:error, Event.changeset(%Event{}, attrs)}
     end
   end
 

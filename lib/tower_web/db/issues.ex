@@ -112,16 +112,15 @@ defmodule TowerWeb.DB.Issues do
 
   defp load_issues(ids, repo) do
     stats_by_id =
-      Issue
-      |> where([i], i.id in ^ids)
-      |> join(:inner, [i], e in assoc(i, :occurrences))
-      |> distinct([i], i.id)
-      |> order_by([i, e], asc: i.id, asc: e.inserted_at)
-      |> select([i, e], %{
-        id: i.id,
-        count_events: over(count(e.id), partition_by: i.id),
-        first_seen: over(min(e.datetime), partition_by: i.id),
-        last_seen: over(max(e.datetime), partition_by: i.id),
+      Event
+      |> where([e], e.issue_id in ^ids)
+      |> distinct([e], e.issue_id)
+      |> order_by([e], asc: e.issue_id, asc: e.inserted_at)
+      |> select([e], %{
+        id: e.issue_id,
+        count_events: over(count(e.id), partition_by: e.issue_id),
+        first_seen: over(min(e.datetime), partition_by: e.issue_id),
+        last_seen: over(max(e.datetime), partition_by: e.issue_id),
         level: e.level,
         normalized_reason: e.normalized_reason,
         stacktrace: e.stacktrace
