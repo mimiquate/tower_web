@@ -555,7 +555,7 @@ defmodule TowerWeb.CoreComponents do
       class={[
         "font-inter text-sm font-normal text-red-500 border border-red-500",
         @size == :sm && "px-2 hover:bg-red-400/10",
-        @size == :lg && "size-8 inline-flex items-center justify-center bg-red-700"
+        @size == :lg && "h-8 w-8 inline-flex items-center justify-center bg-red-700"
       ]}
       {@rest}
     >
@@ -572,7 +572,7 @@ defmodule TowerWeb.CoreComponents do
     ~H"""
     <button
       type="button"
-      class="flex items-center justify-center w-16 h-8 px-2 font-inter text-sm font-normal whitespace-nowrap bg-[#2F5CD3] text-white hover:bg-[#2F5CD3]/80"
+      class="flex items-center justify-center w-20 h-8 px-2 font-inter text-sm font-normal whitespace-nowrap bg-[#2F5CD3] text-white hover:bg-[#2F5CD3]/80"
       {@rest}
     >
       {render_slot(@inner_block)}

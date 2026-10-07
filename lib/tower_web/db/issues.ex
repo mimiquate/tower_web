@@ -83,6 +83,12 @@ defmodule TowerWeb.DB.Issues do
     end
   end
 
+  def generate_synthetic_id(opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    %{rows: [[id]]} = repo.query!("SELECT nextval('tower_web_issues_synthetic_id_seq')")
+    id
+  end
+
   def update_issue(issue, attrs, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
     issue_struct = repo.get(Issue, issue.id)

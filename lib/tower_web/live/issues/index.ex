@@ -169,16 +169,16 @@ defmodule TowerWeb.Live.Issues.Index do
         </th>
 
         <th class="py-2 pl-6 text-base font-light">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 min-h-8">
             <span>Reason (error message)</span>
             <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
             <.merge_button :if={selected_count >= 2} phx-click="show_merge_modal">Merge</.merge_button>
           </div>
         </th>
-        <th class="py-2 pl-6 text-base font-light w-[132px]">Level</th>
-        <th class="py-2 pl-6 text-base font-light w-[132px]">Occurrences</th>
-        <th class="py-2 pl-6 text-base font-light w-[180px]">Last Seen</th>
-        <th class="py-2 pl-6 text-base font-light w-[132px]">Status</th>
+        <th class="py-2 pl-6 text-base font-light w-[110px]">Level</th>
+        <th class="py-2 pl-6 text-base font-light w-[100px]">Occurrences</th>
+        <th class="py-2 pl-6 text-base font-light w-[150px]">Last Seen</th>
+        <th class="py-2 pl-6 text-base font-light w-[110px]">Status</th>
       </:header>
       <:row :let={issue}>
         <td class="py-3 pl-2 w-8">
