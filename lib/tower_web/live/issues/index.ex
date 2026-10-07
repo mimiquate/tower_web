@@ -60,7 +60,7 @@ defmodule TowerWeb.Live.Issues.Index do
             search: search,
             level: level,
             datetime_range: datetime_range,
-            similarity_id: issue_ids
+            id: issue_ids
           )
 
         per_page = Pagination.per_page()

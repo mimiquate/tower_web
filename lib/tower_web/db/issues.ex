@@ -150,7 +150,7 @@ defmodule TowerWeb.DB.Issues do
         matching_ids = from(e in Event, where: e.level == ^value, select: e.issue_id)
         dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
-      {:similarity_id, value}, dynamic
+      {:id, value}, dynamic
       when is_binary(value) or is_list(value) or is_integer(value) ->
         value = List.wrap(value)
         dynamic([i], ^dynamic and i.id in ^value)
