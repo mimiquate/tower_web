@@ -572,7 +572,7 @@ defmodule TowerWeb.CoreComponents do
     ~H"""
     <button
       type="button"
-      class="font-inter text-sm font-normal text-blue-500 border border-blue-500 px-2 hover:bg-blue-400/10"
+      class="flex items-center justify-center w-16 h-8 px-2 font-inter text-sm font-normal whitespace-nowrap bg-[#2F5CD3] text-white hover:bg-[#2F5CD3]/80"
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -589,7 +589,7 @@ defmodule TowerWeb.CoreComponents do
     <span :if={@selected_count > 0} class="font-inter text-sm font-normal text-tower-text-secondary">
       {@selected_count} {@item_label} selected
     </span>
-    <.delete_button :if={@selected_count > 0} phx-click={@delete_event}>Delete</.delete_button>
+    <.delete_button :if={@selected_count > 0} size={:lg} phx-click={@delete_event}>Delete</.delete_button>
     """
   end
 

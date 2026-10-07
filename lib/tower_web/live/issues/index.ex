@@ -156,7 +156,7 @@ defmodule TowerWeb.Live.Issues.Index do
     <.confirm_modal
       show={@show_merge_modal}
       title={"Merge #{selected_count} issues?"}
-      description="The selected issues will be merged into the most recently active one; their events will be moved and the other issues deleted. This action cannot be undone."
+      description="The selected issues will be merged into the most recently one; their events will be moved and the other issues deleted. This action cannot be undone."
       cancel_event="cancel_merge_selected"
       confirm_event="merge_selected"
       confirm_label="Merge"
@@ -447,7 +447,7 @@ defmodule TowerWeb.Live.Issues.Index do
     selected_ids = MapSet.to_list(socket.assigns.selected_issue_ids)
 
     [target | _] =
-      Issues.list_issues(filters: [similarity_id: selected_ids], limit: length(selected_ids))
+      Issues.list_issues(filters: [id: selected_ids], limit: length(selected_ids))
 
     source_ids = selected_ids -- [target.id]
 
