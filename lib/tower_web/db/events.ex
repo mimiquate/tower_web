@@ -67,12 +67,10 @@ defmodule TowerWeb.DB.Events do
         changeset = Event.changeset(%Event{}, Map.put(attrs, :issue_id, similarity_id))
 
         if changeset.valid? do
-          repo.transaction(fn ->
+          repo.transact(fn ->
             with {:ok, _issue} <- Issues.upsert_issue(similarity_id, repo: repo),
                  {:ok, event} <- repo.insert(changeset) do
-              event
-            else
-              {:error, reason} -> repo.rollback(reason)
+              {:ok, event}
             end
           end)
         else
@@ -87,15 +85,10 @@ defmodule TowerWeb.DB.Events do
   def delete_event(%Event{} = event, opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    repo.transaction(fn ->
-      case repo.delete(event) do
-        {:ok, deleted_event} ->
-          Issues.delete_issue_if_empty(event.issue_id, repo: repo)
-          deleted_event
-
-        {:error, reason} ->
-          repo.rollback(reason)
-      end
+    repo.transact(fn ->
+      result = repo.delete(event)
+      Issues.delete_issue_if_empty(event.issue_id, repo: repo)
+      result
     end)
   end
 
@@ -103,7 +96,7 @@ defmodule TowerWeb.DB.Events do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
     {:ok, result} =
-      repo.transaction(fn ->
+      repo.transact(fn ->
         {count, issue_ids} =
           Event
           |> where([e], e.id in ^ids)
@@ -116,7 +109,7 @@ defmodule TowerWeb.DB.Events do
           Issues.delete_issue_if_empty(issue_id, repo: repo)
         end)
 
-        {count, nil}
+        {:ok, {count, nil}}
       end)
 
     result
