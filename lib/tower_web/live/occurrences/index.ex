@@ -23,6 +23,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
        occurrences_base_path: "#{base_path}/occurrences",
        selected_occurrences_ids: MapSet.new(),
        show_delete_modal: false,
+       show_unmerge_modal: false,
        host_otp_app: socket.endpoint.config(:otp_app)
      )}
   end
@@ -146,6 +147,16 @@ defmodule TowerWeb.Live.Occurrences.Index do
       confirm_label="Delete"
     />
 
+    <.confirm_modal
+      show={@show_unmerge_modal}
+      title={"Unmerge #{selected_count} #{selected_occurrence_label}?"}
+      description="Each selected occurrence will be moved into its own new issue."
+      cancel_event="cancel_unmerge_selected"
+      confirm_event="unmerge_selected"
+      confirm_label="Unmerge"
+      tone={:reversible}
+    />
+
     <.list_empty_state
       empty={@filtered_events == []}
       search_query={@search_query}
@@ -162,9 +173,10 @@ defmodule TowerWeb.Live.Occurrences.Index do
         </th>
 
         <th class="py-2 pl-6 text-base font-light">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 min-h-8">
             <span>Related Occurrence</span>
             <.bulk_delete_toolbar selected_count={selected_count} item_label={selected_item_label} />
+            <.merge_button :if={selected_count >= 1} phx-click="show_unmerge_modal">Unmerge</.merge_button>
           </div>
         </th>
         <th class="py-2 pl-6 text-base font-light w-[132px]">Item Level</th>
@@ -407,6 +419,33 @@ defmodule TowerWeb.Live.Occurrences.Index do
      socket
      |> assign(selected_occurrences_ids: MapSet.new(), show_delete_modal: false)
      |> put_flash(:info, "Deleted #{deleted_count} #{occurrence_label(deleted_count)}.")
+     |> push_patch(
+       to:
+         "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"
+     )}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("show_unmerge_modal", _params, socket) do
+    {:noreply, assign(socket, show_unmerge_modal: true)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("cancel_unmerge_selected", _params, socket) do
+    {:noreply, assign(socket, show_unmerge_modal: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_event("unmerge_selected", _params, socket) do
+    ids = MapSet.to_list(socket.assigns.selected_occurrences_ids)
+    {count, _} = Events.unmerge_events(ids)
+
+    Process.send_after(self(), :clear_flash, 3000)
+
+    {:noreply,
+     socket
+     |> assign(selected_occurrences_ids: MapSet.new(), show_unmerge_modal: false)
+     |> put_flash(:info, "Unmerged #{count} #{occurrence_label(count)} into new issues.")
      |> push_patch(
        to:
          "#{socket.assigns.occurrences_base_path}#{Paths.page_path(socket.assigns.page, Filters.current_filters(socket.assigns))}"

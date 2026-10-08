@@ -125,4 +125,33 @@ defmodule TowerWeb.DB.Events do
 
     result
   end
+
+  def unmerge_events(ids, opts \\ []) when is_list(ids) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+
+    {:ok, result} =
+      repo.transaction(fn ->
+        original_issue_ids =
+          Enum.map(ids, fn id ->
+            event = repo.get!(Event, id)
+            new_issue_id = Issues.generate_synthetic_id(repo: repo)
+
+            {:ok, _issue} = Issues.upsert_issue(new_issue_id, repo: repo)
+
+            Event
+            |> where([e], e.id == ^id)
+            |> repo.update_all(set: [issue_id: new_issue_id, similarity_id: new_issue_id])
+
+            event.issue_id
+          end)
+
+        original_issue_ids
+        |> Enum.uniq()
+        |> Enum.each(&Issues.delete_issue_if_empty(&1, repo: repo))
+
+        {length(ids), nil}
+      end)
+
+    result
+  end
 end
