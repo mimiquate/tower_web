@@ -55,6 +55,18 @@ defmodule TowerWeb.DB.Issues do
     end
   end
 
+  def list_merged_issues(issue_id, opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    issue_id = to_integer(issue_id)
+
+    Event
+    |> where([e], e.issue_id == ^issue_id and e.similarity_id != ^issue_id)
+    |> distinct([e], e.similarity_id)
+    |> order_by([e], asc: e.similarity_id, desc: e.datetime)
+    |> select([e], %{id: e.similarity_id, normalized_reason: e.normalized_reason})
+    |> repo.all()
+  end
+
   def count_issues(opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
     filters = Keyword.get(opts, :filters, [])
@@ -81,12 +93,6 @@ defmodule TowerWeb.DB.Issues do
       issue ->
         {:ok, issue}
     end
-  end
-
-  def generate_synthetic_id(opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-    %{rows: [[id]]} = repo.query!("SELECT nextval('tower_web_issues_synthetic_id_seq')")
-    id
   end
 
   def update_issue(issue, attrs, opts \\ []) do
@@ -144,14 +150,9 @@ defmodule TowerWeb.DB.Issues do
           Issue |> where([i], i.id == ^target_id) |> repo.update_all(set: [state: :unresolved])
         end
 
-        result =
-          Event
-          |> where([e], e.issue_id in ^source_ids)
-          |> repo.update_all(set: [issue_id: target_id, similarity_id: target_id])
-
-        Enum.each(source_ids, &delete_issue_if_empty(&1, repo: repo))
-
-        result
+        Event
+        |> where([e], e.issue_id in ^source_ids)
+        |> repo.update_all(set: [issue_id: target_id])
       end)
 
     result

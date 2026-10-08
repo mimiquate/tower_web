@@ -58,7 +58,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           Filters.compact_filters(
             search: search,
             level: level,
-            similarity_id: issue_ids,
+            issue_id: issue_ids,
             datetime_range: datetime_range
           )
 
@@ -201,7 +201,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               }
             />
             <div class="flex items-start gap-3 w-full">
-              <span class="text-sm text-tower-text-secondary shrink-0">#{event.similarity_id}</span>
+              <span class="text-sm text-tower-text-secondary shrink-0">#{event.issue_id}</span>
               <span class="text-sm text-tower-text-secondary line-clamp-1 min-w-0 flex-1">{event.normalized_reason}</span>
             </div>
             <.last_stacktrace_line stacktrace={event.stacktrace} host_otp_app={@host_otp_app} />

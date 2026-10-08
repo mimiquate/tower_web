@@ -56,6 +56,10 @@ defmodule TowerWeb.DB.Events do
         value = List.wrap(value)
         dynamic([e], ^dynamic and e.similarity_id in ^value)
 
+      {:issue_id, value}, dynamic when is_binary(value) or is_list(value) ->
+        value = List.wrap(value)
+        dynamic([e], ^dynamic and e.issue_id in ^value)
+
       {:datetime_range, {from, to}}, dynamic ->
         dynamic([e], ^dynamic and e.datetime >= ^from and e.datetime <= ^to)
 
@@ -131,23 +135,16 @@ defmodule TowerWeb.DB.Events do
 
     {:ok, result} =
       repo.transaction(fn ->
-        original_issue_ids =
-          Enum.map(ids, fn id ->
-            event = repo.get!(Event, id)
-            new_issue_id = Issues.generate_synthetic_id(repo: repo)
+        target_event =
+          Event
+          |> where([e], e.id in ^ids)
+          |> order_by(desc: :datetime)
+          |> limit(1)
+          |> repo.one!()
 
-            {:ok, _issue} = Issues.upsert_issue(new_issue_id, repo: repo)
-
-            Event
-            |> where([e], e.id == ^id)
-            |> repo.update_all(set: [issue_id: new_issue_id, similarity_id: new_issue_id])
-
-            event.issue_id
-          end)
-
-        original_issue_ids
-        |> Enum.uniq()
-        |> Enum.each(&Issues.delete_issue_if_empty(&1, repo: repo))
+        Event
+        |> where([e], e.id in ^ids)
+        |> repo.update_all(set: [issue_id: target_event.similarity_id])
 
         {length(ids), nil}
       end)
