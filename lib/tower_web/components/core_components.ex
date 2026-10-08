@@ -31,6 +31,18 @@ defmodule TowerWeb.CoreComponents do
 
   attr(:class, :string, default: "size-4")
 
+  def merge_icon(assigns) do
+    ~H"""
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class={@class}>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="18" cy="18" r="2.5" />
+      <path stroke-linecap="round" d="M6 8.5V16a2 2 0 0 0 2 2h5.5M15.5 18 18 15.5" />
+    </svg>
+    """
+  end
+
+  attr(:class, :string, default: "size-4")
+
   def circle_icon(assigns) do
     ~H"""
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class={@class}>
@@ -503,6 +515,7 @@ defmodule TowerWeb.CoreComponents do
   attr(:confirm_event, :string, required: true)
   attr(:cancel_label, :string, default: "Cancel")
   attr(:confirm_label, :string, default: "Delete")
+  attr(:tone, :atom, values: [:destructive, :reversible], default: :destructive)
 
   def confirm_modal(assigns) do
     ~H"""
@@ -511,7 +524,8 @@ defmodule TowerWeb.CoreComponents do
       <div class="relative bg-tower-level-bg flex flex-col gap-3 px-6 py-3 max-w-md w-full">
         <div class="flex items-start justify-between w-full">
           <div class="flex flex-col gap-2 items-start">
-            <.warning_icon class="size-6 text-red-500" />
+            <.warning_icon :if={@tone == :destructive} class="size-6 text-red-500" />
+            <.merge_icon :if={@tone == :reversible} class="size-6 text-[#2F5CD3]" />
             <p class="font-roboto-slab text-base text-white">{@title}</p>
           </div>
           <button type="button" phx-click={@cancel_event} class="shrink-0 text-white">
@@ -534,7 +548,11 @@ defmodule TowerWeb.CoreComponents do
           <button
             type="button"
             phx-click={@confirm_event}
-            class="flex-1 font-inter text-sm text-red-500 border border-red-500 px-2 py-1 hover:bg-red-400/10"
+            class={[
+              "flex-1 font-inter text-sm px-2 py-1",
+              @tone == :destructive && "text-red-500 border border-red-500 hover:bg-red-400/10",
+              @tone == :reversible && "text-[#2F5CD3] border border-[#2F5CD3] hover:bg-[#2F5CD3]/10"
+            ]}
           >
             {@confirm_label}
           </button>

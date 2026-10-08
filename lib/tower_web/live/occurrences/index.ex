@@ -154,6 +154,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
       cancel_event="cancel_unmerge_selected"
       confirm_event="unmerge_selected"
       confirm_label="Unmerge"
+      tone={:reversible}
     />
 
     <.list_empty_state

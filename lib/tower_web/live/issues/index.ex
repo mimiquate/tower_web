@@ -156,10 +156,11 @@ defmodule TowerWeb.Live.Issues.Index do
     <.confirm_modal
       show={@show_merge_modal}
       title={"Merge #{selected_count} issues?"}
-      description="The selected issues will be merged into the most recently one; their events will be moved and the other issues deleted. This action cannot be undone."
+      description="The selected issues will be merged into the most recently one; their events will be moved and the other issues deleted."
       cancel_event="cancel_merge_selected"
       confirm_event="merge_selected"
       confirm_label="Merge"
+      tone={:reversible}
     />
 
     <.data_table rows={@filtered_issues}>
