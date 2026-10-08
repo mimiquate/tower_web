@@ -163,7 +163,7 @@ defmodule TowerWeb.DB.Issues do
       |> where([e], e.issue_id in ^ids)
       |> join(:inner, [e], i in Issue, on: i.id == e.issue_id)
       |> distinct([e], e.issue_id)
-      |> order_by([e], asc: e.issue_id, asc: e.datetime)
+      |> order_by([e], asc: e.issue_id, desc: e.datetime)
       |> select([e, i], %{
         id: e.issue_id,
         state: i.state,

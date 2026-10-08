@@ -46,7 +46,7 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue_a.count_events == 2
       assert issue_a.first_seen == ~U[2026-05-08 10:00:00.000000Z]
       assert issue_a.last_seen == ~U[2026-05-08 12:00:00.000000Z]
-      assert issue_a.normalized_reason =~ "first occurrence of error A"
+      assert issue_a.normalized_reason =~ "second occurrence of error A"
 
       assert issue_b.count_events == 1
       assert issue_b.first_seen == ~U[2026-05-08 11:00:00.000000Z]
@@ -200,7 +200,7 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.count_events == 3
       assert issue.first_seen == outside_window
       assert issue.last_seen == inside_window
-      assert issue.normalized_reason == "Older occurrence outside the filtered window"
+      assert issue.normalized_reason == "Recent occurrence inside the filtered window"
     end
   end
 
@@ -240,7 +240,7 @@ defmodule TowerWeb.DB.IssuesTest do
 
       assert issue.id == 1
       assert issue.count_events == 2
-      assert issue.normalized_reason =~ "first occurrence of error A"
+      assert issue.normalized_reason =~ "second occurrence of error A"
     end
   end
 
@@ -419,7 +419,7 @@ defmodule TowerWeb.DB.IssuesTest do
       assert Issues.get_issue(1).state == :unresolved
     end
 
-    test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the earliest datetime" do
+    test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the most recent datetime" do
       {:ok, _} =
         Events.create_event(%{
           id: UUIDv7.generate(),
@@ -466,7 +466,7 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.first_seen == ~U[2026-05-08 10:00:00.000000Z]
       assert issue.last_seen == ~U[2026-05-08 14:00:00.000000Z]
       assert issue.level == :warning
-      assert issue.normalized_reason =~ "backfilled earlier occurrence"
+      assert issue.normalized_reason =~ "later occurrence"
     end
   end
 end
