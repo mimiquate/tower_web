@@ -64,17 +64,20 @@ defmodule TowerWeb.DB.Issues do
     |> repo.aggregate(:count)
   end
 
-  def upsert_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
+  def find_or_create_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    case repo.get(Issue, similarity_id) do
+    case Event
+         |> where([e], e.similarity_id == ^similarity_id)
+         |> select([e], e.issue_id)
+         |> limit(1)
+         |> repo.one() do
       nil ->
-        %Issue{}
-        |> Issue.changeset(%{id: similarity_id})
-        |> repo.insert()
+        {:ok, issue} = repo.insert(%Issue{})
+        {:ok, issue.id}
 
-      issue ->
-        {:ok, issue}
+      issue_id ->
+        {:ok, issue_id}
     end
   end
 

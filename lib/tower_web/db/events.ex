@@ -41,9 +41,9 @@ defmodule TowerWeb.DB.Events do
       {:level, value}, dynamic when not is_nil(value) ->
         dynamic([e], ^dynamic and e.level == ^value)
 
-      {:similarity_id, value}, dynamic when is_binary(value) or is_list(value) ->
+      {:issue_id, value}, dynamic when is_binary(value) or is_list(value) ->
         value = List.wrap(value)
-        dynamic([e], ^dynamic and e.similarity_id in ^value)
+        dynamic([e], ^dynamic and e.issue_id in ^value)
 
       {:datetime_range, {from, to}}, dynamic ->
         dynamic([e], ^dynamic and e.datetime >= ^from and e.datetime <= ^to)
@@ -68,9 +68,10 @@ defmodule TowerWeb.DB.Events do
 
         if changeset.valid? do
           repo.transact(fn ->
-            with {:ok, _issue} <- Issues.upsert_issue(similarity_id, repo: repo),
-                 {:ok, event} <- repo.insert(changeset) do
-              {:ok, event}
+            with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id, repo: repo) do
+              %Event{}
+              |> Event.changeset(Map.put(attrs, :issue_id, issue_id))
+              |> repo.insert()
             end
           end)
         else

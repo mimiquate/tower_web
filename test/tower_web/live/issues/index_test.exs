@@ -11,7 +11,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
 
   describe "render/1" do
     test "shows table with issues" do
-      {:ok, _} =
+      {:ok, event1} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -24,7 +24,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      {:ok, _} =
+      {:ok, event2} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -65,8 +65,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       assert html =~ "<table"
       assert html =~ "Something failed"
       assert html =~ "A warning occurred"
-      assert html =~ "#1"
-      assert html =~ "#2"
+      assert html =~ "##{event1.issue_id}"
+      assert html =~ "##{event2.issue_id}"
     end
   end
 
@@ -205,7 +205,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
     test "filter issues by id" do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-      {:ok, _} =
+      {:ok, warning_event} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -247,9 +247,14 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       socket = socket_with_issues()
 
       {:noreply, socket} =
-        IssuesIndex.handle_params(%{"page" => "1", "issue_ids" => "1"}, "/tower", socket)
+        IssuesIndex.handle_params(
+          %{"page" => "1", "issue_ids" => to_string(warning_event.issue_id)},
+          "/tower",
+          socket
+        )
 
       assert length(socket.assigns.filtered_issues) == 1
+      assert hd(socket.assigns.filtered_issues).id == warning_event.issue_id
     end
   end
 
@@ -354,7 +359,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
 
   describe "handle_event selection and bulk delete" do
     test "delete_selected deletes all events for the selected issue and reports the issue count, not the event count" do
-      {:ok, _} =
+      {:ok, event} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -396,14 +401,16 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       socket = socket_with_issues()
       {:noreply, socket} = IssuesIndex.handle_params(%{"page" => "1"}, "/tower", socket)
 
-      {:noreply, socket} = IssuesIndex.handle_event("toggle_select", %{"id" => "1"}, socket)
+      {:noreply, socket} =
+        IssuesIndex.handle_event("toggle_select", %{"id" => to_string(event.issue_id)}, socket)
 
       {:noreply, socket} = IssuesIndex.handle_event("delete_selected", %{}, socket)
 
       assert socket.assigns.selected_issue_ids == MapSet.new()
       assert socket.assigns.flash["info"] == "Deleted 1 issue."
 
-      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.DB.TestRepo) == []
+      assert Events.list_events(filters: [issue_id: [event.issue_id]], repo: TowerWeb.DB.TestRepo) ==
+               []
 
       remaining_ids =
         Events.list_events(repo: TowerWeb.DB.TestRepo) |> Enum.map(& &1.id)
