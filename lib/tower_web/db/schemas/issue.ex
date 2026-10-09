@@ -3,12 +3,7 @@ defmodule TowerWeb.DB.Issue do
 
   alias TowerWeb.DB.Event
 
-  @primary_key false
-  embedded_schema do
-    field(:id, :integer)
-    field(:count_events, :integer)
-    field(:first_seen, :utc_datetime_usec)
-    field(:last_seen, :utc_datetime_usec)
-    embeds_one(:last_event, Event)
+  schema "tower_web_issues" do
+    has_many(:occurrences, Event, foreign_key: :issue_id)
   end
 end

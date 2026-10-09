@@ -11,7 +11,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
     test "show page displays the correct issue info" do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-      {:ok, _older_event} =
+      {:ok, older_event} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -65,21 +65,24 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
       socket = %Phoenix.LiveView.Socket{assigns: %{flash: %{}, __changed__: %{}}}
 
-      {:ok, socket} = Show.mount(%{"id" => "2"}, %{"base_path" => "/tower"}, socket)
-      {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/2", socket)
+      issue_id = to_string(older_event.issue_id)
+
+      {:ok, socket} = Show.mount(%{"id" => issue_id}, %{"base_path" => "/tower"}, socket)
+      {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/#{issue_id}", socket)
+
+      assert socket.assigns.issue.normalized_reason =~ "Latest error message"
+      assert socket.assigns.issue.level == :error
+      assert socket.assigns.issue.count_events == 3
 
       html = render_component(&Show.render/1, socket.assigns)
 
-      # Verify correct issue is displayed (last_event is the most recent one)
-      assert html =~ "ID: #2"
-      assert html =~ "Latest error message"
-
-      # count_events includes every event for the issue, even ones outside the 30-day window
+      assert html =~ "ID: ##{issue_id}"
       assert html =~ "Occurrences (3)"
 
-      # the recent occurrences list only includes events within the last 30 days
+      # the recent occurrences list shows every event for this issue
       assert html =~ "First occurrence message"
-      refute html =~ "Old occurrence outside 30 day range"
+      assert html =~ "Latest error message"
+      assert html =~ "Old occurrence outside chart range"
 
       # Verify unrelated issue is NOT displayed
       refute html =~ "Unrelated issue message"
@@ -88,7 +91,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
   describe "delete issue" do
     test "deletes all of the issue's events and redirects to list page with success flash" do
-      {:ok, _event1} =
+      {:ok, event1} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -127,7 +130,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      issue = Issues.get_issue(1, repo: TowerWeb.DB.TestRepo)
+      issue = Issues.get_issue(event1.issue_id, repo: TowerWeb.DB.TestRepo)
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -143,7 +146,11 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(filters: [similarity_id: [1]], repo: TowerWeb.DB.TestRepo) == []
+      assert Events.list_events(
+               filters: [issue_id: [event1.issue_id]],
+               repo: TowerWeb.DB.TestRepo
+             ) ==
+               []
 
       remaining_ids =
         Events.list_events(repo: TowerWeb.DB.TestRepo) |> Enum.map(& &1.id)

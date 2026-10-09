@@ -3,6 +3,8 @@ defmodule TowerWeb.DB.Event do
 
   import Ecto.Changeset
 
+  alias TowerWeb.DB.Issue
+
   @primary_key {:id, UUIDv7.Type, autogenerate: false}
 
   schema "tower_web_events" do
@@ -20,6 +22,8 @@ defmodule TowerWeb.DB.Event do
     field(:metadata, TowerWeb.DB.Types.Term)
     field(:request_data, :map)
 
+    belongs_to(:issue, Issue, foreign_key: :issue_id, type: :integer)
+
     timestamps(type: :utc_datetime_usec)
   end
 
@@ -28,6 +32,7 @@ defmodule TowerWeb.DB.Event do
     |> cast(attrs, [
       :id,
       :similarity_id,
+      :issue_id,
       :datetime,
       :level,
       :kind,
@@ -36,7 +41,7 @@ defmodule TowerWeb.DB.Event do
       :metadata,
       :request_data
     ])
-    |> validate_required([:id, :similarity_id, :datetime, :level, :kind, :reason])
+    |> validate_required([:id, :similarity_id, :issue_id, :datetime, :level, :kind, :reason])
     |> put_normalized_reason()
   end
 

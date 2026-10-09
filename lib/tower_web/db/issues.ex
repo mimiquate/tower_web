@@ -14,82 +14,136 @@ defmodule TowerWeb.DB.Issues do
     offset = Keyword.get(opts, :offset, 0)
 
     ordered_ids =
-      Event
+      Issue
       |> where(^filter_where(filters))
-      |> group_by([e], e.similarity_id)
-      |> order_by([e], desc: max(e.datetime))
+      |> order_by([i],
+        desc:
+          fragment(
+            "(SELECT MAX(datetime) FROM tower_web_events WHERE issue_id = ?)",
+            i.id
+          )
+      )
       |> limit(^limit)
       |> offset(^offset)
-      |> select([e], e.similarity_id)
+      |> select([i], i.id)
       |> repo.all()
 
-    issues_by_id =
-      Event
-      |> where([e], e.similarity_id in ^ordered_ids)
-      |> distinct([e], e.similarity_id)
-      |> order_by([e], asc: e.similarity_id, desc: e.datetime)
-      |> select([e], %Issue{
-        id: e.similarity_id,
-        count_events: over(count(e.id), partition_by: e.similarity_id),
-        first_seen: over(min(e.datetime), partition_by: e.similarity_id),
-        last_seen: over(max(e.datetime), partition_by: e.similarity_id),
-        last_event: e
-      })
-      |> repo.all()
-      |> Map.new(&{&1.id, &1})
-
-    Enum.map(ordered_ids, &Map.fetch!(issues_by_id, &1))
+    load_issues(ordered_ids, repo)
   end
 
   def get_issue(id, opts \\ []) do
-    opts
-    |> Keyword.put(:filters, similarity_id: id)
-    |> list_issues()
-    |> List.first()
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    recent_occurrences_limit = Keyword.get(opts, :recent_occurrences_limit)
+    id = to_integer(id)
+
+    case load_issues([id], repo) do
+      [] ->
+        nil
+
+      [issue] when is_integer(recent_occurrences_limit) ->
+        occurrences =
+          Event
+          |> where([e], e.issue_id == ^id)
+          |> order_by(desc: :datetime)
+          |> limit(^recent_occurrences_limit)
+          |> repo.all()
+
+        Map.put(issue, :occurrences, occurrences)
+
+      [issue] ->
+        issue
+    end
   end
 
   def count_issues(opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
     filters = Keyword.get(opts, :filters, [])
 
-    Event
+    Issue
     |> where(^filter_where(filters))
-    |> select([e], count(e.similarity_id, :distinct))
-    |> repo.one()
+    |> repo.aggregate(:count)
   end
 
-  def delete_issue(id, opts \\ []) do
+  def find_or_create_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    Event
-    |> where([e], e.similarity_id == ^id)
-    |> repo.delete_all()
+    case Event
+         |> where([e], e.similarity_id == ^similarity_id)
+         |> select([e], e.issue_id)
+         |> limit(1)
+         |> repo.one() do
+      nil ->
+        {:ok, issue} = repo.insert(%Issue{})
+        {:ok, issue.id}
+
+      issue_id ->
+        {:ok, issue_id}
+    end
   end
 
-  def delete_issues(ids, opts \\ []) when is_list(ids) do
+  def delete_issues_and_events(ids, opts \\ []) when is_list(ids) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    Event
-    |> where([e], e.similarity_id in ^ids)
-    |> repo.delete_all()
+    result = Event |> where([e], e.issue_id in ^ids) |> repo.delete_all()
+
+    Issue |> where([i], i.id in ^ids) |> repo.delete_all()
+
+    result
   end
+
+  defp load_issues(ids, repo) do
+    stats_by_id =
+      Event
+      |> where([e], e.issue_id in ^ids)
+      |> distinct([e], e.issue_id)
+      |> order_by([e], asc: e.issue_id, desc: e.datetime)
+      |> select([e], %{
+        id: e.issue_id,
+        count_events: over(count(e.id), partition_by: e.issue_id),
+        first_seen: over(min(e.datetime), partition_by: e.issue_id),
+        last_seen: over(max(e.datetime), partition_by: e.issue_id),
+        level: e.level,
+        normalized_reason: e.normalized_reason,
+        stacktrace: e.stacktrace
+      })
+      |> repo.all()
+      |> Map.new(&{&1.id, &1})
+
+    ids
+    |> Enum.map(&Map.get(stats_by_id, &1))
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp to_integer(id) when is_integer(id), do: id
+  defp to_integer(id) when is_binary(id), do: String.to_integer(id)
 
   defp filter_where(filters) do
     Enum.reduce(filters, dynamic(true), fn
       {:search, value}, dynamic when value != "" ->
         search_term = "%#{value}%"
-        dynamic([e], ^dynamic and ilike(e.normalized_reason, ^search_term))
+
+        matching_ids =
+          from(e in Event, where: ilike(e.normalized_reason, ^search_term), select: e.issue_id)
+
+        dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
       {:level, value}, dynamic when not is_nil(value) ->
-        dynamic([e], ^dynamic and e.level == ^value)
+        matching_ids = from(e in Event, where: e.level == ^value, select: e.issue_id)
+        dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
-      {:similarity_id, value}, dynamic
+      {:id, value}, dynamic
       when is_binary(value) or is_list(value) or is_integer(value) ->
         value = List.wrap(value)
-        dynamic([e], ^dynamic and e.similarity_id in ^value)
+        dynamic([i], ^dynamic and i.id in ^value)
 
       {:datetime_range, {from, to}}, dynamic ->
-        dynamic([e], ^dynamic and e.datetime >= ^from and e.datetime <= ^to)
+        matching_ids =
+          from(e in Event,
+            where: e.datetime >= ^from and e.datetime <= ^to,
+            select: e.issue_id
+          )
+
+        dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
       {_, _}, dynamic ->
         dynamic
