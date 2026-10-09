@@ -96,7 +96,7 @@ defmodule TowerWeb.DB.Issues do
       Event
       |> where([e], e.issue_id in ^ids)
       |> distinct([e], e.issue_id)
-      |> order_by([e], asc: e.issue_id, asc: e.datetime)
+      |> order_by([e], asc: e.issue_id, desc: e.datetime)
       |> select([e], %{
         id: e.issue_id,
         count_events: over(count(e.id), partition_by: e.issue_id),

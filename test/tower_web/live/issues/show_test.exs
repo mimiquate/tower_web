@@ -70,7 +70,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       {:ok, socket} = Show.mount(%{"id" => issue_id}, %{"base_path" => "/tower"}, socket)
       {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/#{issue_id}", socket)
 
-      assert socket.assigns.issue.normalized_reason =~ "Old occurrence outside chart range"
+      assert socket.assigns.issue.normalized_reason =~ "Latest error message"
       assert socket.assigns.issue.level == :error
       assert socket.assigns.issue.count_events == 3
 
