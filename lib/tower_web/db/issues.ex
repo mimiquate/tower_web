@@ -81,29 +81,7 @@ defmodule TowerWeb.DB.Issues do
     end
   end
 
-  def delete_issue_if_empty(issue_id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-
-    remaining_count = Event |> where([e], e.issue_id == ^issue_id) |> repo.aggregate(:count)
-
-    if remaining_count == 0 do
-      Issue |> where([i], i.id == ^issue_id) |> repo.delete_all()
-    end
-
-    :ok
-  end
-
-  def delete_issue(id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-
-    result = Event |> where([e], e.issue_id == ^id) |> repo.delete_all()
-
-    Issue |> where([i], i.id == ^id) |> repo.delete_all()
-
-    result
-  end
-
-  def delete_issues(ids, opts \\ []) when is_list(ids) do
+  def delete_issues_and_events(ids, opts \\ []) when is_list(ids) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
     result = Event |> where([e], e.issue_id in ^ids) |> repo.delete_all()

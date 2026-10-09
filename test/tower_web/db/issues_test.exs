@@ -281,7 +281,7 @@ defmodule TowerWeb.DB.IssuesTest do
     end
   end
 
-  describe "delete_issue/2" do
+  describe "delete_issues_and_events/2" do
     test "deletes all events for the given similarity_id and returns the count" do
       {:ok, event_a1} =
         Events.create_event(%{
@@ -313,7 +313,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "error B"}
         })
 
-      assert Issues.delete_issue(event_a1.issue_id) == {2, nil}
+      assert Issues.delete_issues_and_events([event_a1.issue_id]) == {2, nil}
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]

@@ -95,7 +95,7 @@ defmodule TowerWeb.Live.Issues.Show do
   end
 
   def handle_event("confirm_delete", _params, socket) do
-    {_count, _} = Issues.delete_issue(socket.assigns.issue.id)
+    {_count, _} = Issues.delete_issues_and_events([socket.assigns.issue.id])
 
     socket =
       socket

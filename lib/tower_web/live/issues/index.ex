@@ -397,7 +397,7 @@ defmodule TowerWeb.Live.Issues.Index do
   @impl Phoenix.LiveView
   def handle_event("delete_selected", _params, socket) do
     ids = MapSet.to_list(socket.assigns.selected_issue_ids)
-    {_events_deleted_count, _} = Issues.delete_issues(ids)
+    {_events_deleted_count, _} = Issues.delete_issues_and_events(ids)
     deleted_count = length(ids)
 
     Process.send_after(self(), :clear_flash, 3000)
