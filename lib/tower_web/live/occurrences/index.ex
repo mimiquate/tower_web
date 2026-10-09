@@ -57,7 +57,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
           Filters.compact_filters(
             search: search,
             level: level,
-            similarity_id: issue_ids,
+            issue_id: issue_ids,
             datetime_range: datetime_range
           )
 

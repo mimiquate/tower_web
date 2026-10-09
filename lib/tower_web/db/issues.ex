@@ -64,22 +64,35 @@ defmodule TowerWeb.DB.Issues do
     |> repo.aggregate(:count)
   end
 
-  def upsert_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
+  def find_or_create_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
-    case repo.get(Issue, similarity_id) do
+    case Event
+         |> where([e], e.similarity_id == ^similarity_id)
+         |> select([e], e.issue_id)
+         |> limit(1)
+         |> repo.one() do
       nil ->
-        %Issue{}
-        |> Issue.changeset(%{id: similarity_id, state: :unresolved})
-        |> repo.insert()
+        {:ok, issue} =
+          %Issue{}
+          |> Issue.changeset(%{state: :unresolved})
+          |> repo.insert()
 
-      %Issue{state: :resolved} = issue ->
-        issue
-        |> Issue.changeset(%{state: :unresolved})
-        |> repo.update()
+        {:ok, issue.id}
 
-      issue ->
-        {:ok, issue}
+      issue_id ->
+        case repo.get(Issue, issue_id) do
+          %Issue{state: :resolved} = issue ->
+            {:ok, reopened_issue} =
+              issue
+              |> Issue.changeset(%{state: :unresolved})
+              |> repo.update()
+
+            {:ok, reopened_issue.id}
+
+          %Issue{} ->
+            {:ok, issue_id}
+        end
     end
   end
 
@@ -92,29 +105,7 @@ defmodule TowerWeb.DB.Issues do
     |> repo.update()
   end
 
-  def delete_issue_if_empty(issue_id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-
-    remaining_count = Event |> where([e], e.issue_id == ^issue_id) |> repo.aggregate(:count)
-
-    if remaining_count == 0 do
-      Issue |> where([i], i.id == ^issue_id) |> repo.delete_all()
-    end
-
-    :ok
-  end
-
-  def delete_issue(id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-
-    result = Event |> where([e], e.issue_id == ^id) |> repo.delete_all()
-
-    Issue |> where([i], i.id == ^id) |> repo.delete_all()
-
-    result
-  end
-
-  def delete_issues(ids, opts \\ []) when is_list(ids) do
+  def delete_issues_and_events(ids, opts \\ []) when is_list(ids) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
     result = Event |> where([e], e.issue_id in ^ids) |> repo.delete_all()
@@ -130,7 +121,7 @@ defmodule TowerWeb.DB.Issues do
       |> where([e], e.issue_id in ^ids)
       |> join(:inner, [e], i in Issue, on: i.id == e.issue_id)
       |> distinct([e], e.issue_id)
-      |> order_by([e], asc: e.issue_id, asc: e.datetime)
+      |> order_by([e], asc: e.issue_id, desc: e.datetime)
       |> select([e, i], %{
         id: e.issue_id,
         state: i.state,

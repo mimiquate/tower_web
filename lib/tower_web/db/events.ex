@@ -52,9 +52,9 @@ defmodule TowerWeb.DB.Events do
       {:level, value}, dynamic when not is_nil(value) ->
         dynamic([e], ^dynamic and e.level == ^value)
 
-      {:similarity_id, value}, dynamic when is_binary(value) or is_list(value) ->
+      {:issue_id, value}, dynamic when is_binary(value) or is_list(value) ->
         value = List.wrap(value)
-        dynamic([e], ^dynamic and e.similarity_id in ^value)
+        dynamic([e], ^dynamic and e.issue_id in ^value)
 
       {:datetime_range, {from, to}}, dynamic ->
         dynamic([e], ^dynamic and e.datetime >= ^from and e.datetime <= ^to)
@@ -79,9 +79,10 @@ defmodule TowerWeb.DB.Events do
 
         if changeset.valid? do
           repo.transact(fn ->
-            with {:ok, _issue} <- Issues.upsert_issue(similarity_id, repo: repo),
-                 {:ok, event} <- repo.insert(changeset) do
-              {:ok, event}
+            with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id, repo: repo) do
+              %Event{}
+              |> Event.changeset(Map.put(attrs, :issue_id, issue_id))
+              |> repo.insert()
             end
           end)
         else
@@ -98,7 +99,7 @@ defmodule TowerWeb.DB.Events do
 
     repo.transact(fn ->
       result = repo.delete(event)
-      Issues.delete_issue_if_empty(event.issue_id, repo: repo)
+      delete_issue_if_empty(event.issue_id, repo)
       result
     end)
   end
@@ -116,13 +117,21 @@ defmodule TowerWeb.DB.Events do
 
         issue_ids
         |> Enum.uniq()
-        |> Enum.each(fn issue_id ->
-          Issues.delete_issue_if_empty(issue_id, repo: repo)
-        end)
+        |> Enum.each(&delete_issue_if_empty(&1, repo))
 
         {:ok, {count, nil}}
       end)
 
     result
+  end
+
+  defp delete_issue_if_empty(issue_id, repo) do
+    remaining_count = Event |> where([e], e.issue_id == ^issue_id) |> repo.aggregate(:count)
+
+    if remaining_count == 0 do
+      Issues.delete_issues_and_events([issue_id], repo: repo)
+    end
+
+    :ok
   end
 end

@@ -35,7 +35,7 @@ defmodule TowerWeb.Live.Issues.Show do
             if show_chart do
               Events.list_events(
                 limit: @occurrences_chart_max_events,
-                filters: [similarity_id: id, datetime_range: chart_datetime_range],
+                filters: [issue_id: id, datetime_range: chart_datetime_range],
                 select: [:datetime]
               )
               |> Enum.map(& &1.datetime)
@@ -96,7 +96,7 @@ defmodule TowerWeb.Live.Issues.Show do
   end
 
   def handle_event("confirm_delete", _params, socket) do
-    {_count, _} = Issues.delete_issue(socket.assigns.issue.id)
+    {_count, _} = Issues.delete_issues_and_events([socket.assigns.issue.id])
 
     socket =
       socket

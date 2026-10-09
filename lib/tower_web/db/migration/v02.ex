@@ -4,22 +4,32 @@ defmodule TowerWeb.DB.Migration.V02 do
   use Ecto.Migration
 
   def up do
-    create_if_not_exists table(:tower_web_issues, primary_key: false) do
-      add(:id, :integer, primary_key: true)
+    create_if_not_exists table(:tower_web_issues) do
     end
-
-    execute("""
-    INSERT INTO tower_web_issues (id)
-    SELECT DISTINCT similarity_id FROM tower_web_events
-    WHERE similarity_id IS NOT NULL
-    ON CONFLICT (id) DO NOTHING
-    """)
 
     alter table(:tower_web_events) do
       add(:issue_id, :integer)
     end
 
-    execute("UPDATE tower_web_events SET issue_id = similarity_id WHERE issue_id IS NULL")
+    execute("""
+    CREATE TEMPORARY TABLE tower_web_similarity_issue_map AS
+    SELECT similarity_id, nextval(pg_get_serial_sequence('tower_web_issues', 'id')) AS issue_id
+    FROM (SELECT DISTINCT similarity_id FROM tower_web_events WHERE similarity_id IS NOT NULL) AS distinct_similarity_ids
+    """)
+
+    execute("""
+    INSERT INTO tower_web_issues (id)
+    SELECT issue_id FROM tower_web_similarity_issue_map
+    """)
+
+    execute("""
+    UPDATE tower_web_events e
+    SET issue_id = m.issue_id
+    FROM tower_web_similarity_issue_map m
+    WHERE e.similarity_id = m.similarity_id
+    """)
+
+    execute("DROP TABLE tower_web_similarity_issue_map")
 
     alter table(:tower_web_events) do
       modify(:issue_id, references(:tower_web_issues, column: :id, type: :integer), null: false)
