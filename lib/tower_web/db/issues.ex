@@ -73,12 +73,36 @@ defmodule TowerWeb.DB.Issues do
          |> limit(1)
          |> repo.one() do
       nil ->
-        {:ok, issue} = repo.insert(%Issue{})
+        {:ok, issue} =
+          %Issue{}
+          |> Issue.changeset(%{state: :unresolved})
+          |> repo.insert()
+
         {:ok, issue.id}
 
       issue_id ->
-        {:ok, issue_id}
+        case repo.get(Issue, issue_id) do
+          %Issue{state: :resolved} = issue ->
+            {:ok, reopened_issue} =
+              issue
+              |> Issue.changeset(%{state: :unresolved})
+              |> repo.update()
+
+            {:ok, reopened_issue.id}
+
+          %Issue{} ->
+            {:ok, issue_id}
+        end
     end
+  end
+
+  def update_issue(issue, attrs, opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    issue_struct = repo.get(Issue, issue.id)
+
+    issue_struct
+    |> Issue.changeset(attrs)
+    |> repo.update()
   end
 
   def delete_issues_and_events(ids, opts \\ []) when is_list(ids) do
@@ -95,10 +119,12 @@ defmodule TowerWeb.DB.Issues do
     stats_by_id =
       Event
       |> where([e], e.issue_id in ^ids)
+      |> join(:inner, [e], i in Issue, on: i.id == e.issue_id)
       |> distinct([e], e.issue_id)
       |> order_by([e], asc: e.issue_id, desc: e.datetime)
-      |> select([e], %{
+      |> select([e, i], %{
         id: e.issue_id,
+        state: i.state,
         count_events: over(count(e.id), partition_by: e.issue_id),
         first_seen: over(min(e.datetime), partition_by: e.issue_id),
         last_seen: over(max(e.datetime), partition_by: e.issue_id),

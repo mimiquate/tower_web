@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.Events do
   import Ecto.Query
 
   alias TowerWeb.DB.Event
+  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
   alias TowerWeb.DB.Repo
 
@@ -13,14 +14,24 @@ defmodule TowerWeb.DB.Events do
     limit = Keyword.get(opts, :limit, @default_limit)
     offset = Keyword.get(opts, :offset, 0)
     fields = Keyword.get(opts, :select, dynamic([e], e))
+    preload_issue = Keyword.get(opts, :preload_issue, false)
 
-    Event
-    |> where(^filter_where(filters))
-    |> order_by(desc: :datetime)
-    |> limit(^limit)
-    |> offset(^offset)
-    |> select(^fields)
-    |> repo.all()
+    events =
+      Event
+      |> where(^filter_where(filters))
+      |> order_by(desc: :datetime)
+      |> limit(^limit)
+      |> offset(^offset)
+      |> select(^fields)
+      |> repo.all()
+
+    case preload_issue do
+      fields when is_list(fields) ->
+        repo.preload(events, issue: from(i in Issue, select: ^fields))
+
+      _ ->
+        events
+    end
   end
 
   def count_events(opts \\ []) do

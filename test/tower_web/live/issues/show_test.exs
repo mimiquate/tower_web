@@ -164,6 +164,61 @@ defmodule TowerWeb.Live.Issues.ShowTest do
     end
   end
 
+  describe "toggle issue state" do
+    test "toggles the dropdown open and marks an issue resolved, then back to unresolved" do
+      {:ok, event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 10:30:00Z],
+            level: :error,
+            kind: :message,
+            reason: "Some error"
+          },
+          repo: TowerWeb.DB.TestRepo
+        )
+
+      issue = Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo)
+      assert issue.state == :unresolved
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{issue: issue, dropdown_open: false, flash: %{}, __changed__: %{}},
+        redirected: nil
+      }
+
+      {:noreply, opened_socket} = Show.handle_event("toggle_dropdown", %{}, socket)
+      assert opened_socket.assigns.dropdown_open == true
+
+      {:noreply, resolved_socket} =
+        Show.handle_event("set_issue_state", %{"state" => "resolved"}, opened_socket)
+
+      assert resolved_socket.assigns.issue.state == :resolved
+      assert resolved_socket.assigns.dropdown_open == false
+      assert resolved_socket.redirected == nil
+      assert Phoenix.Flash.get(resolved_socket.assigns.flash, :info) == nil
+
+      {:ok, _second_event} =
+        Events.create_event(
+          %{
+            id: UUIDv7.generate(),
+            similarity_id: 1,
+            datetime: ~U[2024-03-15 11:30:00Z],
+            level: :error,
+            kind: :message,
+            reason: "Some error again"
+          },
+          repo: TowerWeb.DB.TestRepo
+        )
+
+      assert Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo).state == :unresolved
+
+      {:noreply, closed_socket} = Show.handle_event("close_dropdown", %{}, resolved_socket)
+
+      assert closed_socket.assigns.dropdown_open == false
+    end
+  end
+
   describe "issue not found" do
     test "redirects to list page with error flash when issue does not exist" do
       socket = %Phoenix.LiveView.Socket{
