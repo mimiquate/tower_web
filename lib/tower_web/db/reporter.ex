@@ -43,11 +43,14 @@ defmodule TowerWeb.DB.Reporter do
       request_data: request_data(event.plug_conn)
     }
 
-    case TowerWeb.DB.Events.create_event(attrs) do
+    case TowerWeb.DB.BurstProtector.add(attrs) do
       {:error, reason} ->
         Logger.error("[TowerWeb.DB] Error creating event in DB: #{inspect(reason)}")
 
       {:ok, _event} ->
+        nil
+
+      :dropped ->
         nil
     end
   end
