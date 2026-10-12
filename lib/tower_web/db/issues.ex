@@ -55,18 +55,6 @@ defmodule TowerWeb.DB.Issues do
     end
   end
 
-  def list_merged_issues(issue_id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-    issue_id = to_integer(issue_id)
-
-    Event
-    |> where([e], e.issue_id == ^issue_id and e.similarity_id != ^issue_id)
-    |> distinct([e], e.similarity_id)
-    |> order_by([e], asc: e.similarity_id, desc: e.datetime)
-    |> select([e], %{id: e.similarity_id, normalized_reason: e.normalized_reason})
-    |> repo.all()
-  end
-
   def count_issues(opts \\ []) do
     repo = Keyword.get(opts, :repo) || Repo.repo()
     filters = Keyword.get(opts, :filters, [])
@@ -81,6 +69,7 @@ defmodule TowerWeb.DB.Issues do
 
     case Event
          |> where([e], e.similarity_id == ^similarity_id)
+         |> order_by(desc: :datetime)
          |> select([e], e.issue_id)
          |> limit(1)
          |> repo.one() do
@@ -141,9 +130,14 @@ defmodule TowerWeb.DB.Issues do
           Issue |> where([i], i.id == ^target_id) |> repo.update_all(set: [state: :unresolved])
         end
 
-        Event
-        |> where([e], e.issue_id in ^source_ids)
-        |> repo.update_all(set: [issue_id: target_id])
+        events_moved =
+          Event
+          |> where([e], e.issue_id in ^source_ids)
+          |> repo.update_all(set: [issue_id: target_id])
+
+        Issue |> where([i], i.id in ^source_ids) |> repo.delete_all()
+
+        events_moved
       end)
 
     result

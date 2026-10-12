@@ -139,19 +139,27 @@ defmodule TowerWeb.DB.Events do
     repo = Keyword.get(opts, :repo) || Repo.repo()
 
     {:ok, result} =
-      repo.transaction(fn ->
-        target_event =
+      repo.transact(fn ->
+        old_issue_ids =
           Event
           |> where([e], e.id in ^ids)
-          |> order_by(desc: :datetime)
-          |> limit(1)
-          |> repo.one!()
+          |> select([e], e.issue_id)
+          |> repo.all()
+          |> Enum.uniq()
 
-        Event
-        |> where([e], e.id in ^ids)
-        |> repo.update_all(set: [issue_id: target_event.similarity_id])
+        {:ok, new_issue} =
+          %Issue{}
+          |> Issue.changeset(%{state: :unresolved})
+          |> repo.insert()
 
-        {length(ids), nil}
+        {count, _} =
+          Event
+          |> where([e], e.id in ^ids)
+          |> repo.update_all(set: [issue_id: new_issue.id])
+
+        Enum.each(old_issue_ids, &delete_issue_if_empty(&1, repo))
+
+        {:ok, {count, nil}}
       end)
 
     result

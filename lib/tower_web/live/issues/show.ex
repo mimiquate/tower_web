@@ -46,7 +46,6 @@ defmodule TowerWeb.Live.Issues.Show do
           {:ok,
            assign(socket,
              issue: issue,
-             merged_issues: Issues.list_merged_issues(id),
              recent_events: issue.occurrences,
              recent_events_limit: @recent_events_limit,
              show_chart: show_chart,
@@ -212,15 +211,6 @@ defmodule TowerWeb.Live.Issues.Show do
             <span class="text-sm text-white">Last Seen</span>
             <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_seen)} {DatetimeFormatter.format_time(@issue.last_seen)}</span>
           </div>
-        </div>
-      </div>
-
-      <div :if={@merged_issues != []} class="border border-tower-line-color p-6 mb-6">
-        <h2 class="font-roboto-slab text-lg text-white font-light mb-4">Merged Issues</h2>
-
-        <div :for={merged <- @merged_issues} class="flex items-center gap-6 border-b border-tower-line-color py-2 last:border-b-0">
-          <span class="text-sm text-tower-text-primary w-[80px] shrink-0">#{merged.id}</span>
-          <span class="text-sm text-tower-text-secondary line-clamp-1">{merged.normalized_reason}</span>
         </div>
       </div>
 

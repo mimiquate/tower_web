@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.IssuesTest do
   use TowerWeb.DB.DataCase, async: false
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
 
   describe "list_issues/1" do
@@ -366,6 +367,9 @@ defmodule TowerWeb.DB.IssuesTest do
       assert Issues.get_issue(target_event.issue_id) != nil
       assert Issues.get_issue(source_event.issue_id) == nil
       assert Issues.get_issue(untouched_event.issue_id) != nil
+
+      assert TowerWeb.DB.TestRepo.get(Issue, source_event.issue_id) == nil
+      assert TowerWeb.DB.TestRepo.get(Issue, target_event.issue_id) != nil
     end
   end
 
@@ -417,6 +421,45 @@ defmodule TowerWeb.DB.IssuesTest do
         })
 
       assert Issues.get_issue(event.issue_id).state == :unresolved
+    end
+
+    test "when a similarity_id's events are split across two issues, a new occurrence joins whichever issue has the most recent one" do
+      {:ok, older_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 5,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "older occurrence"}
+        })
+
+      {:ok, newer_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 5,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "newer occurrence"}
+        })
+
+      original_issue_id = newer_event.issue_id
+
+      # Split older_event out into a brand-new issue, leaving newer_event behind.
+      assert Events.unmerge_events([older_event.id]) == {1, nil}
+
+      {:ok, latest_event} =
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 5,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "latest occurrence"}
+        })
+
+      assert latest_event.issue_id == original_issue_id
     end
 
     test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the most recent datetime" do
