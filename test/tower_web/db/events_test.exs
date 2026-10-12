@@ -228,8 +228,8 @@ defmodule TowerWeb.DB.EventsTest do
       assert events == []
     end
 
-    test "filters events by similarity_id" do
-      {:ok, _} =
+    test "filters events by issue_id" do
+      {:ok, event1} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -249,14 +249,14 @@ defmodule TowerWeb.DB.EventsTest do
           reason: %ArgumentError{message: "invalid argument"}
         })
 
-      events = Events.list_events(filters: [similarity_id: "1"])
+      events = Events.list_events(filters: [issue_id: to_string(event1.issue_id)])
 
       assert length(events) == 1
-      assert hd(events).similarity_id == 1
+      assert hd(events).issue_id == event1.issue_id
     end
 
-    test "filters events by a list of similarity_id values" do
-      {:ok, _} =
+    test "filters events by a list of issue_id values" do
+      {:ok, event1} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -276,7 +276,7 @@ defmodule TowerWeb.DB.EventsTest do
           reason: %ArgumentError{message: "invalid argument"}
         })
 
-      {:ok, _} =
+      {:ok, event3} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 3,
@@ -286,10 +286,15 @@ defmodule TowerWeb.DB.EventsTest do
           reason: %RuntimeError{message: "unexpected"}
         })
 
-      events = Events.list_events(filters: [similarity_id: ["1", "3"]])
+      events =
+        Events.list_events(
+          filters: [issue_id: [to_string(event1.issue_id), to_string(event3.issue_id)]]
+        )
 
       assert length(events) == 2
-      assert Enum.map(events, & &1.similarity_id) |> Enum.sort() == [1, 3]
+
+      assert Enum.map(events, & &1.issue_id) |> Enum.sort() ==
+               Enum.sort([event1.issue_id, event3.issue_id])
     end
 
     test "filters events by level and search term" do
@@ -579,14 +584,14 @@ defmodule TowerWeb.DB.EventsTest do
 
       {:ok, _} = Events.delete_event(oldest)
 
-      issue = Issues.get_issue(1)
+      issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1
       assert issue.first_seen == newest.datetime
       assert issue.last_seen == newest.datetime
 
       {:ok, _} = Events.delete_event(newest)
 
-      assert Issues.get_issue(1) == nil
+      assert Issues.get_issue(oldest.issue_id) == nil
     end
   end
 
@@ -661,12 +666,12 @@ defmodule TowerWeb.DB.EventsTest do
 
       assert Events.delete_events([oldest.id, only_event.id]) == {2, nil}
 
-      issue = Issues.get_issue(1)
+      issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1
       assert issue.first_seen == remaining.datetime
       assert issue.last_seen == remaining.datetime
 
-      assert Issues.get_issue(2) == nil
+      assert Issues.get_issue(only_event.issue_id) == nil
     end
   end
 end

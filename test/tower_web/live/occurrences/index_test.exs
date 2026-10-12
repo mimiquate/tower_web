@@ -599,7 +599,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     test "filters events by a single issue_id" do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-      {:ok, _} =
+      {:ok, event1} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -629,7 +629,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       socket = socket_with_events(events)
 
       {:noreply, socket} =
-        Occurrences.handle_params(%{"page" => "1", "issue_ids" => "1"}, "/tower", socket)
+        Occurrences.handle_params(
+          %{"page" => "1", "issue_ids" => to_string(event1.issue_id)},
+          "/tower",
+          socket
+        )
 
       assert length(socket.assigns.filtered_events) == 1
 
@@ -641,7 +645,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
     test "filters events by more than one issue_id" do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-      {:ok, _} =
+      {:ok, event1} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -667,7 +671,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      {:ok, _} =
+      {:ok, event3} =
         Events.create_event(
           %{
             id: UUIDv7.generate(),
@@ -684,7 +688,11 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       socket = socket_with_events(events)
 
       {:noreply, socket} =
-        Occurrences.handle_params(%{"page" => "1", "issue_ids" => "1,3"}, "/tower", socket)
+        Occurrences.handle_params(
+          %{"page" => "1", "issue_ids" => "#{event1.issue_id},#{event3.issue_id}"},
+          "/tower",
+          socket
+        )
 
       assert length(socket.assigns.filtered_events) == 2
 

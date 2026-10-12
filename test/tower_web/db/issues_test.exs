@@ -6,7 +6,7 @@ defmodule TowerWeb.DB.IssuesTest do
 
   describe "list_issues/1" do
     test "lists distinct issues grouped by similarity_id" do
-      {:ok, _} =
+      {:ok, event_a1} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -26,7 +26,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "second occurrence of error A"}
         })
 
-      {:ok, _} =
+      {:ok, event_b} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
@@ -40,8 +40,8 @@ defmodule TowerWeb.DB.IssuesTest do
 
       assert length(issues) == 2
 
-      issue_a = Enum.find(issues, &(&1.id == 1))
-      issue_b = Enum.find(issues, &(&1.id == 2))
+      issue_a = Enum.find(issues, &(&1.id == event_a1.issue_id))
+      issue_b = Enum.find(issues, &(&1.id == event_b.issue_id))
 
       assert issue_a.count_events == 2
       assert issue_a.first_seen == ~U[2026-05-08 10:00:00.000000Z]
@@ -55,7 +55,7 @@ defmodule TowerWeb.DB.IssuesTest do
     end
 
     test "returns all issues without filters and only matching ones with a search filter" do
-      {:ok, _} =
+      {:ok, event_a} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -80,11 +80,11 @@ defmodule TowerWeb.DB.IssuesTest do
       issues = Issues.list_issues(filters: [search: "database"])
 
       assert length(issues) == 1
-      assert hd(issues).id == 1
+      assert hd(issues).id == event_a.issue_id
     end
 
     test "paginates results with limit and offset" do
-      {:ok, _} =
+      {:ok, event_a} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -94,7 +94,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "error A"}
         })
 
-      {:ok, _} =
+      {:ok, event_b} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
@@ -104,7 +104,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "error B"}
         })
 
-      {:ok, _} =
+      {:ok, event_c} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 3,
@@ -117,12 +117,12 @@ defmodule TowerWeb.DB.IssuesTest do
       page_1 = Issues.list_issues(limit: 2, offset: 0)
       page_2 = Issues.list_issues(limit: 2, offset: 2)
 
-      assert Enum.map(page_1, & &1.id) == [3, 2]
-      assert Enum.map(page_2, & &1.id) == [1]
+      assert Enum.map(page_1, & &1.id) == [event_c.issue_id, event_b.issue_id]
+      assert Enum.map(page_2, & &1.id) == [event_a.issue_id]
     end
 
     test "orders issues by last_seen descending" do
-      {:ok, _} =
+      {:ok, event_a} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -132,7 +132,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "error A"}
         })
 
-      {:ok, _} =
+      {:ok, event_b} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
@@ -142,7 +142,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "error B"}
         })
 
-      {:ok, _} =
+      {:ok, event_c} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 3,
@@ -154,7 +154,7 @@ defmodule TowerWeb.DB.IssuesTest do
 
       issues = Issues.list_issues()
 
-      assert Enum.map(issues, & &1.id) == [2, 3, 1]
+      assert Enum.map(issues, & &1.id) == [event_b.issue_id, event_c.issue_id, event_a.issue_id]
     end
 
     test "count_events, first_seen and last_seen are not scoped to the datetime_range filter" do
@@ -206,7 +206,7 @@ defmodule TowerWeb.DB.IssuesTest do
 
   describe "get_issue/2" do
     test "returns the issue matching the given id" do
-      {:ok, _} =
+      {:ok, event_a1} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -236,9 +236,9 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "error B"}
         })
 
-      issue = Issues.get_issue(1)
+      issue = Issues.get_issue(event_a1.issue_id)
 
-      assert issue.id == 1
+      assert issue.id == event_a1.issue_id
       assert issue.count_events == 2
       assert issue.normalized_reason =~ "second occurrence of error A"
     end
@@ -281,9 +281,9 @@ defmodule TowerWeb.DB.IssuesTest do
     end
   end
 
-  describe "delete_issue/2" do
+  describe "delete_issues_and_events/2" do
     test "deletes all events for the given similarity_id and returns the count" do
-      {:ok, _} =
+      {:ok, event_a1} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -313,13 +313,13 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "error B"}
         })
 
-      assert Issues.delete_issue(1) == {2, nil}
+      assert Issues.delete_issues_and_events([event_a1.issue_id]) == {2, nil}
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
 
-      assert Issues.get_issue(1) == nil
-      assert Issues.get_issue(2) != nil
+      assert Issues.get_issue(event_a1.issue_id) == nil
+      assert Issues.get_issue(kept_event.issue_id) != nil
     end
   end
 
@@ -355,23 +355,23 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "untouched issue event"}
         })
 
-      assert Issues.merge_issues(1, [2]) == {1, nil}
+      assert Issues.merge_issues(target_event.issue_id, [source_event.issue_id]) == {1, nil}
 
       events = Events.list_events() |> Map.new(&{&1.id, &1})
 
-      assert events[target_event.id].issue_id == 1
-      assert events[source_event.id].issue_id == 1
-      assert events[untouched_event.id].issue_id == 3
+      assert events[target_event.id].issue_id == target_event.issue_id
+      assert events[source_event.id].issue_id == target_event.issue_id
+      assert events[untouched_event.id].issue_id == untouched_event.issue_id
 
-      assert Issues.get_issue(1) != nil
-      assert Issues.get_issue(2) == nil
-      assert Issues.get_issue(3) != nil
+      assert Issues.get_issue(target_event.issue_id) != nil
+      assert Issues.get_issue(source_event.issue_id) == nil
+      assert Issues.get_issue(untouched_event.issue_id) != nil
     end
   end
 
-  describe "upsert_issue/2 (via Events.create_event/2)" do
+  describe "find_or_create_issue/2 (via Events.create_event/2)" do
     test "creates the issue on the first event for a similarity_id" do
-      {:ok, _} =
+      {:ok, event} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -381,7 +381,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "first occurrence"}
         })
 
-      issue = Issues.get_issue(1)
+      issue = Issues.get_issue(event.issue_id)
 
       assert issue.count_events == 1
       assert issue.first_seen == ~U[2026-05-08 12:00:00.000000Z]
@@ -392,7 +392,7 @@ defmodule TowerWeb.DB.IssuesTest do
     end
 
     test "forces state back to :unresolved when a new occurrence lands on a resolved issue" do
-      {:ok, _} =
+      {:ok, event} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -402,7 +402,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "first occurrence"}
         })
 
-      issue = Issues.get_issue(1)
+      issue = Issues.get_issue(event.issue_id)
       {:ok, resolved_issue} = Issues.update_issue(issue, %{state: :resolved})
       assert resolved_issue.state == :resolved
 
@@ -416,11 +416,11 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "second occurrence"}
         })
 
-      assert Issues.get_issue(1).state == :unresolved
+      assert Issues.get_issue(event.issue_id).state == :unresolved
     end
 
     test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the most recent datetime" do
-      {:ok, _} =
+      {:ok, event} =
         Events.create_event(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -460,7 +460,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "occurrence within the existing range"}
         })
 
-      issue = Issues.get_issue(1)
+      issue = Issues.get_issue(event.issue_id)
 
       assert issue.count_events == 4
       assert issue.first_seen == ~U[2026-05-08 10:00:00.000000Z]

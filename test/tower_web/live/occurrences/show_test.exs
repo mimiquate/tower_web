@@ -99,7 +99,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html =
         render_component(&Show.render/1, %{
           event: event1,
-          issue: Issues.get_issue(event1.similarity_id, repo: TowerWeb.DB.TestRepo),
+          issue: Issues.get_issue(event1.issue_id, repo: TowerWeb.DB.TestRepo),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -146,7 +146,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html =
         render_component(&Show.render/1, %{
           event: event,
-          issue: Issues.get_issue(event.similarity_id, repo: TowerWeb.DB.TestRepo),
+          issue: Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -185,7 +185,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html =
         render_component(&Show.render/1, %{
           event: event,
-          issue: Issues.get_issue(event.similarity_id, repo: TowerWeb.DB.TestRepo),
+          issue: Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",

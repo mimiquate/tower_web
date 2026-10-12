@@ -5,7 +5,6 @@ defmodule TowerWeb.DB.Issue do
 
   alias TowerWeb.DB.Event
 
-  @primary_key {:id, :integer, autogenerate: false}
   schema "tower_web_issues" do
     field(:state, Ecto.Enum, values: [:unresolved, :resolved], default: :unresolved)
 
@@ -14,7 +13,7 @@ defmodule TowerWeb.DB.Issue do
 
   def changeset(issue, attrs) do
     issue
-    |> cast(attrs, [:id, :state])
-    |> validate_required([:id])
+    |> cast(attrs, [:state])
+    |> validate_required([:state])
   end
 end
