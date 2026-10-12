@@ -68,7 +68,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         )
 
       # Fetch events like the LiveView does
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
 
       # Render with real events
       html =
@@ -143,7 +143,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -190,7 +190,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -252,7 +252,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       # Filter by "database"
@@ -291,7 +291,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -319,7 +319,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -374,7 +374,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -418,7 +418,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -473,7 +473,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -550,7 +550,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       %{socket: socket_with_events(events)}
     end
 
@@ -625,7 +625,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -684,7 +684,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -838,7 +838,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 
@@ -862,7 +862,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo)
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
       socket = socket_with_events(events)
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 

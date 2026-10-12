@@ -14,24 +14,19 @@ defmodule TowerWeb.DB.Events do
     limit = Keyword.get(opts, :limit, @default_limit)
     offset = Keyword.get(opts, :offset, 0)
     fields = Keyword.get(opts, :select, dynamic([e], e))
-    preload_issue = Keyword.get(opts, :preload_issue, false)
+    preload_issue? = Keyword.get(opts, :preload_issue?, false)
 
-    events =
+    query =
       Event
       |> where(^filter_where(filters))
       |> order_by(desc: :datetime)
       |> limit(^limit)
       |> offset(^offset)
       |> select(^fields)
-      |> repo.all()
 
-    case preload_issue do
-      fields when is_list(fields) ->
-        repo.preload(events, issue: from(i in Issue, select: ^fields))
+    query = if preload_issue?, do: preload(query, :issue), else: query
 
-      _ ->
-        events
-    end
+    repo.all(query)
   end
 
   def count_events(opts \\ []) do

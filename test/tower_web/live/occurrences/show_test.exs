@@ -33,7 +33,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue: [:id, :state])
+      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
 
       html =
         render_component(&Index.render/1, %{
@@ -214,7 +214,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           repo: TowerWeb.DB.TestRepo
         )
 
-      assert length(Events.list_events(repo: TowerWeb.DB.TestRepo)) == 1
+      assert length(Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)) == 1
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -230,7 +230,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(repo: TowerWeb.DB.TestRepo) == []
+      assert Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true) == []
 
       assert updated_socket.redirected ==
                {:live, :redirect, %{to: "/tower/occurrences", kind: :push}}

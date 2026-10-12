@@ -80,7 +80,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
               limit: per_page,
               offset: offset,
               filters: filters,
-              preload_issue: [:id, :state]
+              preload_issue?: true
             )
 
           {:noreply,
