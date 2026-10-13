@@ -13,22 +13,26 @@ defmodule TowerWeb.DB.Issues do
     limit = Keyword.get(opts, :limit, @default_limit)
     offset = Keyword.get(opts, :offset, 0)
 
-    ordered_ids =
-      Issue
-      |> where(^filter_where(filters))
-      |> order_by([i],
-        desc:
-          fragment(
-            "(SELECT MAX(datetime) FROM tower_web_events WHERE issue_id = ?)",
-            i.id
-          )
-      )
-      |> limit(^limit)
-      |> offset(^offset)
-      |> select([i], i.id)
-      |> repo.all()
-
-    load_issues(ordered_ids, repo)
+    Issue
+    |> where(^filter_where(filters))
+    |> order_by([i],
+      desc:
+        fragment(
+          "(SELECT MAX(datetime) FROM tower_web_events WHERE issue_id = ?)",
+          i.id
+        )
+    )
+    |> limit(^limit)
+    |> offset(^offset)
+    |> select_merge([i], %{
+      count_events:
+        type(
+          fragment("(SELECT COUNT(*) FROM tower_web_events WHERE issue_id = ?)", i.id),
+          :integer
+        )
+    })
+    |> preload(first_event: ^Issue.first_event_query(), last_event: ^Issue.last_event_query())
+    |> repo.all()
   end
 
   def get_issue(id, opts \\ []) do
@@ -36,19 +40,13 @@ defmodule TowerWeb.DB.Issues do
     recent_occurrences_limit = Keyword.get(opts, :recent_occurrences_limit)
     id = to_integer(id)
 
-    case load_issues([id], repo) do
+    case list_issues(filters: [id: id], limit: 1, repo: repo) do
       [] ->
         nil
 
       [issue] when is_integer(recent_occurrences_limit) ->
-        occurrences =
-          Event
-          |> where([e], e.issue_id == ^id)
-          |> order_by(desc: :datetime)
-          |> limit(^recent_occurrences_limit)
-          |> repo.all()
-
-        Map.put(issue, :occurrences, occurrences)
+        query = Event |> order_by(desc: :datetime) |> limit(^recent_occurrences_limit)
+        repo.preload(issue, occurrences: query)
 
       [issue] ->
         issue
@@ -89,29 +87,6 @@ defmodule TowerWeb.DB.Issues do
     Issue |> where([i], i.id in ^ids) |> repo.delete_all()
 
     result
-  end
-
-  defp load_issues(ids, repo) do
-    stats_by_id =
-      Event
-      |> where([e], e.issue_id in ^ids)
-      |> distinct([e], e.issue_id)
-      |> order_by([e], asc: e.issue_id, desc: e.datetime)
-      |> select([e], %{
-        id: e.issue_id,
-        count_events: over(count(e.id), partition_by: e.issue_id),
-        first_seen: over(min(e.datetime), partition_by: e.issue_id),
-        last_seen: over(max(e.datetime), partition_by: e.issue_id),
-        level: e.level,
-        normalized_reason: e.normalized_reason,
-        stacktrace: e.stacktrace
-      })
-      |> repo.all()
-      |> Map.new(&{&1.id, &1})
-
-    ids
-    |> Enum.map(&Map.get(stats_by_id, &1))
-    |> Enum.reject(&is_nil/1)
   end
 
   defp to_integer(id) when is_integer(id), do: id

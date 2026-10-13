@@ -586,8 +586,8 @@ defmodule TowerWeb.DB.EventsTest do
 
       issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1
-      assert issue.first_seen == newest.datetime
-      assert issue.last_seen == newest.datetime
+      assert issue.first_event.datetime == newest.datetime
+      assert issue.last_event.datetime == newest.datetime
 
       {:ok, _} = Events.delete_event(newest)
 
@@ -668,8 +668,8 @@ defmodule TowerWeb.DB.EventsTest do
 
       issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1
-      assert issue.first_seen == remaining.datetime
-      assert issue.last_seen == remaining.datetime
+      assert issue.first_event.datetime == remaining.datetime
+      assert issue.last_event.datetime == remaining.datetime
 
       assert Issues.get_issue(only_event.issue_id) == nil
     end

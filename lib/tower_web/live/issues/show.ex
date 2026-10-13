@@ -128,18 +128,18 @@ defmodule TowerWeb.Live.Issues.Show do
 
       <div class="flex flex-col gap-3 mb-8">
         <span class="inline-flex bg-tower-active font-mono text-lg text-white px-2 w-fit">ID: #{@issue.id}</span>
-        <p class="font-mono text-lg text-white line-clamp-1">{@issue.normalized_reason}</p>
+        <p class="font-mono text-lg text-white line-clamp-1">{@issue.last_event.normalized_reason}</p>
       </div>
 
       <div class="border border-tower-line-color p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
           <h2 class="font-roboto-slab text-lg text-white font-light">Description</h2>
-          <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(@issue.level)]}>
-            {@issue.level}
+          <span class={["bg-tower-level-bg w-[132px] h-7 px-2 py-1 text-sm inline-flex items-center justify-center", Level.level_class(@issue.last_event.level)]}>
+            {@issue.last_event.level}
           </span>
         </div>
         <div class="mb-6">
-          <.expandable_reason reason={@issue.normalized_reason} expanded={@reason_expanded} />
+          <.expandable_reason reason={@issue.last_event.normalized_reason} expanded={@reason_expanded} />
         </div>
         <div class="flex gap-12">
           <div class="flex flex-col gap-1">
@@ -148,11 +148,11 @@ defmodule TowerWeb.Live.Issues.Show do
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">First Seen</span>
-            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.first_seen)} {DatetimeFormatter.format_time(@issue.first_seen)}</span>
+            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.first_event.datetime)} {DatetimeFormatter.format_time(@issue.first_event.datetime)}</span>
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">Last Seen</span>
-            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_seen)} {DatetimeFormatter.format_time(@issue.last_seen)}</span>
+            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_event.datetime)} {DatetimeFormatter.format_time(@issue.last_event.datetime)}</span>
           </div>
         </div>
       </div>
@@ -201,9 +201,9 @@ defmodule TowerWeb.Live.Issues.Show do
   @max_chart_range_us 30 * 24 * 60 * 60 * 1_000_000
 
   defp chart_datetime_range(issue) do
-    diff_us = DateTime.diff(issue.last_seen, issue.first_seen, :microsecond)
+    diff_us = DateTime.diff(issue.last_event.datetime, issue.first_event.datetime, :microsecond)
     range_us = diff_us |> max(@min_chart_range_us) |> min(@max_chart_range_us)
 
-    {DateTime.add(issue.last_seen, -range_us, :microsecond), issue.last_seen}
+    {DateTime.add(issue.last_event.datetime, -range_us, :microsecond), issue.last_event.datetime}
   end
 end

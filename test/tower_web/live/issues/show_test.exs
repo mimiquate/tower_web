@@ -70,8 +70,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       {:ok, socket} = Show.mount(%{"id" => issue_id}, %{"base_path" => "/tower"}, socket)
       {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/#{issue_id}", socket)
 
-      assert socket.assigns.issue.normalized_reason =~ "Latest error message"
-      assert socket.assigns.issue.level == :error
+      assert socket.assigns.issue.last_event.normalized_reason =~ "Latest error message"
+      assert socket.assigns.issue.last_event.level == :error
       assert socket.assigns.issue.count_events == 3
 
       html = render_component(&Show.render/1, socket.assigns)
