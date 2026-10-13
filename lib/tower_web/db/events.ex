@@ -8,7 +8,7 @@ defmodule TowerWeb.DB.Events do
   @default_limit 20
 
   def list_events(opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+    repo = Repo.repo()
     filters = Keyword.get(opts, :filters, [])
     limit = Keyword.get(opts, :limit, @default_limit)
     offset = Keyword.get(opts, :offset, 0)
@@ -24,7 +24,7 @@ defmodule TowerWeb.DB.Events do
   end
 
   def count_events(opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+    repo = Repo.repo()
     filters = Keyword.get(opts, :filters, [])
 
     Event
@@ -53,14 +53,12 @@ defmodule TowerWeb.DB.Events do
     end)
   end
 
-  def get_event(id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
-
-    repo.get(Event, id)
+  def get_event(id) do
+    Repo.repo().get(Event, id)
   end
 
-  def create_event(attrs, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+  def create_event(attrs) do
+    repo = Repo.repo()
 
     case Map.get(attrs, :similarity_id) do
       similarity_id when is_integer(similarity_id) ->
@@ -68,7 +66,7 @@ defmodule TowerWeb.DB.Events do
 
         if changeset.valid? do
           repo.transact(fn ->
-            with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id, repo: repo) do
+            with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id) do
               %Event{}
               |> Event.changeset(Map.put(attrs, :issue_id, issue_id))
               |> repo.insert()
@@ -83,8 +81,8 @@ defmodule TowerWeb.DB.Events do
     end
   end
 
-  def delete_event(%Event{} = event, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+  def delete_event(%Event{} = event) do
+    repo = Repo.repo()
 
     repo.transact(fn ->
       result = repo.delete(event)
@@ -93,8 +91,8 @@ defmodule TowerWeb.DB.Events do
     end)
   end
 
-  def delete_events(ids, opts \\ []) when is_list(ids) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+  def delete_events(ids) when is_list(ids) do
+    repo = Repo.repo()
 
     {:ok, result} =
       repo.transact(fn ->
@@ -118,7 +116,7 @@ defmodule TowerWeb.DB.Events do
     remaining_count = Event |> where([e], e.issue_id == ^issue_id) |> repo.aggregate(:count)
 
     if remaining_count == 0 do
-      Issues.delete_issues_and_events([issue_id], repo: repo)
+      Issues.delete_issues_and_events([issue_id])
     end
 
     :ok

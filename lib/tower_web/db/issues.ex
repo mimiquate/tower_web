@@ -8,7 +8,7 @@ defmodule TowerWeb.DB.Issues do
   @default_limit 20
 
   def list_issues(opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+    repo = Repo.repo()
     filters = Keyword.get(opts, :filters, [])
     limit = Keyword.get(opts, :limit, @default_limit)
     offset = Keyword.get(opts, :offset, 0)
@@ -36,11 +36,11 @@ defmodule TowerWeb.DB.Issues do
   end
 
   def get_issue(id, opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+    repo = Repo.repo()
     recent_occurrences_limit = Keyword.get(opts, :recent_occurrences_limit)
     id = to_integer(id)
 
-    case list_issues(filters: [id: id], limit: 1, repo: repo) do
+    case list_issues(filters: [id: id], limit: 1) do
       [] ->
         nil
 
@@ -54,7 +54,7 @@ defmodule TowerWeb.DB.Issues do
   end
 
   def count_issues(opts \\ []) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+    repo = Repo.repo()
     filters = Keyword.get(opts, :filters, [])
 
     Issue
@@ -62,8 +62,8 @@ defmodule TowerWeb.DB.Issues do
     |> repo.aggregate(:count)
   end
 
-  def find_or_create_issue(similarity_id, opts \\ []) when is_integer(similarity_id) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+  def find_or_create_issue(similarity_id) when is_integer(similarity_id) do
+    repo = Repo.repo()
 
     case Event
          |> where([e], e.similarity_id == ^similarity_id)
@@ -79,8 +79,8 @@ defmodule TowerWeb.DB.Issues do
     end
   end
 
-  def delete_issues_and_events(ids, opts \\ []) when is_list(ids) do
-    repo = Keyword.get(opts, :repo) || Repo.repo()
+  def delete_issues_and_events(ids) when is_list(ids) do
+    repo = Repo.repo()
 
     result = Event |> where([e], e.issue_id in ^ids) |> repo.delete_all()
 

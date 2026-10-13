@@ -12,32 +12,26 @@ defmodule TowerWeb.Live.Issues.IndexTest do
   describe "render/1" do
     test "shows table with issues" do
       {:ok, event1} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            kind: :error,
-            level: :error,
-            reason: %RuntimeError{message: "Something failed"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          kind: :error,
+          level: :error,
+          reason: %RuntimeError{message: "Something failed"}
+        })
 
       {:ok, event2} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: ~U[2024-03-14 09:00:00Z],
-            kind: :throw,
-            level: :warning,
-            reason: "A warning occurred"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2024-03-14 09:00:00Z],
+          kind: :throw,
+          level: :warning,
+          reason: "A warning occurred"
+        })
 
-      issues = Issues.list_issues(repo: TowerWeb.DB.TestRepo)
+      issues = Issues.list_issues()
 
       html =
         render_component(&IssuesIndex.render/1, %{
@@ -75,30 +69,24 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :message,
-            level: :error,
-            reason: "Database connection failed"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :message,
+          level: :error,
+          reason: "Database connection failed"
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -2, :hour),
-            kind: :message,
-            level: :warning,
-            reason: "Memory usage high"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -2, :hour),
+          kind: :message,
+          level: :warning,
+          reason: "Memory usage high"
+        })
 
       socket = socket_with_issues()
 
@@ -119,30 +107,24 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :error,
-            level: :error,
-            reason: %RuntimeError{message: "Error event"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :error,
+          level: :error,
+          reason: %RuntimeError{message: "Error event"}
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -2, :hour),
-            kind: :error,
-            level: :warning,
-            reason: %RuntimeError{message: "Warning event"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -2, :hour),
+          kind: :error,
+          level: :warning,
+          reason: %RuntimeError{message: "Warning event"}
+        })
 
       socket = socket_with_issues()
 
@@ -163,30 +145,24 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(now, -30, :minute),
-            kind: :error,
-            level: :error,
-            reason: "30 minutes ago"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(now, -30, :minute),
+          kind: :error,
+          level: :error,
+          reason: "30 minutes ago"
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -2, :hour),
-            kind: :error,
-            level: :error,
-            reason: "2 hours ago"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -2, :hour),
+          kind: :error,
+          level: :error,
+          reason: "2 hours ago"
+        })
 
       socket = socket_with_issues()
 
@@ -206,43 +182,34 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, warning_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :error,
-            level: :warning,
-            reason: %RuntimeError{message: "Warning event"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :error,
+          level: :warning,
+          reason: %RuntimeError{message: "Warning event"}
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :error,
-            level: :error,
-            reason: %RuntimeError{message: "Error event"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :error,
+          level: :error,
+          reason: %RuntimeError{message: "Error event"}
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 3,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :error,
-            level: :critical,
-            reason: %RuntimeError{message: "Critical event"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 3,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :error,
+          level: :critical,
+          reason: %RuntimeError{message: "Critical event"}
+        })
 
       socket = socket_with_issues()
 
@@ -360,43 +327,34 @@ defmodule TowerWeb.Live.Issues.IndexTest do
   describe "handle_event selection and bulk delete" do
     test "delete_selected deletes all events for the selected issue and reports the issue count, not the event count" do
       {:ok, event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:00:00Z],
-            kind: :error,
-            level: :error,
-            reason: "Some error"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:00:00Z],
+          kind: :error,
+          level: :error,
+          reason: "Some error"
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            kind: :error,
-            level: :error,
-            reason: "Some error, second occurrence"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          kind: :error,
+          level: :error,
+          reason: "Some error, second occurrence"
+        })
 
       {:ok, kept_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: ~U[2024-03-15 11:00:00Z],
-            kind: :error,
-            level: :error,
-            reason: "Unrelated error"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2024-03-15 11:00:00Z],
+          kind: :error,
+          level: :error,
+          reason: "Unrelated error"
+        })
 
       socket = socket_with_issues()
       {:noreply, socket} = IssuesIndex.handle_params(%{"page" => "1"}, "/tower", socket)
@@ -409,11 +367,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       assert socket.assigns.selected_issue_ids == MapSet.new()
       assert socket.assigns.flash["info"] == "Deleted 1 issue."
 
-      assert Events.list_events(filters: [issue_id: [event.issue_id]], repo: TowerWeb.DB.TestRepo) ==
-               []
+      assert Events.list_events(filters: [issue_id: [event.issue_id]]) == []
 
       remaining_ids =
-        Events.list_events(repo: TowerWeb.DB.TestRepo) |> Enum.map(& &1.id)
+        Events.list_events() |> Enum.map(& &1.id)
 
       assert remaining_ids == [kept_event.id]
     end
