@@ -23,8 +23,9 @@ defmodule TowerWeb.DB.EventsTest do
       assert event.similarity_id == 12345
     end
 
-    test "returns error with invalid attrs" do
-      assert {:error, _} = Events.create_event(%{})
+    test "returns error when other fields are missing, even with a valid similarity_id" do
+      assert {:error, changeset} = Events.create_event(%{similarity_id: 1})
+      refute changeset.valid?
     end
   end
 

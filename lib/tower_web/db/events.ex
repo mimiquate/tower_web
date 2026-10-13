@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.Events do
   import Ecto.Query
 
   alias TowerWeb.DB.Event
+  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
   alias TowerWeb.DB.Repo
 
@@ -59,25 +60,20 @@ defmodule TowerWeb.DB.Events do
 
   def create_event(attrs) do
     repo = Repo.repo()
+    changeset = Event.changeset(%Event{}, attrs)
 
-    case Map.get(attrs, :similarity_id) do
-      similarity_id when is_integer(similarity_id) ->
-        changeset = Event.changeset(%Event{}, Map.put(attrs, :issue_id, similarity_id))
+    if changeset.valid? do
+      similarity_id = Ecto.Changeset.get_field(changeset, :similarity_id)
 
-        if changeset.valid? do
-          repo.transact(fn ->
-            with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id) do
-              %Event{}
-              |> Event.changeset(Map.put(attrs, :issue_id, issue_id))
-              |> repo.insert()
-            end
-          end)
-        else
-          {:error, changeset}
+      repo.transact(fn ->
+        with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id) do
+          %Event{}
+          |> Event.changeset(Map.put(attrs, :issue_id, issue_id))
+          |> repo.insert()
         end
-
-      _ ->
-        {:error, Event.changeset(%Event{}, attrs)}
+      end)
+    else
+      {:error, changeset}
     end
   end
 
@@ -86,7 +82,7 @@ defmodule TowerWeb.DB.Events do
 
     repo.transact(fn ->
       result = repo.delete(event)
-      delete_issue_if_empty(event.issue_id, repo)
+      delete_issues_if_empty([event.issue_id], repo)
       result
     end)
   end
@@ -102,9 +98,7 @@ defmodule TowerWeb.DB.Events do
           |> select([e], e.issue_id)
           |> repo.delete_all()
 
-        issue_ids
-        |> Enum.uniq()
-        |> Enum.each(&delete_issue_if_empty(&1, repo))
+        delete_issues_if_empty(Enum.uniq(issue_ids), repo)
 
         {:ok, {count, nil}}
       end)
@@ -112,12 +106,16 @@ defmodule TowerWeb.DB.Events do
     result
   end
 
-  defp delete_issue_if_empty(issue_id, repo) do
-    remaining_count = Event |> where([e], e.issue_id == ^issue_id) |> repo.aggregate(:count)
+  defp delete_issues_if_empty(issue_ids, repo) do
+    empty_ids =
+      Issue
+      |> where([i], i.id in ^issue_ids)
+      |> join(:left, [i], e in Event, on: e.issue_id == i.id)
+      |> where([i, e], is_nil(e.id))
+      |> select([i], i.id)
+      |> repo.all()
 
-    if remaining_count == 0 do
-      Issues.delete_issues_and_events([issue_id])
-    end
+    Issues.delete_issues_and_events(empty_ids)
 
     :ok
   end

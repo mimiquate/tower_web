@@ -41,7 +41,7 @@ defmodule TowerWeb.DB.Event do
       :metadata,
       :request_data
     ])
-    |> validate_required([:id, :similarity_id, :issue_id, :datetime, :level, :kind, :reason])
+    |> validate_required([:id, :similarity_id, :datetime, :level, :kind, :reason])
     |> put_normalized_reason()
   end
 

@@ -79,6 +79,8 @@ defmodule TowerWeb.DB.Issues do
     end
   end
 
+  def delete_issues_and_events([]), do: {:ok, {0, nil}}
+
   def delete_issues_and_events(ids) when is_list(ids) do
     repo = Repo.repo()
 
@@ -86,7 +88,7 @@ defmodule TowerWeb.DB.Issues do
 
     Issue |> where([i], i.id in ^ids) |> repo.delete_all()
 
-    result
+    {:ok, result}
   end
 
   defp to_integer(id) when is_integer(id), do: id
