@@ -41,7 +41,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
@@ -51,7 +51,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
         })
 
       {:ok, _} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
@@ -76,7 +76,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
@@ -86,7 +86,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
         })
 
       {:ok, _} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
@@ -109,7 +109,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
 
     test "filters counts by datetime_range" do
       {:ok, _} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: DateTime.add(DateTime.utc_now(), -30, :minute),
@@ -119,7 +119,7 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
         })
 
       {:ok, _} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(DateTime.utc_now(), -2, :day),

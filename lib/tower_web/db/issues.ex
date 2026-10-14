@@ -71,11 +71,10 @@ defmodule TowerWeb.DB.Issues do
          |> limit(1)
          |> repo.one() do
       nil ->
-        {:ok, issue} = repo.insert(%Issue{})
-        {:ok, issue.id}
+        repo.insert(%Issue{})
 
       issue_id ->
-        {:ok, issue_id}
+        {:ok, repo.get!(Issue, issue_id)}
     end
   end
 
