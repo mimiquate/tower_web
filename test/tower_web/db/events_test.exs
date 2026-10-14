@@ -628,7 +628,7 @@ defmodule TowerWeb.DB.EventsTest do
           reason: "kept"
         })
 
-      assert Events.delete_events([event1.id, event2.id]) == {2, nil}
+      assert Events.delete_events([event1.id, event2.id]) == {:ok, 2}
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
@@ -665,7 +665,7 @@ defmodule TowerWeb.DB.EventsTest do
           reason: "issue 2, only event"
         })
 
-      assert Events.delete_events([oldest.id, only_event.id]) == {2, nil}
+      assert Events.delete_events([oldest.id, only_event.id]) == {:ok, 2}
 
       issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1

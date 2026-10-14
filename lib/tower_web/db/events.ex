@@ -1,6 +1,7 @@
 defmodule TowerWeb.DB.Events do
   import Ecto.Query
 
+  alias Ecto.Multi
   alias TowerWeb.DB.Event
   alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
@@ -65,13 +66,19 @@ defmodule TowerWeb.DB.Events do
     if changeset.valid? do
       similarity_id = Ecto.Changeset.get_field(changeset, :similarity_id)
 
-      repo.transact(fn ->
-        with {:ok, issue_id} <- Issues.find_or_create_issue(similarity_id) do
-          %Event{}
-          |> Event.changeset(Map.put(attrs, :issue_id, issue_id))
-          |> repo.insert()
-        end
-      end)
+      multi =
+        Multi.new()
+        |> Multi.run(:issue_id, fn _repo, _changes ->
+          Issues.find_or_create_issue(similarity_id)
+        end)
+        |> Multi.insert(:event, fn %{issue_id: issue_id} ->
+          Event.changeset(%Event{}, Map.put(attrs, :issue_id, issue_id))
+        end)
+
+      case repo.transact(multi) do
+        {:ok, %{event: event}} -> {:ok, event}
+        {:error, failed_value} -> {:error, failed_value}
+      end
     else
       {:error, changeset}
     end
@@ -80,33 +87,43 @@ defmodule TowerWeb.DB.Events do
   def delete_event(%Event{} = event) do
     repo = Repo.repo()
 
-    repo.transact(fn ->
-      result = repo.delete(event)
-      delete_issues_if_empty([event.issue_id], repo)
-      result
-    end)
+    multi =
+      Multi.new()
+      |> Multi.delete(:event, event)
+      |> Multi.run(:issue, fn _repo, _changes ->
+        delete_issues_if_empty([event.issue_id])
+      end)
+
+    case repo.transact(multi) do
+      {:ok, %{event: event}} -> {:ok, event}
+      {:error, failed_value} -> {:error, failed_value}
+    end
   end
 
   def delete_events(ids) when is_list(ids) do
     repo = Repo.repo()
 
-    {:ok, result} =
-      repo.transact(fn ->
-        {count, issue_ids} =
-          Event
-          |> where([e], e.id in ^ids)
-          |> select([e], e.issue_id)
-          |> repo.delete_all()
+    query =
+      Event
+      |> where([e], e.id in ^ids)
+      |> select([e], e.issue_id)
 
-        delete_issues_if_empty(Enum.uniq(issue_ids), repo)
-
-        {:ok, {count, nil}}
+    multi =
+      Multi.new()
+      |> Multi.delete_all(:events, query)
+      |> Multi.run(:issue, fn _repo, %{events: {_count, issue_ids}} ->
+        delete_issues_if_empty(Enum.uniq(issue_ids))
       end)
 
-    result
+    case repo.transact(multi) do
+      {:ok, %{events: {count, _issue_ids}}} -> {:ok, count}
+      {:error, failed_value} -> {:error, failed_value}
+    end
   end
 
-  defp delete_issues_if_empty(issue_ids, repo) do
+  defp delete_issues_if_empty(issue_ids) do
+    repo = Repo.repo()
+
     empty_ids =
       Issue
       |> where([i], i.id in ^issue_ids)
@@ -116,7 +133,5 @@ defmodule TowerWeb.DB.Events do
       |> repo.all()
 
     Issues.delete_issues_and_events(empty_ids)
-
-    :ok
   end
 end
