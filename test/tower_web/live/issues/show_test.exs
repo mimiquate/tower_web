@@ -11,8 +11,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
     test "show page displays the correct issue info" do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
-      {:ok, older_event} =
-        Events.create_event(%{
+      {:ok, %{event: older_event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(now, -5, :day),
@@ -22,7 +22,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
         })
 
       {:ok, _latest_event} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(now, -1, :day),
@@ -32,7 +32,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
         })
 
       {:ok, _old_event} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(now, -45, :day),
@@ -42,7 +42,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
         })
 
       {:ok, _other_issue_event} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 3,
           datetime: DateTime.add(now, -1, :day),
@@ -79,8 +79,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
   describe "delete issue" do
     test "deletes all of the issue's events and redirects to list page with success flash" do
-      {:ok, event1} =
-        Events.create_event(%{
+      {:ok, %{event: event1}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
@@ -90,7 +90,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
         })
 
       {:ok, _event2} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: ~U[2024-03-15 11:30:00Z],
@@ -99,8 +99,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           reason: "Occurrence to delete 2"
         })
 
-      {:ok, kept_event} =
-        Events.create_event(%{
+      {:ok, %{event: kept_event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: ~U[2024-03-15 12:30:00Z],
@@ -141,8 +141,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
   describe "toggle issue state" do
     test "toggles the dropdown open and marks an issue resolved, then back to unresolved" do
-      {:ok, event} =
-        Events.create_event(%{
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
@@ -171,7 +171,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       assert Phoenix.Flash.get(resolved_socket.assigns.flash, :info) == nil
 
       {:ok, _second_event} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: ~U[2024-03-15 11:30:00Z],

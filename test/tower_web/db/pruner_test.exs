@@ -18,7 +18,7 @@ defmodule TowerWeb.DB.PrunerTest do
         Map.new(overrides)
       )
 
-    {:ok, event} = Events.create_event(attrs)
+    {:ok, %{event: event}} = Events.create_event_for_issue(attrs)
     event
   end
 

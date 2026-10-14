@@ -103,8 +103,8 @@ defmodule TowerWeb.DB.Pruner do
       |> state.repo.all()
 
     case Events.delete_events(ids) do
-      {:ok, 0} -> :ok
-      {:ok, _count} -> delete_in_batches(state, queryable)
+      {:ok, %{events: {0, _issue_ids}}} -> :ok
+      {:ok, %{events: {_count, _issue_ids}}} -> delete_in_batches(state, queryable)
     end
   end
 end

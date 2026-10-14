@@ -20,8 +20,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
   describe "index to show navigation" do
     test "index page has link to correct occurrence" do
-      {:ok, event} =
-        Events.create_event(%{
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
@@ -61,8 +61,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
     end
 
     test "show page displays the correct occurrence info" do
-      {:ok, event1} =
-        Events.create_event(%{
+      {:ok, %{event: event1}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: ~U[2024-03-15 10:30:00Z],
@@ -74,7 +74,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
         })
 
       {:ok, _event2} =
-        Events.create_event(%{
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: ~U[2024-03-14 09:00:00Z],
@@ -112,8 +112,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
     end
 
     test "show page displays request data when present" do
-      {:ok, event} =
-        Events.create_event(%{
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 3,
           datetime: ~U[2024-03-15 10:30:00Z],
@@ -155,8 +155,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
     end
 
     test "show page hides request section when request data is absent" do
-      {:ok, event} =
-        Events.create_event(%{
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 4,
           datetime: ~U[2024-03-15 10:30:00Z],
@@ -186,8 +186,8 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
   describe "delete event" do
     test "deletes event and redirects to list page with success flash" do
-      {:ok, event} =
-        Events.create_event(%{
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],

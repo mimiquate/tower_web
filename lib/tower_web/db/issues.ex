@@ -72,25 +72,19 @@ defmodule TowerWeb.DB.Issues do
          |> limit(1)
          |> repo.one() do
       nil ->
-        {:ok, issue} =
-          %Issue{}
-          |> Issue.changeset(%{state: :unresolved})
-          |> repo.insert()
-
-        {:ok, issue.id}
+        %Issue{}
+        |> Issue.changeset(%{state: :unresolved})
+        |> repo.insert()
 
       issue_id ->
         case repo.get(Issue, issue_id) do
           %Issue{state: :resolved} = issue ->
-            {:ok, reopened_issue} =
-              issue
-              |> Issue.changeset(%{state: :unresolved})
-              |> repo.update()
+            issue
+            |> Issue.changeset(%{state: :unresolved})
+            |> repo.update()
 
-            {:ok, reopened_issue.id}
-
-          %Issue{} ->
-            {:ok, issue_id}
+          %Issue{} = issue ->
+            {:ok, issue}
         end
     end
   end
