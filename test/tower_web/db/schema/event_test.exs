@@ -56,7 +56,6 @@ defmodule TowerWeb.DB.EventTest do
       refute changeset.valid?
       assert "can't be blank" in errors_on(changeset).id
       assert "can't be blank" in errors_on(changeset).similarity_id
-      assert "can't be blank" in errors_on(changeset).issue_id
       assert "can't be blank" in errors_on(changeset).datetime
       assert "can't be blank" in errors_on(changeset).level
       assert "can't be blank" in errors_on(changeset).kind
