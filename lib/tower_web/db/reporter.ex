@@ -44,8 +44,8 @@ defmodule TowerWeb.DB.Reporter do
     }
 
     case TowerWeb.DB.BurstProtector.add(attrs) do
-      {:error, reason} ->
-        Logger.error("[TowerWeb.DB] Error creating event in DB: #{inspect(reason)}")
+      {:error, _failed_step, failed_value, _changes_so_far} ->
+        Logger.error("[TowerWeb.DB] Error creating event in DB: #{inspect(failed_value)}")
 
       {:ok, _event} ->
         nil
