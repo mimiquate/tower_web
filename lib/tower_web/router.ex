@@ -1,6 +1,9 @@
 defmodule TowerWeb.Router do
   @moduledoc false
 
+  # Shared with TowerWeb.occurrence_url/1, which looks this route up in the host router
+  def occurrence_route, do: "/occurrences/:id"
+
   defmacro tower_dashboard(path, opts \\ []) do
     quote bind_quoted: [path: path, opts: opts] do
       scoped_path = Phoenix.Router.scoped_path(__MODULE__, path)
@@ -27,7 +30,7 @@ defmodule TowerWeb.Router do
           live("/issues", TowerWeb.Live.Issues.Index, :index)
           live("/issues/:id", TowerWeb.Live.Issues.Show, :show)
           live("/occurrences", TowerWeb.Live.Occurrences.Index, :index)
-          live("/occurrences/:id", TowerWeb.Live.Occurrences.Show, :show)
+          live(TowerWeb.Router.occurrence_route(), TowerWeb.Live.Occurrences.Show, :show)
         end
       end
     end

@@ -151,6 +151,20 @@ TowerWeb.DB.enable()
 TowerWeb.DB.disable()
 ```
 
+### Occurrence URLs
+
+To let reporters such as [TowerEmail](https://github.com/mimiquate/tower_email) link to an occurrence in the dashboard, tell TowerWeb which endpoint serves it and which router mounts it:
+
+```elixir
+# config/runtime.exs
+
+config :tower_web,
+  endpoint: MyAppWeb.Endpoint,
+  router: MyAppWeb.Router
+```
+
+The dashboard's path is read from the router, and the host from the endpoint.
+
 ## Usage
 
 Start your Phoenix server and visit `/tower` to see the dashboard.
