@@ -41,30 +41,24 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :message,
-            level: :error,
-            reason: "Database connection failed"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :message,
+          level: :error,
+          reason: "Database connection failed"
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -2, :hour),
-            kind: :message,
-            level: :warning,
-            reason: "Memory usage high"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -2, :hour),
+          kind: :message,
+          level: :warning,
+          reason: "Memory usage high"
+        })
 
       {:noreply, socket} =
         Dashboard.handle_params(
@@ -82,30 +76,24 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(now, -1, :hour),
-            kind: :message,
-            level: :error,
-            reason: "Database connection failed"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(now, -1, :hour),
+          kind: :message,
+          level: :error,
+          reason: "Database connection failed"
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -2, :hour),
-            kind: :message,
-            level: :warning,
-            reason: "Memory usage high"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -2, :hour),
+          kind: :message,
+          level: :warning,
+          reason: "Memory usage high"
+        })
 
       {:noreply, socket} =
         Dashboard.handle_params(
@@ -121,30 +109,24 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
 
     test "filters counts by datetime_range" do
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: DateTime.add(DateTime.utc_now(), -30, :minute),
-            kind: :message,
-            level: :error,
-            reason: "inside range"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.add(DateTime.utc_now(), -30, :minute),
+          kind: :message,
+          level: :error,
+          reason: "inside range"
+        })
 
       {:ok, _} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(DateTime.utc_now(), -2, :day),
-            kind: :message,
-            level: :warning,
-            reason: "outside range"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(DateTime.utc_now(), -2, :day),
+          kind: :message,
+          level: :warning,
+          reason: "outside range"
+        })
 
       {:noreply, socket} =
         Dashboard.handle_params(

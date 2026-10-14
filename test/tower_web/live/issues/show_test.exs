@@ -12,56 +12,44 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       {:ok, older_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -5, :day),
-            level: :warning,
-            kind: :throw,
-            reason: "First occurrence message"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -5, :day),
+          level: :warning,
+          kind: :throw,
+          reason: "First occurrence message"
+        })
 
       {:ok, _latest_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -1, :day),
-            level: :error,
-            kind: :error,
-            reason: %RuntimeError{message: "Latest error message"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -1, :day),
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "Latest error message"}
+        })
 
       {:ok, _old_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: DateTime.add(now, -45, :day),
-            level: :error,
-            kind: :error,
-            reason: "Old occurrence outside chart range"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: DateTime.add(now, -45, :day),
+          level: :error,
+          kind: :error,
+          reason: "Old occurrence outside chart range"
+        })
 
       {:ok, _other_issue_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 3,
-            datetime: DateTime.add(now, -1, :day),
-            level: :error,
-            kind: :error,
-            reason: "Unrelated issue message"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 3,
+          datetime: DateTime.add(now, -1, :day),
+          level: :error,
+          kind: :error,
+          reason: "Unrelated issue message"
+        })
 
       socket = %Phoenix.LiveView.Socket{assigns: %{flash: %{}, __changed__: %{}}}
 
@@ -70,8 +58,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       {:ok, socket} = Show.mount(%{"id" => issue_id}, %{"base_path" => "/tower"}, socket)
       {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/#{issue_id}", socket)
 
-      assert socket.assigns.issue.normalized_reason =~ "Latest error message"
-      assert socket.assigns.issue.level == :error
+      assert socket.assigns.issue.last_event.normalized_reason =~ "Latest error message"
+      assert socket.assigns.issue.last_event.level == :error
       assert socket.assigns.issue.count_events == 3
 
       html = render_component(&Show.render/1, socket.assigns)
@@ -92,45 +80,36 @@ defmodule TowerWeb.Live.Issues.ShowTest do
   describe "delete issue" do
     test "deletes all of the issue's events and redirects to list page with success flash" do
       {:ok, event1} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :message,
-            reason: "Occurrence to delete 1"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Occurrence to delete 1"
+        })
 
       {:ok, _event2} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 11:30:00Z],
-            level: :error,
-            kind: :message,
-            reason: "Occurrence to delete 2"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 11:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Occurrence to delete 2"
+        })
 
       {:ok, kept_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: ~U[2024-03-15 12:30:00Z],
-            level: :error,
-            kind: :message,
-            reason: "Unrelated occurrence"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2024-03-15 12:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Unrelated occurrence"
+        })
 
-      issue = Issues.get_issue(event1.issue_id, repo: TowerWeb.DB.TestRepo)
+      issue = Issues.get_issue(event1.issue_id)
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -146,14 +125,10 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(
-               filters: [issue_id: [event1.issue_id]],
-               repo: TowerWeb.DB.TestRepo
-             ) ==
-               []
+      assert Events.list_events(filters: [issue_id: [event1.issue_id]]) == []
 
       remaining_ids =
-        Events.list_events(repo: TowerWeb.DB.TestRepo) |> Enum.map(& &1.id)
+        Events.list_events() |> Enum.map(& &1.id)
 
       assert remaining_ids == [kept_event.id]
 
@@ -167,19 +142,16 @@ defmodule TowerWeb.Live.Issues.ShowTest do
   describe "toggle issue state" do
     test "toggles the dropdown open and marks an issue resolved, then back to unresolved" do
       {:ok, event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :message,
-            reason: "Some error"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Some error"
+        })
 
-      issue = Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo)
+      issue = Issues.get_issue(event.issue_id)
       assert issue.state == :unresolved
 
       socket = %Phoenix.LiveView.Socket{
@@ -199,19 +171,16 @@ defmodule TowerWeb.Live.Issues.ShowTest do
       assert Phoenix.Flash.get(resolved_socket.assigns.flash, :info) == nil
 
       {:ok, _second_event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 11:30:00Z],
-            level: :error,
-            kind: :message,
-            reason: "Some error again"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 11:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Some error again"
+        })
 
-      assert Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo).state == :unresolved
+      assert Issues.get_issue(event.issue_id).state == :unresolved
 
       {:noreply, closed_socket} = Show.handle_event("close_dropdown", %{}, resolved_socket)
 

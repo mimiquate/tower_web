@@ -21,19 +21,16 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
   describe "index to show navigation" do
     test "index page has link to correct occurrence" do
       {:ok, event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :error,
-            reason: %RuntimeError{message: "Test error"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "Test error"}
+        })
 
-      events = Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)
+      events = Events.list_events(preload_issue?: true)
 
       html =
         render_component(&Index.render/1, %{
@@ -65,41 +62,35 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
     test "show page displays the correct occurrence info" do
       {:ok, event1} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :error,
-            reason: %RuntimeError{message: "First error message"},
-            stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
-            metadata: %{user_id: 123, request_id: "abc"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "First error message"},
+          stacktrace: [{MyApp, :func, 1, [file: ~c"lib/app.ex", line: 10]}],
+          metadata: %{user_id: 123, request_id: "abc"}
+        })
 
       {:ok, _event2} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 2,
-            datetime: ~U[2024-03-14 09:00:00Z],
-            level: :warning,
-            kind: :throw,
-            reason: "Second error message"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2024-03-14 09:00:00Z],
+          level: :warning,
+          kind: :throw,
+          reason: "Second error message"
+        })
 
       # Reload from database to ensure metadata is loaded properly
-      event1 = Events.get_event(event1.id, repo: TowerWeb.DB.TestRepo)
+      event1 = Events.get_event(event1.id)
 
       # Render show page with event1
       html =
         render_component(&Show.render/1, %{
           event: event1,
-          issue: Issues.get_issue(event1.issue_id, repo: TowerWeb.DB.TestRepo),
+          issue: Issues.get_issue(event1.issue_id),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -122,31 +113,28 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
     test "show page displays request data when present" do
       {:ok, event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 3,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :error,
-            reason: %RuntimeError{message: "Request error"},
-            request_data: %{
-              "method" => "GET",
-              "url" => "https://example.com/users/1",
-              "user_ip" => "127.0.0.1",
-              "headers" => %{"user-agent" => "curl/8.0"},
-              "params" => %{"id" => "1"}
-            }
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 3,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "Request error"},
+          request_data: %{
+            "method" => "GET",
+            "url" => "https://example.com/users/1",
+            "user_ip" => "127.0.0.1",
+            "headers" => %{"user-agent" => "curl/8.0"},
+            "params" => %{"id" => "1"}
+          }
+        })
 
-      event = Events.get_event(event.id, repo: TowerWeb.DB.TestRepo)
+      event = Events.get_event(event.id)
 
       html =
         render_component(&Show.render/1, %{
           event: event,
-          issue: Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo),
+          issue: Issues.get_issue(event.issue_id),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -168,24 +156,21 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
     test "show page hides request section when request data is absent" do
       {:ok, event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 4,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :error,
-            reason: %RuntimeError{message: "No request error"}
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 4,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "No request error"}
+        })
 
-      event = Events.get_event(event.id, repo: TowerWeb.DB.TestRepo)
+      event = Events.get_event(event.id)
 
       html =
         render_component(&Show.render/1, %{
           event: event,
-          issue: Issues.get_issue(event.issue_id, repo: TowerWeb.DB.TestRepo),
+          issue: Issues.get_issue(event.issue_id),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -202,19 +187,16 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
   describe "delete event" do
     test "deletes event and redirects to list page with success flash" do
       {:ok, event} =
-        Events.create_event(
-          %{
-            id: UUIDv7.generate(),
-            similarity_id: 1,
-            datetime: ~U[2024-03-15 10:30:00Z],
-            level: :error,
-            kind: :message,
-            reason: "Event to delete"
-          },
-          repo: TowerWeb.DB.TestRepo
-        )
+        Events.create_event(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Event to delete"
+        })
 
-      assert length(Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true)) == 1
+      assert length(Events.list_events(preload_issue?: true)) == 1
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -230,7 +212,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events(repo: TowerWeb.DB.TestRepo, preload_issue?: true) == []
+      assert Events.list_events(preload_issue?: true) == []
 
       assert updated_socket.redirected ==
                {:live, :redirect, %{to: "/tower/occurrences", kind: :push}}

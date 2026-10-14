@@ -45,14 +45,14 @@ defmodule TowerWeb.DB.IssuesTest do
       issue_b = Enum.find(issues, &(&1.id == event_b.issue_id))
 
       assert issue_a.count_events == 2
-      assert issue_a.first_seen == ~U[2026-05-08 10:00:00.000000Z]
-      assert issue_a.last_seen == ~U[2026-05-08 12:00:00.000000Z]
-      assert issue_a.normalized_reason =~ "second occurrence of error A"
+      assert issue_a.first_event.datetime == ~U[2026-05-08 10:00:00.000000Z]
+      assert issue_a.last_event.datetime == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue_a.last_event.normalized_reason =~ "second occurrence of error A"
 
       assert issue_b.count_events == 1
-      assert issue_b.first_seen == ~U[2026-05-08 11:00:00.000000Z]
-      assert issue_b.last_seen == ~U[2026-05-08 11:00:00.000000Z]
-      assert issue_b.normalized_reason =~ "error B"
+      assert issue_b.first_event.datetime == ~U[2026-05-08 11:00:00.000000Z]
+      assert issue_b.last_event.datetime == ~U[2026-05-08 11:00:00.000000Z]
+      assert issue_b.last_event.normalized_reason =~ "error B"
     end
 
     test "returns all issues without filters and only matching ones with a search filter" do
@@ -199,9 +199,9 @@ defmodule TowerWeb.DB.IssuesTest do
       [issue] = Issues.list_issues(filters: [datetime_range: datetime_range])
 
       assert issue.count_events == 3
-      assert issue.first_seen == outside_window
-      assert issue.last_seen == inside_window
-      assert issue.normalized_reason == "Recent occurrence inside the filtered window"
+      assert issue.first_event.datetime == outside_window
+      assert issue.last_event.datetime == inside_window
+      assert issue.last_event.normalized_reason == "Recent occurrence inside the filtered window"
     end
   end
 
@@ -241,7 +241,7 @@ defmodule TowerWeb.DB.IssuesTest do
 
       assert issue.id == event_a1.issue_id
       assert issue.count_events == 2
-      assert issue.normalized_reason =~ "second occurrence of error A"
+      assert issue.last_event.normalized_reason =~ "second occurrence of error A"
     end
   end
 
@@ -314,7 +314,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %ArgumentError{message: "error B"}
         })
 
-      assert Issues.delete_issues_and_events([event_a1.issue_id]) == {2, nil}
+      assert Issues.delete_issues_and_events([event_a1.issue_id]) == {:ok, {2, nil}}
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
@@ -388,10 +388,10 @@ defmodule TowerWeb.DB.IssuesTest do
       issue = Issues.get_issue(event.issue_id)
 
       assert issue.count_events == 1
-      assert issue.first_seen == ~U[2026-05-08 12:00:00.000000Z]
-      assert issue.last_seen == ~U[2026-05-08 12:00:00.000000Z]
-      assert issue.level == :error
-      assert issue.normalized_reason =~ "first occurrence"
+      assert issue.first_event.datetime == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue.last_event.datetime == ~U[2026-05-08 12:00:00.000000Z]
+      assert issue.last_event.level == :error
+      assert issue.last_event.normalized_reason =~ "first occurrence"
       assert issue.state == :unresolved
     end
 
@@ -506,10 +506,10 @@ defmodule TowerWeb.DB.IssuesTest do
       issue = Issues.get_issue(event.issue_id)
 
       assert issue.count_events == 4
-      assert issue.first_seen == ~U[2026-05-08 10:00:00.000000Z]
-      assert issue.last_seen == ~U[2026-05-08 14:00:00.000000Z]
-      assert issue.level == :warning
-      assert issue.normalized_reason =~ "later occurrence"
+      assert issue.first_event.datetime == ~U[2026-05-08 10:00:00.000000Z]
+      assert issue.last_event.datetime == ~U[2026-05-08 14:00:00.000000Z]
+      assert issue.last_event.level == :warning
+      assert issue.last_event.normalized_reason =~ "later occurrence"
     end
   end
 end

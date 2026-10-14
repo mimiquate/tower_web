@@ -23,8 +23,9 @@ defmodule TowerWeb.DB.EventsTest do
       assert event.similarity_id == 12345
     end
 
-    test "returns error with invalid attrs" do
-      assert {:error, _} = Events.create_event(%{})
+    test "returns error when other fields are missing, even with a valid similarity_id" do
+      assert {:error, changeset} = Events.create_event(%{similarity_id: 1})
+      refute changeset.valid?
     end
   end
 
@@ -586,8 +587,8 @@ defmodule TowerWeb.DB.EventsTest do
 
       issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1
-      assert issue.first_seen == newest.datetime
-      assert issue.last_seen == newest.datetime
+      assert issue.first_event.datetime == newest.datetime
+      assert issue.last_event.datetime == newest.datetime
 
       {:ok, _} = Events.delete_event(newest)
 
@@ -627,7 +628,7 @@ defmodule TowerWeb.DB.EventsTest do
           reason: "kept"
         })
 
-      assert Events.delete_events([event1.id, event2.id]) == {2, nil}
+      assert Events.delete_events([event1.id, event2.id]) == {:ok, 2}
 
       remaining_ids = Events.list_events() |> Enum.map(& &1.id)
       assert remaining_ids == [kept_event.id]
@@ -664,12 +665,12 @@ defmodule TowerWeb.DB.EventsTest do
           reason: "issue 2, only event"
         })
 
-      assert Events.delete_events([oldest.id, only_event.id]) == {2, nil}
+      assert Events.delete_events([oldest.id, only_event.id]) == {:ok, 2}
 
       issue = Issues.get_issue(oldest.issue_id)
       assert issue.count_events == 1
-      assert issue.first_seen == remaining.datetime
-      assert issue.last_seen == remaining.datetime
+      assert issue.first_event.datetime == remaining.datetime
+      assert issue.last_event.datetime == remaining.datetime
 
       assert Issues.get_issue(only_event.issue_id) == nil
     end
