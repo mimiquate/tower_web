@@ -1,5 +1,5 @@
 defmodule TowerWeb.DBTest do
-  use ExUnit.Case
+  use TowerWeb.DB.DataCase, async: false
   doctest TowerWeb.DB
 
   import ExUnit.CaptureLog, only: [capture_log: 1]
