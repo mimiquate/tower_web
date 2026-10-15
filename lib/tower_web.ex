@@ -12,8 +12,6 @@ defmodule TowerWeb do
       end
   """
 
-  require Logger
-
   defmacro __using__(which) do
     quote do
       use TowerWeb.Web, unquote(which)
@@ -23,49 +21,18 @@ defmodule TowerWeb do
   @doc """
   Returns the absolute URL of the occurrence with the given id in the dashboard.
 
-  Requires the host application's endpoint and the router where
-  `tower_dashboard` is mounted:
+  Requires the URL where the host application mounts the dashboard:
 
-      config :tower_web,
-        endpoint: MyAppWeb.Endpoint,
-        router: MyAppWeb.Router
+      config :tower_web, base_url: "https://myapp.com/tower"
 
-  The dashboard's path is read from the router, including any enclosing `scope`.
-
-  Returns `nil` when either of them is not configured, or while storage is
-  disabled (see `TowerWeb.DB.disable/0`), since events aren't persisted then.
-  Also returns `nil`, logging a warning, when the router doesn't mount the dashboard.
+  Raises when `base_url` is not configured.
   """
-  @spec occurrence_url(String.t()) :: String.t() | nil
+  @spec occurrence_url(String.t()) :: String.t()
   def occurrence_url(id) do
-    with true <- Application.get_env(:tower_web, :enabled, true),
-         {:ok, endpoint} <- Application.fetch_env(:tower_web, :endpoint),
-         {:ok, router} <- Application.fetch_env(:tower_web, :router),
-         {:ok, route} <- occurrence_route(router) do
-      endpoint.url() <> endpoint.path(String.replace(route, ":id", id))
-    else
-      _ -> nil
-    end
+    "#{base_url()}/occurrences/#{id}"
   end
 
-  # Finds the occurrence route that tower_dashboard mounted in the host router
-  defp occurrence_route(router) do
-    router
-    |> Phoenix.Router.routes()
-    |> Enum.find(
-      &(&1.plug == Phoenix.LiveView.Plug and
-          String.ends_with?(&1.path, TowerWeb.Router.occurrence_route()))
-    )
-    |> case do
-      %{path: route} ->
-        {:ok, route}
-
-      nil ->
-        Logger.warning(
-          "#{inspect(router)} doesn't mount tower_dashboard, can't build occurrence URLs"
-        )
-
-        :error
-    end
+  defp base_url do
+    :tower_web |> Application.fetch_env!(:base_url) |> String.trim_trailing("/")
   end
 end

@@ -153,17 +153,15 @@ TowerWeb.DB.disable()
 
 ### Occurrence URLs
 
-To let reporters such as [TowerEmail](https://github.com/mimiquate/tower_email) link to an occurrence in the dashboard, tell TowerWeb which endpoint serves it and which router mounts it:
+To let reporters such as [TowerEmail](https://github.com/mimiquate/tower_email) link to an occurrence in the dashboard, set the URL where it's mounted:
 
 ```elixir
 # config/runtime.exs
 
-config :tower_web,
-  endpoint: MyAppWeb.Endpoint,
-  router: MyAppWeb.Router
+config :tower_web, base_url: "https://myapp.com/tower"
 ```
 
-The dashboard's path is read from the router, and the host from the endpoint.
+It's required when using TowerEmail: without it, error e-mails aren't sent.
 
 ## Usage
 
