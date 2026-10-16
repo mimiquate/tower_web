@@ -4,6 +4,7 @@ defmodule TowerWeb.Live.Issues.Show do
   alias TowerWeb.DB.Events
   alias TowerWeb.DB.Issues
   alias TowerWeb.Live.DatetimeFormatter
+  alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Paths
 
@@ -15,52 +16,55 @@ defmodule TowerWeb.Live.Issues.Show do
     base_path = session["base_path"]
     issues_base_path = "#{base_path}/issues"
 
-    case Issues.get_issue(id) do
-      nil ->
-        socket =
-          socket
-          |> put_flash(:error, "Issue not found")
-          |> push_navigate(to: issues_base_path)
+    if Filters.valid_issue_id?(id) do
+      case Issues.get_issue(id, recent_occurrences_limit: @recent_events_limit) do
+        nil ->
+          socket =
+            socket
+            |> put_flash(:error, "Issue not found")
+            |> push_navigate(to: issues_base_path)
 
-        {:ok, socket}
+          {:ok, socket}
 
-      issue ->
-        chart_datetime_range = chart_datetime_range(issue)
+        issue ->
+          chart_datetime_range = chart_datetime_range(issue)
 
-        show_chart = issue.count_events <= @occurrences_chart_max_events
+          show_chart = issue.count_events <= @occurrences_chart_max_events
 
-        chart_datetimes =
-          if show_chart do
-            Events.list_events(
-              limit: @occurrences_chart_max_events,
-              filters: [similarity_id: id, datetime_range: chart_datetime_range],
-              select: [:datetime]
-            )
-            |> Enum.map(& &1.datetime)
-          else
-            []
-          end
+          chart_datetimes =
+            if show_chart do
+              Events.list_events(
+                limit: @occurrences_chart_max_events,
+                filters: [issue_id: id, datetime_range: chart_datetime_range],
+                select: [:datetime]
+              )
+              |> Enum.map(& &1.datetime)
+            else
+              []
+            end
 
-        recent_events =
-          Events.list_events(
-            limit: @recent_events_limit,
-            filters: [similarity_id: id]
-          )
+          {:ok,
+           assign(socket,
+             issue: issue,
+             recent_events: issue.occurrences,
+             recent_events_limit: @recent_events_limit,
+             show_chart: show_chart,
+             chart_datetimes: chart_datetimes,
+             chart_datetime_range: chart_datetime_range,
+             base_path: base_path,
+             issues_base_path: issues_base_path,
+             occurrences_base_path: "#{base_path}/occurrences",
+             show_delete_modal: false,
+             reason_expanded: false
+           )}
+      end
+    else
+      socket =
+        socket
+        |> put_flash(:error, "Please enter a valid issue ID")
+        |> push_navigate(to: issues_base_path)
 
-        {:ok,
-         assign(socket,
-           issue: issue,
-           recent_events: recent_events,
-           recent_events_limit: @recent_events_limit,
-           show_chart: show_chart,
-           chart_datetimes: chart_datetimes,
-           chart_datetime_range: chart_datetime_range,
-           base_path: base_path,
-           issues_base_path: issues_base_path,
-           occurrences_base_path: "#{base_path}/occurrences",
-           show_delete_modal: false,
-           reason_expanded: false
-         )}
+      {:ok, socket}
     end
   end
 
@@ -91,7 +95,7 @@ defmodule TowerWeb.Live.Issues.Show do
   end
 
   def handle_event("confirm_delete", _params, socket) do
-    {_count, _} = Issues.delete_issue(socket.assigns.issue.id)
+    {_count, _} = Issues.delete_issues_and_events([socket.assigns.issue.id])
 
     socket =
       socket
@@ -144,11 +148,11 @@ defmodule TowerWeb.Live.Issues.Show do
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">First Seen</span>
-            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.first_seen)} {DatetimeFormatter.format_time(@issue.first_seen)}</span>
+            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.first_event.datetime)} {DatetimeFormatter.format_time(@issue.first_event.datetime)}</span>
           </div>
           <div class="flex flex-col gap-1">
             <span class="text-sm text-white">Last Seen</span>
-            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_seen)} {DatetimeFormatter.format_time(@issue.last_seen)}</span>
+            <span class="text-sm text-tower-text-secondary">{DatetimeFormatter.format_date(@issue.last_event.datetime)} {DatetimeFormatter.format_time(@issue.last_event.datetime)}</span>
           </div>
         </div>
       </div>
@@ -197,9 +201,9 @@ defmodule TowerWeb.Live.Issues.Show do
   @max_chart_range_us 30 * 24 * 60 * 60 * 1_000_000
 
   defp chart_datetime_range(issue) do
-    diff_us = DateTime.diff(issue.last_seen, issue.first_seen, :microsecond)
+    diff_us = DateTime.diff(issue.last_event.datetime, issue.first_event.datetime, :microsecond)
     range_us = diff_us |> max(@min_chart_range_us) |> min(@max_chart_range_us)
 
-    {DateTime.add(issue.last_seen, -range_us, :microsecond), issue.last_seen}
+    {DateTime.add(issue.last_event.datetime, -range_us, :microsecond), issue.last_event.datetime}
   end
 end

@@ -21,7 +21,7 @@ defmodule TowerWeb.DB.BurstProtector do
             dropped: 0
 
   @doc """
-  Creates the event through `TowerWeb.DB.Events.create_event/1` and counts it
+  Creates the event through `TowerWeb.DB.Events.create_event_for_issue/1` and counts it
   against the current window, unless `max_count` has already been reached
   for that window, in which case the event is dropped.
   """
@@ -44,7 +44,7 @@ defmodule TowerWeb.DB.BurstProtector do
   @impl true
   def handle_call({:add, attrs}, _from, %State{count: count, max_count: max_count} = state)
       when count < max_count do
-    {:reply, Events.create_event(attrs), %{state | count: count + 1}}
+    {:reply, Events.create_event_for_issue(attrs), %{state | count: count + 1}}
   end
 
   def handle_call({:add, _attrs}, _from, state) do

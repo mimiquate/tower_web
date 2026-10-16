@@ -60,7 +60,7 @@ defmodule TowerWeb.Live.Issues.Index do
             search: search,
             level: level,
             datetime_range: datetime_range,
-            similarity_id: issue_ids
+            id: issue_ids
           )
 
         per_page = Pagination.per_page()
@@ -203,7 +203,7 @@ defmodule TowerWeb.Live.Issues.Index do
           <span class="text-sm text-white">{issue.count_events}</span>
         </td>
         <td class="py-3 pl-6">
-          <.datetime_stack datetime={issue.last_seen} />
+          <.datetime_stack datetime={issue.last_event.datetime} />
         </td>
       </:row>
     </.data_table>
@@ -320,27 +320,25 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_event("filter_issue_id", %{"issue_id_filter" => issue_id}, socket) do
-    case Integer.parse(issue_id) do
-      {_issue_id_int, ""} ->
-        current_issue_ids = socket.assigns.issue_ids_filtered
+    if Filters.valid_issue_id?(issue_id) do
+      current_issue_ids = socket.assigns.issue_ids_filtered
 
-        new_issue_ids =
-          if issue_id in current_issue_ids,
-            do: current_issue_ids,
-            else: current_issue_ids ++ [issue_id]
+      new_issue_ids =
+        if issue_id in current_issue_ids,
+          do: current_issue_ids,
+          else: current_issue_ids ++ [issue_id]
 
-        {:noreply,
-         push_patch(socket,
-           to:
-             Paths.build_path(
-               socket.assigns.issues_base_path,
-               Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
-             )
-         )}
-
-      _ ->
-        Process.send_after(self(), :clear_flash, 3000)
-        {:noreply, put_flash(socket, :error, "Please enter a valid issue ID")}
+      {:noreply,
+       push_patch(socket,
+         to:
+           Paths.build_path(
+             socket.assigns.issues_base_path,
+             Filters.current_filters(socket.assigns, issue_ids: new_issue_ids)
+           )
+       )}
+    else
+      Process.send_after(self(), :clear_flash, 3000)
+      {:noreply, put_flash(socket, :error, "Please enter a valid issue ID")}
     end
   end
 
@@ -399,7 +397,7 @@ defmodule TowerWeb.Live.Issues.Index do
   @impl Phoenix.LiveView
   def handle_event("delete_selected", _params, socket) do
     ids = MapSet.to_list(socket.assigns.selected_issue_ids)
-    {_events_deleted_count, _} = Issues.delete_issues(ids)
+    {_events_deleted_count, _} = Issues.delete_issues_and_events(ids)
     deleted_count = length(ids)
 
     Process.send_after(self(), :clear_flash, 3000)
