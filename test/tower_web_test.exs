@@ -8,13 +8,10 @@ defmodule TowerWebTest do
     test "returns the absolute URL of the occurrence" do
       put_env(:tower_web, :base_url, @base_url)
       assert TowerWeb.occurrence_url(@id) == "#{@base_url}/occurrences/#{@id}"
-
-      put_env(:tower_web, :base_url, @base_url <> "/")
-      assert TowerWeb.occurrence_url(@id) == "#{@base_url}/occurrences/#{@id}"
     end
 
-    test "raises when base_url is not configured" do
-      assert_raise ArgumentError, fn -> TowerWeb.occurrence_url(@id) end
+    test "returns nil when base_url is not configured" do
+      assert TowerWeb.occurrence_url(@id) == nil
     end
   end
 

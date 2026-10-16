@@ -43,6 +43,18 @@ config :tower, :reporters, [TowerWeb.DB]
 config :tower_web, enabled: true, repo: MyApp.Repo
 ```
 
+#### Occurrence URLs
+
+To let reporters such as [TowerEmail](https://github.com/mimiquate/tower_email) link to an occurrence in the dashboard, set the URL where it's mounted:
+
+```elixir
+# config/runtime.exs
+
+config :tower_web, base_url: "https://myapp.com/tower"
+```
+
+Without it, reporters skip the link.
+
 ### 2. Add and run the migration
 
 Generate a migration:
@@ -150,18 +162,6 @@ Events beyond `max_count` are dropped until the window resets every `interval` s
 TowerWeb.DB.enable()
 TowerWeb.DB.disable()
 ```
-
-### Occurrence URLs
-
-To let reporters such as [TowerEmail](https://github.com/mimiquate/tower_email) link to an occurrence in the dashboard, set the URL where it's mounted:
-
-```elixir
-# config/runtime.exs
-
-config :tower_web, base_url: "https://myapp.com/tower"
-```
-
-It's required when using TowerEmail: without it, error e-mails aren't sent.
 
 ## Usage
 

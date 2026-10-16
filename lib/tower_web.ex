@@ -25,14 +25,12 @@ defmodule TowerWeb do
 
       config :tower_web, base_url: "https://myapp.com/tower"
 
-  Raises when `base_url` is not configured.
+  Returns `nil` when `base_url` is not configured.
   """
-  @spec occurrence_url(String.t()) :: String.t()
   def occurrence_url(id) do
-    "#{base_url()}/occurrences/#{id}"
-  end
-
-  defp base_url do
-    :tower_web |> Application.fetch_env!(:base_url) |> String.trim_trailing("/")
+    case Application.fetch_env(:tower_web, :base_url) do
+      {:ok, base_url} -> "#{base_url}/occurrences/#{id}"
+      :error -> nil
+    end
   end
 end
