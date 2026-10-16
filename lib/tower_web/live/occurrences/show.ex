@@ -21,7 +21,7 @@ defmodule TowerWeb.Live.Occurrences.Show do
         {:ok, socket}
 
       event ->
-        issue = Issues.get_issue(event.similarity_id)
+        issue = Issues.get_issue(event.issue_id)
 
         {:ok,
          assign(socket,
@@ -104,10 +104,10 @@ defmodule TowerWeb.Live.Occurrences.Show do
       <div class="flex flex-col gap-1 mb-6">
         <span class="text-lg font-mono text-white">ID: #{@event.id}</span>
         <.link
-          navigate={Paths.show_path(@issues_base_path, @event.similarity_id, [])}
+          navigate={Paths.show_path(@issues_base_path, @event.issue_id, [])}
           class="text-sm font-mono text-tower-text-secondary hover:text-white transition-colors"
         >
-          Issue ID: #{@event.similarity_id}
+          Issue ID: #{@event.issue_id}
         </.link>
       </div>
 

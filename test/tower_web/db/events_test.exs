@@ -677,4 +677,57 @@ defmodule TowerWeb.DB.EventsTest do
       assert Issues.get_issue(only_event.issue_id) == nil
     end
   end
+
+  describe "unmerge_events/2" do
+    test "moves the selected events into one brand-new issue and deletes any issue left empty" do
+      {:ok, %{event: a1}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "issue A, event 1"}
+        })
+
+      {:ok, %{event: a2}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "issue A, event 2"}
+        })
+
+      {:ok, %{event: b1}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "issue B, only event"}
+        })
+
+      old_issue_a_id = a1.issue_id
+      old_issue_b_id = b1.issue_id
+
+      assert Events.unmerge_events([a1.id, b1.id]) == {2, nil}
+
+      events = Events.list_events() |> Map.new(&{&1.id, &1})
+
+      new_issue_id = events[a1.id].issue_id
+
+      assert new_issue_id == events[b1.id].issue_id
+      assert new_issue_id != old_issue_a_id
+      assert new_issue_id != old_issue_b_id
+
+      assert events[a2.id].issue_id == old_issue_a_id
+      assert Issues.get_issue(old_issue_a_id) != nil
+
+      # issue B is now empty, so it must be deleted
+      assert Issues.get_issue(old_issue_b_id) == nil
+    end
+  end
 end

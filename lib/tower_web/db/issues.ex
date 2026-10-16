@@ -67,6 +67,7 @@ defmodule TowerWeb.DB.Issues do
 
     case Event
          |> where([e], e.similarity_id == ^similarity_id)
+         |> order_by(desc: :datetime)
          |> select([e], e.issue_id)
          |> limit(1)
          |> repo.one() do
@@ -107,6 +108,33 @@ defmodule TowerWeb.DB.Issues do
     Issue |> where([i], i.id in ^ids) |> repo.delete_all()
 
     {:ok, result}
+  end
+
+  def merge_issues(target_id, source_ids, opts \\ []) when is_list(source_ids) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+
+    {:ok, result} =
+      repo.transaction(fn ->
+        any_source_unresolved? =
+          Issue
+          |> where([i], i.id in ^source_ids and i.state == :unresolved)
+          |> repo.exists?()
+
+        if any_source_unresolved? do
+          Issue |> where([i], i.id == ^target_id) |> repo.update_all(set: [state: :unresolved])
+        end
+
+        events_moved =
+          Event
+          |> where([e], e.issue_id in ^source_ids)
+          |> repo.update_all(set: [issue_id: target_id])
+
+        Issue |> where([i], i.id in ^source_ids) |> repo.delete_all()
+
+        events_moved
+      end)
+
+    result
   end
 
   defp to_integer(id) when is_integer(id), do: id

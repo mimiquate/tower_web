@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.IssuesTest do
   use TowerWeb.DB.DataCase, async: false
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
 
   describe "list_issues/1" do
@@ -323,6 +324,55 @@ defmodule TowerWeb.DB.IssuesTest do
     end
   end
 
+  describe "merge_issues/3" do
+    test "merges two issues into one, leaving the third issue untouched" do
+      {:ok, %{event: target_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "target issue event"}
+        })
+
+      {:ok, %{event: source_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "source issue event"}
+        })
+
+      {:ok, %{event: untouched_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 3,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :warning,
+          kind: :error,
+          reason: %ArgumentError{message: "untouched issue event"}
+        })
+
+      assert Issues.merge_issues(target_event.issue_id, [source_event.issue_id]) == {1, nil}
+
+      events = Events.list_events() |> Map.new(&{&1.id, &1})
+
+      assert events[target_event.id].issue_id == target_event.issue_id
+      assert events[source_event.id].issue_id == target_event.issue_id
+      assert events[untouched_event.id].issue_id == untouched_event.issue_id
+
+      assert Issues.get_issue(target_event.issue_id) != nil
+      assert Issues.get_issue(source_event.issue_id) == nil
+      assert Issues.get_issue(untouched_event.issue_id) != nil
+
+      assert TowerWeb.DB.TestRepo.get(Issue, source_event.issue_id) == nil
+      assert TowerWeb.DB.TestRepo.get(Issue, target_event.issue_id) != nil
+    end
+  end
+
   describe "find_or_create_issue/2 (via Events.create_event_for_issue/2)" do
     test "creates the issue on the first event for a similarity_id" do
       {:ok, %{event: event}} =
@@ -346,7 +396,7 @@ defmodule TowerWeb.DB.IssuesTest do
     end
 
     test "forces state back to :unresolved when a new occurrence lands on a resolved issue" do
-      {:ok, event} =
+      {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -356,7 +406,7 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "first occurrence"}
         })
 
-      issue = Issues.get_issue(event.issue.id)
+      issue = Issues.get_issue(event.issue_id)
       {:ok, resolved_issue} = Issues.update_issue(issue, %{state: :resolved})
       assert resolved_issue.state == :resolved
 
@@ -370,7 +420,46 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "second occurrence"}
         })
 
-      assert Issues.get_issue(event.issue.id).state == :unresolved
+      assert Issues.get_issue(event.issue_id).state == :unresolved
+    end
+
+    test "when a similarity_id's events are split across two issues, a new occurrence joins whichever issue has the most recent one" do
+      {:ok, %{event: older_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 5,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "older occurrence"}
+        })
+
+      {:ok, %{event: newer_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 5,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "newer occurrence"}
+        })
+
+      original_issue_id = newer_event.issue_id
+
+      # Split older_event out into a brand-new issue, leaving newer_event behind.
+      assert Events.unmerge_events([older_event.id]) == {1, nil}
+
+      {:ok, %{event: latest_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 5,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "latest occurrence"}
+        })
+
+      assert latest_event.issue_id == original_issue_id
     end
 
     test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the most recent datetime" do

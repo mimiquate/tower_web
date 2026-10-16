@@ -31,6 +31,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
           show_delete_modal: false,
+          show_unmerge_modal: false,
           host_otp_app: :tower_web
         })
 
@@ -85,6 +86,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
           show_delete_modal: false,
+          show_unmerge_modal: false,
           host_otp_app: :tower_web
         })
 
@@ -149,6 +151,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
           show_delete_modal: false,
+          show_unmerge_modal: false,
           host_otp_app: :tower_web
         })
 
@@ -192,6 +195,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime_range_custom_open: false,
           selected_occurrences_ids: MapSet.new(),
           show_delete_modal: false,
+          show_unmerge_modal: false,
           host_otp_app: :tower_web
         })
 
@@ -805,6 +809,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         datetime_range_custom_open: false,
         selected_occurrences_ids: MapSet.new(),
         show_delete_modal: false,
+        show_unmerge_modal: false,
         host_otp_app: :tower_web
       }
     }

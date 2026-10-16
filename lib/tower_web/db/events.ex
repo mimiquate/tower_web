@@ -119,4 +119,34 @@ defmodule TowerWeb.DB.Events do
 
     Issues.delete_issues_and_events(empty_ids)
   end
+
+  def unmerge_events(ids, opts \\ []) when is_list(ids) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+
+    {:ok, result} =
+      repo.transact(fn ->
+        old_issue_ids =
+          Event
+          |> where([e], e.id in ^ids)
+          |> select([e], e.issue_id)
+          |> repo.all()
+          |> Enum.uniq()
+
+        {:ok, new_issue} =
+          %Issue{}
+          |> Issue.changeset(%{state: :unresolved})
+          |> repo.insert()
+
+        {count, _} =
+          Event
+          |> where([e], e.id in ^ids)
+          |> repo.update_all(set: [issue_id: new_issue.id])
+
+        delete_issues_if_empty(old_issue_ids)
+
+        {:ok, {count, nil}}
+      end)
+
+    result
+  end
 end
