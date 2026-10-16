@@ -71,11 +71,30 @@ defmodule TowerWeb.DB.Issues do
          |> limit(1)
          |> repo.one() do
       nil ->
-        repo.insert(%Issue{})
+        %Issue{}
+        |> Issue.changeset(%{state: :unresolved})
+        |> repo.insert()
 
       issue_id ->
-        {:ok, repo.get!(Issue, issue_id)}
+        case repo.get(Issue, issue_id) do
+          %Issue{state: :resolved} = issue ->
+            issue
+            |> Issue.changeset(%{state: :unresolved})
+            |> repo.update()
+
+          %Issue{} = issue ->
+            {:ok, issue}
+        end
     end
+  end
+
+  def update_issue(issue, attrs, opts \\ []) do
+    repo = Keyword.get(opts, :repo) || Repo.repo()
+    issue_struct = repo.get(Issue, issue.id)
+
+    issue_struct
+    |> Issue.changeset(attrs)
+    |> repo.update()
   end
 
   def delete_issues_and_events([]), do: {:ok, {0, nil}}

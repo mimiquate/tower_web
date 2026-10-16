@@ -61,7 +61,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
         })
 
       # Fetch events like the LiveView does
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
 
       # Render with real events
       html =
@@ -126,7 +126,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "Info event"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -169,7 +169,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "Test error"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
 
       html =
         render_component(&Occurrences.render/1, %{
@@ -224,7 +224,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "Memory usage high"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       # Filter by "database"
@@ -260,7 +260,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "DATABASE ERROR"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -285,7 +285,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "Database connection failed"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -331,7 +331,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: %RuntimeError{message: "Info event"}
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -369,7 +369,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: %RuntimeError{message: "Warning event"}
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -415,7 +415,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: %RuntimeError{message: "Database warning"}
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -480,7 +480,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "10 days ago"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       %{socket: socket_with_events(events)}
     end
 
@@ -549,7 +549,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: %RuntimeError{message: "Second issue"}
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -599,7 +599,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: %RuntimeError{message: "Third issue"}
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
 
       {:noreply, socket} =
@@ -750,7 +750,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "Some error"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 
@@ -771,7 +771,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           reason: "Some error"
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
       socket = socket_with_events(events)
       {:noreply, socket} = Occurrences.handle_params(%{"page" => "1"}, "/tower", socket)
 

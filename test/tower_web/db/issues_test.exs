@@ -323,7 +323,7 @@ defmodule TowerWeb.DB.IssuesTest do
     end
   end
 
-  describe "find_or_create_issue/2 (via Events.create_event/2)" do
+  describe "find_or_create_issue/2 (via Events.create_event_for_issue/2)" do
     test "creates the issue on the first event for a similarity_id" do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
@@ -342,6 +342,35 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.last_event.datetime == ~U[2026-05-08 12:00:00.000000Z]
       assert issue.last_event.level == :error
       assert issue.last_event.normalized_reason =~ "first occurrence"
+      assert issue.state == :unresolved
+    end
+
+    test "forces state back to :unresolved when a new occurrence lands on a resolved issue" do
+      {:ok, event} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      issue = Issues.get_issue(event.issue.id)
+      {:ok, resolved_issue} = Issues.update_issue(issue, %{state: :resolved})
+      assert resolved_issue.state == :resolved
+
+      {:ok, _} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 13:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "second occurrence"}
+        })
+
+      assert Issues.get_issue(event.issue.id).state == :unresolved
     end
 
     test "increments count_events and extends first_seen/last_seen, with level/normalized_reason/stacktrace reflecting the event with the most recent datetime" do

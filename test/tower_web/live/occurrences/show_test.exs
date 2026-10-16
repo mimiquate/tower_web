@@ -4,6 +4,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
   import Phoenix.LiveViewTest
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.Live.Occurrences.Index
   alias TowerWeb.Live.Occurrences.Show
 
@@ -29,7 +30,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           reason: %RuntimeError{message: "Test error"}
         })
 
-      events = Events.list_events()
+      events = Events.list_events(preload_issue?: true)
 
       html =
         render_component(&Index.render/1, %{
@@ -88,6 +89,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html =
         render_component(&Show.render/1, %{
           event: event1,
+          issue: Issues.get_issue(event1.issue_id),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -130,6 +132,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html =
         render_component(&Show.render/1, %{
           event: event,
+          issue: Issues.get_issue(event.issue_id),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -164,6 +167,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       html =
         render_component(&Show.render/1, %{
           event: event,
+          issue: Issues.get_issue(event.issue_id),
           base_path: "/tower",
           back_path: "/tower/occurrences?page=1",
           occurrences_base_path: "/tower/occurrences",
@@ -188,7 +192,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
           reason: "Event to delete"
         })
 
-      assert length(Events.list_events()) == 1
+      assert length(Events.list_events(preload_issue?: true)) == 1
 
       socket = %Phoenix.LiveView.Socket{
         assigns: %{
@@ -204,7 +208,7 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
 
       {:noreply, updated_socket} = Show.handle_event("confirm_delete", %{}, socket)
 
-      assert Events.list_events() == []
+      assert Events.list_events(preload_issue?: true) == []
 
       assert updated_socket.redirected ==
                {:live, :redirect, %{to: "/tower/occurrences", kind: :push}}
