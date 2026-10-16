@@ -40,7 +40,10 @@ config :tower, :reporters, [TowerWeb.DB]
 
 ```elixir
 # runtime.exs
-config :tower_web, enabled: true, repo: MyApp.Repo
+config :tower_web,
+  enabled: true,
+  repo: MyApp.Repo,
+  base_url: "https://myapp.com/errors"
 ```
 
 ### 2. Add and run the migration
