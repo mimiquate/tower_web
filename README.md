@@ -40,20 +40,11 @@ config :tower, :reporters, [TowerWeb.DB]
 
 ```elixir
 # runtime.exs
-config :tower_web, enabled: true, repo: MyApp.Repo
+config :tower_web,
+  enabled: true,
+  repo: MyApp.Repo,
+  base_url: "https://myapp.com/errors"
 ```
-
-#### Occurrence URLs
-
-To let reporters such as [TowerEmail](https://github.com/mimiquate/tower_email) link to an occurrence in the dashboard, set the URL where it's mounted:
-
-```elixir
-# config/runtime.exs
-
-config :tower_web, base_url: "https://myapp.com/tower"
-```
-
-Without it, reporters skip the link.
 
 ### 2. Add and run the migration
 
