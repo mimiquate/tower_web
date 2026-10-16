@@ -1,6 +1,4 @@
-defmodule Mix.Tasks.TowerWeb.BackfillIssueIds do
-  @shortdoc "Backfills issue_id for events that don't have one yet"
-
+defmodule TowerWeb.DB.BackfillIssueIds do
   @moduledoc """
   Backfills `issue_id` on `tower_web_events` rows that don't have one yet.
 
@@ -8,11 +6,7 @@ defmodule Mix.Tasks.TowerWeb.BackfillIssueIds do
   existed before the `issue_id` column was introduced (for example, events migrated over
   from the standalone `tower_db` package). Each run groups the affected rows by
   `similarity_id` and assigns one new issue per group.
-
-      mix tower_web.backfill_issue_ids
   """
-
-  use Mix.Task
 
   import Ecto.Query
 
@@ -20,25 +14,24 @@ defmodule Mix.Tasks.TowerWeb.BackfillIssueIds do
   alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Repo
 
-  @impl Mix.Task
-  def run(_args) do
-    Mix.Task.run("app.start")
-
+  def run do
     repo = Repo.repo()
 
-    similarity_ids =
+    repo.transact(fn ->
       Event
       |> where([e], is_nil(e.issue_id))
       |> distinct([e], e.similarity_id)
       |> select([e], e.similarity_id)
-      |> repo.all()
+      |> repo.stream()
+      |> Enum.each(fn similarity_id ->
+        {:ok, issue} = repo.insert(%Issue{})
 
-    Enum.each(similarity_ids, fn similarity_id ->
-      {:ok, issue} = repo.insert(%Issue{})
+        Event
+        |> where([e], e.similarity_id == ^similarity_id and is_nil(e.issue_id))
+        |> repo.update_all(set: [issue_id: issue.id])
+      end)
 
-      Event
-      |> where([e], e.similarity_id == ^similarity_id and is_nil(e.issue_id))
-      |> repo.update_all(set: [issue_id: issue.id])
+      {:ok, :ok}
     end)
   end
 end
