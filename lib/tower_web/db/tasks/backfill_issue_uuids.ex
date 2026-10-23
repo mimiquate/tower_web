@@ -1,4 +1,4 @@
-defmodule TowerWeb.DB.BackfillIssueUuids do
+defmodule TowerWeb.DB.Tasks.BackfillIssueUuids do
   @moduledoc """
   Generates a UUIDv7 id for every existing issue, writing it into the temporary
   `new_id`/`new_issue_id` columns added by migration V04, ahead of the column
