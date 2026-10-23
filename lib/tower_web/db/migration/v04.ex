@@ -16,8 +16,6 @@ defmodule TowerWeb.DB.Migration.V04 do
 
     TowerWeb.DB.BackfillIssueUuids.run()
 
-    drop(index(:tower_web_events, [:issue_id, "datetime DESC"]))
-
     alter table(:tower_web_events) do
       remove(:issue_id)
     end
@@ -39,11 +37,6 @@ defmodule TowerWeb.DB.Migration.V04 do
   end
 
   def down do
-    drop(index(:tower_web_events, [:issue_id, "datetime DESC"]))
-
-    execute("ALTER TABLE tower_web_events DROP CONSTRAINT tower_web_events_issue_id_fkey")
-    execute("ALTER TABLE tower_web_issues DROP CONSTRAINT tower_web_issues_pkey")
-
     alter table(:tower_web_events) do
       remove(:issue_id)
     end
