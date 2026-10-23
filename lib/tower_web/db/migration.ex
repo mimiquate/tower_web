@@ -15,8 +15,8 @@ defmodule TowerWeb.DB.Migration do
       defmodule MyApp.Repo.Migrations.AddTowerWebDB do
         use Ecto.Migration
 
-        def up, do: TowerWeb.DB.Migration.up(from: 0, to: 4)
-        def down, do: TowerWeb.DB.Migration.down(from: 4, to: 0)
+        def up, do: TowerWeb.DB.Migration.up(from: 0, to: 6)
+        def down, do: TowerWeb.DB.Migration.down(from: 6, to: 0)
       end
   """
 
