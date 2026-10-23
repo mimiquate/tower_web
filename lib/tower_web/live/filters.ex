@@ -97,7 +97,7 @@ defmodule TowerWeb.Live.Filters do
   end
 
   def valid_issue_id?(id) do
-    id =~ ~r/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+    match?({:ok, _}, Ecto.UUID.dump(id))
   end
 
   def parse_issue_ids(""), do: []
