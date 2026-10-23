@@ -26,19 +26,22 @@ defmodule TowerWeb.Plugs.ValidateIssueIdsTest do
     refute conn.halted
   end
 
-  test "passes the request through when issue_ids is fully numeric" do
-    conn = call(%{"issue_ids" => "12,34"})
+  test "passes the request through when issue_ids is fully valid UUIDs" do
+    conn =
+      call(%{
+        "issue_ids" => "018e5c33-1b1b-7c3a-8f1a-111111111111,018e5c33-1b1b-7c3a-8f1a-222222222222"
+      })
 
     refute conn.halted
   end
 
-  test "halts with 400 when issue_ids contains a non-numeric value" do
-    conn = call(%{"issue_ids" => "1234,abc"})
+  test "halts with 400 when issue_ids contains a non-UUID value" do
+    conn = call(%{"issue_ids" => "018e5c33-1b1b-7c3a-8f1a-111111111111,abc"})
 
     assert conn.halted
     assert conn.status == 400
 
     assert conn.resp_body ==
-             "Invalid issue_ids parameter. Expected numeric format."
+             "Invalid issue_ids parameter. Expected UUID format."
   end
 end
