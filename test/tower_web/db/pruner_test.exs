@@ -2,6 +2,7 @@ defmodule TowerWeb.DB.PrunerTest do
   use TowerWeb.DB.DataCase, async: false
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issues
   alias TowerWeb.DB.Pruner
 
   defp insert_event(overrides) do
@@ -63,6 +64,49 @@ defmodule TowerWeb.DB.PrunerTest do
     assert remaining == ids_of([e3, e4, other])
     refute e1.id in remaining
     refute e2.id in remaining
+  end
+
+  test "prunes per issue_id, not per similarity_id, after a merge" do
+    now = DateTime.utc_now()
+
+    e1 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -300, :second))
+    e2 = insert_event(similarity_id: 2, datetime: DateTime.add(now, -200, :second))
+    e3 = insert_event(similarity_id: 2, datetime: now)
+
+    issue_id_1 = Events.get_event(e1.id).issue_id
+    issue_id_2 = Events.get_event(e2.id).issue_id
+    assert issue_id_1 != issue_id_2
+
+    Issues.merge_issues(issue_id_1, [issue_id_2])
+
+    prune(max_size_per_issue: 1, max_age: {999_999_999, :seconds})
+
+    remaining =
+      Events.list_events(limit: 100)
+      |> ids_of()
+
+    assert remaining == ids_of([e3])
+    refute e1.id in remaining
+    refute e2.id in remaining
+  end
+
+  test "prunes per issue_id, not per similarity_id, after an unmerge" do
+    now = DateTime.utc_now()
+
+    e1 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -300, :second))
+    e2 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -200, :second))
+    e3 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -100, :second))
+    e4 = insert_event(similarity_id: 1, datetime: now)
+
+    {1, nil} = Events.unmerge_events([e1.id])
+
+    prune(max_size_per_issue: 3, max_age: {999_999_999, :seconds})
+
+    remaining =
+      Events.list_events(limit: 100)
+      |> ids_of()
+
+    assert remaining == ids_of([e1, e2, e3, e4])
   end
 
   test "keeps only the newest max_size events overall, batching the deletes" do

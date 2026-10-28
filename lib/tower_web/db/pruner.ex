@@ -74,7 +74,7 @@ defmodule TowerWeb.DB.Pruner do
     |> select([e], %{
       id: e.id,
       datetime: e.datetime,
-      rank: over(row_number(), partition_by: e.similarity_id, order_by: [desc: e.datetime])
+      rank: over(row_number(), partition_by: e.issue_id, order_by: [desc: e.datetime])
     })
     |> subquery()
     |> where([r], r.rank > ^max_count)
