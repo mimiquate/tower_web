@@ -81,7 +81,10 @@ defmodule TowerWeb.DB.PrunerTest do
 
     prune(max_size_per_issue: 1, max_age: {999_999_999, :seconds})
 
-    remaining = ids_of(Events.list_events(limit: 100))
+    remaining =
+      Events.list_events(limit: 100)
+      |> ids_of()
+
     assert remaining == ids_of([e3])
     refute e1.id in remaining
     refute e2.id in remaining
@@ -99,7 +102,10 @@ defmodule TowerWeb.DB.PrunerTest do
 
     prune(max_size_per_issue: 3, max_age: {999_999_999, :seconds})
 
-    remaining = ids_of(Events.list_events(limit: 100))
+    remaining =
+      Events.list_events(limit: 100)
+      |> ids_of()
+
     assert remaining == ids_of([e1, e2, e3, e4])
   end
 
