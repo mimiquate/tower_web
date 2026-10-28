@@ -389,8 +389,7 @@ defmodule TowerWeb.Live.Issues.Index do
 
   @impl Phoenix.LiveView
   def handle_event("toggle_select", %{"id" => id}, socket) do
-    selected_issue_ids =
-      Selection.toggle(socket.assigns.selected_issue_ids, String.to_integer(id))
+    selected_issue_ids = Selection.toggle(socket.assigns.selected_issue_ids, id)
 
     {:noreply, assign(socket, selected_issue_ids: selected_issue_ids)}
   end

@@ -268,7 +268,8 @@ defmodule TowerWeb.Live.Issues.IndexTest do
             "search" => "timeout",
             "level" => "error",
             "datetime_range" => "last_30d",
-            "issue_ids" => "1,2"
+            "issue_ids" =>
+              "018e5c33-1b1b-7c3a-8f1a-111111111111,018e5c33-1b1b-7c3a-8f1a-222222222222"
           },
           "/tower/issues",
           socket_with_issues()
@@ -288,7 +289,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
                datetime_range: "last_30d",
                datetime_range_from: "",
                datetime_range_to: "",
-               issue_ids: ["1", "2"]
+               issue_ids: [
+                 "018e5c33-1b1b-7c3a-8f1a-111111111111",
+                 "018e5c33-1b1b-7c3a-8f1a-222222222222"
+               ]
              ]
     end
 
