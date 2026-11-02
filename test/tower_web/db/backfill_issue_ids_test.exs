@@ -33,7 +33,7 @@ defmodule TowerWeb.DB.BackfillIssueIdsTest do
 
     assert event_without_issue.issue_id == nil
 
-    BackfillIssueIds.run(:infinity)
+    BackfillIssueIds.run()
 
     reloaded_event_with_issue = Events.get_event(event_with_issue.id)
     reloaded_event_without_issue = Events.get_event(event_without_issue.id)

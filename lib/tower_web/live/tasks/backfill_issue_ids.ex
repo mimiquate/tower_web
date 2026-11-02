@@ -15,10 +15,11 @@ defmodule TowerWeb.DB.BackfillIssueIds do
   alias TowerWeb.DB.Repo
 
   @doc """
-  `timeout` is the timeout for the transaction's connection checkout, in milliseconds
-  (or `:infinity`). It does not apply to the individual queries run inside it.
+  Options are passed as the second argument to `c:Ecto.Repo.transact/2`, so e.g.
+  `:timeout` sets the timeout for the transaction's connection checkout. It does not
+  apply to the individual queries run inside it.
   """
-  def run(timeout) do
+  def run(opts \\ []) do
     repo = Repo.repo()
 
     repo.transact(
@@ -38,7 +39,7 @@ defmodule TowerWeb.DB.BackfillIssueIds do
 
         {:ok, :ok}
       end,
-      timeout: timeout
+      opts
     )
   end
 end
