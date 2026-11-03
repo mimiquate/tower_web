@@ -9,7 +9,6 @@ defmodule TowerWeb.DB.EventTest do
 
       attrs = %{
         id: UUIDv7.generate(),
-        similarity_id: 12345,
         issue_id: issue_id,
         datetime: ~U[2026-04-16 12:00:00.000000Z],
         level: :error,
@@ -24,14 +23,18 @@ defmodule TowerWeb.DB.EventTest do
       assert changeset.changes.level == :error
       assert changeset.changes.kind == :error
       assert changeset.changes.reason == %{message: "Something went wrong"}
-      assert changeset.changes.similarity_id == 12345
+
+      normalized_reason = Exception.format(:error, attrs.reason, [])
+
+      assert changeset.changes.similarity_id ==
+               TowerWeb.DB.SimilarityId.compute(:error, normalized_reason, [])
+
       assert changeset.changes.issue_id == issue_id
     end
 
     test "accepts request_data" do
       attrs = %{
         id: UUIDv7.generate(),
-        similarity_id: 12345,
         issue_id: UUIDv7.generate(),
         datetime: ~U[2026-04-16 12:00:00.000000Z],
         level: :error,
@@ -57,7 +60,6 @@ defmodule TowerWeb.DB.EventTest do
 
       refute changeset.valid?
       assert "can't be blank" in errors_on(changeset).id
-      assert "can't be blank" in errors_on(changeset).similarity_id
       assert "can't be blank" in errors_on(changeset).datetime
       assert "can't be blank" in errors_on(changeset).level
       assert "can't be blank" in errors_on(changeset).kind
