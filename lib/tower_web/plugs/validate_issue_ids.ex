@@ -14,7 +14,7 @@ defmodule TowerWeb.Plugs.ValidateIssueIds do
       conn
       |> send_resp(
         400,
-        "Invalid issue_ids parameter. Expected numeric format."
+        "Invalid issue_ids parameter. Expected UUID format."
       )
       |> halt()
     end
