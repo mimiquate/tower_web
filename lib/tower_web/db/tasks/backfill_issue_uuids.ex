@@ -13,27 +13,35 @@ defmodule TowerWeb.DB.Tasks.BackfillIssueUuids do
 
   alias TowerWeb.DB.Repo
 
-  def run do
+  @doc """
+  Options are passed as the second argument to `c:Ecto.Repo.transact/2`, so e.g.
+  `:timeout` sets the timeout for the transaction's connection checkout. It does not
+  apply to the individual queries run inside it.
+  """
+  def run(opts \\ []) do
     repo = Repo.repo()
 
-    repo.transact(fn ->
-      "tower_web_issues"
-      |> where([i], is_nil(i.new_id))
-      |> select([i], i.id)
-      |> repo.stream()
-      |> Enum.each(fn issue_id ->
-        new_id = UUIDv7.generate() |> Ecto.UUID.dump!()
-
+    repo.transact(
+      fn ->
         "tower_web_issues"
-        |> where([i], i.id == ^issue_id)
-        |> repo.update_all(set: [new_id: new_id])
+        |> where([i], is_nil(i.new_id))
+        |> select([i], i.id)
+        |> repo.stream()
+        |> Enum.each(fn issue_id ->
+          new_id = UUIDv7.generate() |> Ecto.UUID.dump!()
 
-        "tower_web_events"
-        |> where([e], e.issue_id == ^issue_id)
-        |> repo.update_all(set: [new_issue_id: new_id])
-      end)
+          "tower_web_issues"
+          |> where([i], i.id == ^issue_id)
+          |> repo.update_all(set: [new_id: new_id])
 
-      {:ok, :ok}
-    end)
+          "tower_web_events"
+          |> where([e], e.issue_id == ^issue_id)
+          |> repo.update_all(set: [new_issue_id: new_id])
+        end)
+
+        {:ok, :ok}
+      end,
+      opts
+    )
   end
 end

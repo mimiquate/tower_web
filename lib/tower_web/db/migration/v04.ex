@@ -14,7 +14,7 @@ defmodule TowerWeb.DB.Migration.V04 do
 
     flush()
 
-    TowerWeb.DB.Tasks.BackfillIssueUuids.run()
+    TowerWeb.DB.Tasks.BackfillIssueUuids.run(timeout: :infinity)
 
     alter table(:tower_web_events) do
       remove(:issue_id)
