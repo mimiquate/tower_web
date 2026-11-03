@@ -43,8 +43,11 @@ config :tower, :reporters, [TowerWeb.DB]
 config :tower_web,
   enabled: true,
   repo: MyApp.Repo,
-  base_url: "https://myapp.com/errors"
+  base_url: "https://myapp.com/errors",
+  otp_app: :my_app
 ```
+
+`otp_app` tells TowerWeb your application's OTP app name, so it can recognize which stacktrace frame belongs to your app when grouping occurrences into issues. If it's not set, grouping falls back to the first stacktrace frame regardless of which application it belongs to, which is less precise.
 
 ### 2. Add and run the migration
 
