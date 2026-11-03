@@ -3,6 +3,7 @@ import Config
 config :tower_web,
   ecto_repos: [TowerWeb.DB.TestRepo],
   repo: TowerWeb.DB.TestRepo,
+  otp_app: :tower_web,
   pruner: false
 
 config :tower_web, TowerWeb.DB.TestRepo,
