@@ -14,7 +14,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
           kind: :error,
           level: :error,
@@ -24,7 +23,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, %{event: event2}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2024-03-14 09:00:00Z],
           kind: :throw,
           level: :warning,
@@ -72,7 +70,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :message,
           level: :error,
@@ -82,7 +79,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
           kind: :message,
           level: :warning,
@@ -110,7 +106,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -120,7 +115,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :warning,
@@ -148,7 +142,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -30, :minute),
           kind: :error,
           level: :error,
@@ -158,7 +151,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
@@ -185,7 +177,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, %{event: warning_event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :warning,
@@ -195,7 +186,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -205,7 +195,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :critical,
@@ -334,7 +323,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :error,
           level: :error,
@@ -344,7 +332,6 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
           kind: :error,
           level: :error,
@@ -354,11 +341,10 @@ defmodule TowerWeb.Live.Issues.IndexTest do
       {:ok, %{event: kept_event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2024-03-15 11:00:00Z],
           kind: :error,
           level: :error,
-          reason: "Unrelated error"
+          reason: %RuntimeError{message: "Unrelated error"}
         })
 
       socket = socket_with_issues()
