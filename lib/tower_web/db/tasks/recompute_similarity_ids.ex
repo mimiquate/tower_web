@@ -26,6 +26,12 @@ defmodule TowerWeb.DB.RecomputeSimilarityIds do
       fn ->
         Event
         |> distinct([e], e.similarity_id)
+        |> select([e], %{
+          similarity_id: e.similarity_id,
+          kind: e.kind,
+          normalized_reason: e.normalized_reason,
+          stacktrace: e.stacktrace
+        })
         |> repo.all()
         |> Enum.each(fn event ->
           new_similarity_id =
