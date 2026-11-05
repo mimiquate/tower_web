@@ -6,7 +6,7 @@ defmodule TowerWeb.DB.SimilarityId do
   (module, function, arity, file, line) - no message/reason content at all.
   """
 
-  alias TowerWeb.Live.StacktraceFormatter
+  alias TowerWeb.DB.StacktraceFrame
 
   def compute(kind, normalized_reason, stacktrace) do
     kind |> components(normalized_reason, stacktrace) |> :erlang.phash2()
@@ -17,7 +17,7 @@ defmodule TowerWeb.DB.SimilarityId do
   end
 
   defp build(kind_or_module, stacktrace) do
-    case StacktraceFormatter.pick_frame(stacktrace, StacktraceFormatter.host_otp_app()) do
+    case StacktraceFrame.pick_frame(stacktrace, StacktraceFrame.host_otp_app()) do
       nil ->
         {kind_or_module}
 
@@ -26,7 +26,7 @@ defmodule TowerWeb.DB.SimilarityId do
           kind_or_module,
           module,
           function,
-          normalize_arity(arity_or_args),
+          StacktraceFrame.normalize_arity(arity_or_args),
           opts[:file],
           opts[:line]
         }
@@ -34,14 +34,11 @@ defmodule TowerWeb.DB.SimilarityId do
   end
 
   defp kind_or_module(:error, normalized_reason) when is_binary(normalized_reason) do
-    case Regex.run(~r/^\*\* \(([^)]+)\)/, normalized_reason) do
-      [_, module_name] -> module_name
-      nil -> :unknown
-    end
+    # Exception.format/3 always normalizes :error reasons into an exception struct
+    # first, so the rendered banner is always "** (Module) ...".
+    [_, module_name] = Regex.run(~r/^\*\* \(([^)]+)\)/, normalized_reason)
+    module_name
   end
 
   defp kind_or_module(kind, _normalized_reason), do: kind
-
-  defp normalize_arity(arity_or_args) when is_list(arity_or_args), do: length(arity_or_args)
-  defp normalize_arity(arity) when is_integer(arity), do: arity
 end
