@@ -47,7 +47,7 @@ config :tower_web,
   otp_app: :my_app
 ```
 
-`otp_app` tells TowerWeb your application's OTP app name, so it can recognize which stacktrace frame belongs to your app when grouping occurrences into issues. If it's not set, grouping falls back to the first stacktrace frame regardless of which application it belongs to, which is less precise.
+`otp_app` tells TowerWeb your application's OTP app name, so it can recognize which stacktrace frame belongs to your app when grouping occurrences into issues. If it's not set, grouping falls back to the last stacktrace frame regardless of which application it belongs to, which is less precise.
 
 ### 2. Add and run the migration
 
