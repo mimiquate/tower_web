@@ -1,4 +1,4 @@
-defmodule TowerWeb.DB.RecomputeSimilarityIdsTest do
+defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
   use TowerWeb.DB.DataCase, async: false
 
   import Ecto.Query
