@@ -44,7 +44,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
           level: :error,
           kind: :error,
@@ -54,7 +53,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, %{event: event2}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2024-03-14 09:00:00Z],
           level: :warning,
           kind: :throw,
@@ -101,7 +99,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:00:00Z],
           level: :error,
           kind: :error,
@@ -111,7 +108,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2024-03-15 10:00:00Z],
           level: :warning,
           kind: :exit,
@@ -121,7 +117,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2024-03-15 10:00:00Z],
           level: :info,
           kind: :message,
@@ -165,7 +160,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 14:30:45Z],
           level: :error,
           kind: :message,
@@ -211,7 +205,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :message,
           level: :error,
@@ -221,7 +214,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -2, :hour),
           kind: :message,
           level: :warning,
@@ -257,7 +249,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(DateTime.utc_now(), -1, :hour),
           kind: :message,
           level: :error,
@@ -282,7 +273,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :message,
           level: :error,
@@ -308,7 +298,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -318,7 +307,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :warning,
@@ -328,7 +316,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -3, :hour),
           kind: :error,
           level: :info,
@@ -356,7 +343,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -366,7 +352,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :warning,
@@ -392,7 +377,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -402,7 +386,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
@@ -412,7 +395,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -3, :hour),
           kind: :error,
           level: :warning,
@@ -447,7 +429,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -30, :minute),
           kind: :error,
           level: :error,
@@ -457,7 +438,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
@@ -467,7 +447,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: DateTime.add(now, -3, :day),
           kind: :error,
           level: :error,
@@ -477,7 +456,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 4,
           datetime: DateTime.add(now, -10, :day),
           kind: :error,
           level: :error,
@@ -536,7 +514,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -546,11 +523,10 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
-          reason: %RuntimeError{message: "Second issue"}
+          reason: %ArgumentError{message: "Second issue"}
         })
 
       events = Events.list_events(preload_issue?: true)
@@ -576,7 +552,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.add(now, -1, :hour),
           kind: :error,
           level: :error,
@@ -586,21 +561,19 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
-          reason: %RuntimeError{message: "Second issue"}
+          reason: %ArgumentError{message: "Second issue"}
         })
 
       {:ok, %{event: event3}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: DateTime.add(now, -3, :hour),
           kind: :error,
           level: :error,
-          reason: %RuntimeError{message: "Third issue"}
+          reason: %ArithmeticError{message: "Third issue"}
         })
 
       events = Events.list_events(preload_issue?: true)
@@ -751,7 +724,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :error,
           level: :error,
@@ -772,7 +744,6 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :error,
           level: :error,

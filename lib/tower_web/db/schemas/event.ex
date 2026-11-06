@@ -31,7 +31,6 @@ defmodule TowerWeb.DB.Event do
     event
     |> cast(attrs, [
       :id,
-      :similarity_id,
       :issue_id,
       :datetime,
       :level,
@@ -41,8 +40,9 @@ defmodule TowerWeb.DB.Event do
       :metadata,
       :request_data
     ])
-    |> validate_required([:id, :similarity_id, :datetime, :level, :kind, :reason])
+    |> validate_required([:id, :datetime, :level, :kind, :reason])
     |> put_normalized_reason()
+    |> put_similarity_id()
   end
 
   defp put_normalized_reason(changeset) do
@@ -55,6 +55,18 @@ defmodule TowerWeb.DB.Event do
     else
       changeset
     end
+  end
+
+  defp put_similarity_id(changeset) do
+    kind = get_field(changeset, :kind)
+    normalized_reason = get_field(changeset, :normalized_reason)
+    stacktrace = get_field(changeset, :stacktrace) || []
+
+    put_change(
+      changeset,
+      :similarity_id,
+      TowerWeb.DB.SimilarityId.compute(kind, normalized_reason, stacktrace)
+    )
   end
 
   # Exception.format/3 only handles :error, :exit, and :throw kinds.

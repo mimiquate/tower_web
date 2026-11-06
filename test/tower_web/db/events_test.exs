@@ -6,26 +6,30 @@ defmodule TowerWeb.DB.EventsTest do
 
   describe "create_event_for_issue/1" do
     test "creates an event with valid attrs" do
+      reason = %RuntimeError{message: "Something went wrong"}
+
       attrs = %{
         id: UUIDv7.generate(),
-        similarity_id: 12345,
         datetime: ~U[2026-04-16 12:00:00.000000Z],
         level: :error,
         kind: :error,
-        reason: %RuntimeError{message: "Something went wrong"}
+        reason: reason
       }
 
       assert {:ok, %{event: event}} = Events.create_event_for_issue(attrs)
       assert event.datetime == ~U[2026-04-16 12:00:00.000000Z]
       assert event.level == :error
       assert event.kind == :error
-      assert event.reason == %RuntimeError{message: "Something went wrong"}
-      assert event.similarity_id == 12345
+      assert event.reason == reason
+
+      normalized_reason = Exception.format(:error, reason, [])
+
+      assert event.similarity_id ==
+               TowerWeb.DB.SimilarityId.compute(:error, normalized_reason, [])
     end
 
-    test "returns error when other fields are missing, even with a valid similarity_id" do
-      assert {:error, :event, changeset, _changes} =
-               Events.create_event_for_issue(%{similarity_id: 1})
+    test "returns error when required fields are missing" do
+      assert {:error, :event, changeset, _changes} = Events.create_event_for_issue(%{})
 
       refute changeset.valid?
     end
@@ -38,7 +42,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -48,7 +51,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 12:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -58,7 +60,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -80,7 +81,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :message,
@@ -90,7 +90,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -107,7 +106,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :message,
@@ -124,7 +122,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :message,
@@ -140,7 +137,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :message,
@@ -150,7 +146,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -166,7 +161,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -176,7 +170,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -193,7 +186,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -203,7 +195,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -219,7 +210,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -235,7 +225,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -245,7 +234,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -262,7 +250,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -272,7 +259,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -282,7 +268,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: event3}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2026-05-08 12:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -304,7 +289,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -314,7 +298,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -324,7 +307,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2026-05-08 12:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -342,7 +324,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 08:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -352,7 +333,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -362,7 +342,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2026-05-08 14:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -385,7 +364,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: from,
           level: :error,
           kind: :error,
@@ -395,7 +373,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: to,
           level: :error,
           kind: :error,
@@ -411,7 +388,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 08:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -433,7 +409,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -443,7 +418,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -463,7 +437,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -473,7 +446,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -493,7 +465,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -503,7 +474,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :warning,
           kind: :error,
@@ -513,7 +483,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2026-05-08 14:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -526,14 +495,12 @@ defmodule TowerWeb.DB.EventsTest do
         )
 
       assert length(events) == 1
-      assert hd(events).similarity_id == 1
     end
 
     test "returns only the selected fields" do
       {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :message,
@@ -552,7 +519,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 99,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -568,7 +534,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: oldest}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-04-16 10:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -578,7 +543,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: newest}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -603,7 +567,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -613,7 +576,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: event2}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -623,7 +585,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: kept_event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -640,7 +601,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: oldest}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-04-16 10:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -650,7 +610,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: remaining}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-04-16 11:00:00.000000Z],
           level: :warning,
           kind: :message,
@@ -660,11 +619,10 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: only_event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
-          kind: :message,
-          reason: "issue 2, only event"
+          kind: :error,
+          reason: %RuntimeError{message: "issue 2, only event"}
         })
 
       assert {:ok, %{events: {2, _issue_ids}}} = Events.delete_events([oldest.id, only_event.id])
@@ -683,7 +641,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: a1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -693,7 +650,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: a2}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :error,
           kind: :error,
@@ -703,7 +659,6 @@ defmodule TowerWeb.DB.EventsTest do
       {:ok, %{event: b1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2026-05-08 12:00:00.000000Z],
           level: :warning,
           kind: :error,

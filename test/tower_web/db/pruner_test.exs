@@ -10,7 +10,6 @@ defmodule TowerWeb.DB.PrunerTest do
       Map.merge(
         %{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: DateTime.utc_now(),
           level: :error,
           kind: :error,
@@ -52,11 +51,16 @@ defmodule TowerWeb.DB.PrunerTest do
   test "keeps only the newest max_size_per_issue events per issue" do
     now = DateTime.utc_now()
 
-    e1 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -300, :second))
-    e2 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -200, :second))
-    e3 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -100, :second))
-    e4 = insert_event(similarity_id: 1, datetime: now)
-    other = insert_event(similarity_id: 2, datetime: DateTime.add(now, -500, :second))
+    e1 = insert_event(datetime: DateTime.add(now, -300, :second))
+    e2 = insert_event(datetime: DateTime.add(now, -200, :second))
+    e3 = insert_event(datetime: DateTime.add(now, -100, :second))
+    e4 = insert_event(datetime: now)
+
+    other =
+      insert_event(
+        reason: %ArgumentError{message: "different issue"},
+        datetime: DateTime.add(now, -500, :second)
+      )
 
     prune(max_size_per_issue: 2, max_age: {999_999_999, :seconds})
 
@@ -69,9 +73,19 @@ defmodule TowerWeb.DB.PrunerTest do
   test "prunes per issue_id, not per similarity_id, after a merge" do
     now = DateTime.utc_now()
 
-    e1 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -300, :second))
-    e2 = insert_event(similarity_id: 2, datetime: DateTime.add(now, -200, :second))
-    e3 = insert_event(similarity_id: 2, datetime: now)
+    e1 = insert_event(datetime: DateTime.add(now, -300, :second))
+
+    e2 =
+      insert_event(
+        reason: %ArgumentError{message: "different issue"},
+        datetime: DateTime.add(now, -200, :second)
+      )
+
+    e3 =
+      insert_event(
+        reason: %ArgumentError{message: "different issue"},
+        datetime: now
+      )
 
     issue_id_1 = Events.get_event(e1.id).issue_id
     issue_id_2 = Events.get_event(e2.id).issue_id
@@ -93,10 +107,10 @@ defmodule TowerWeb.DB.PrunerTest do
   test "prunes per issue_id, not per similarity_id, after an unmerge" do
     now = DateTime.utc_now()
 
-    e1 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -300, :second))
-    e2 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -200, :second))
-    e3 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -100, :second))
-    e4 = insert_event(similarity_id: 1, datetime: now)
+    e1 = insert_event(datetime: DateTime.add(now, -300, :second))
+    e2 = insert_event(datetime: DateTime.add(now, -200, :second))
+    e3 = insert_event(datetime: DateTime.add(now, -100, :second))
+    e4 = insert_event(datetime: now)
 
     {1, nil} = Events.unmerge_events([e1.id])
 
@@ -114,7 +128,7 @@ defmodule TowerWeb.DB.PrunerTest do
 
     events =
       for i <- 1..10 do
-        insert_event(similarity_id: i, datetime: DateTime.add(now, -(10 - i), :second))
+        insert_event(datetime: DateTime.add(now, -(10 - i), :second))
       end
 
     kept = Enum.take(events, -2)

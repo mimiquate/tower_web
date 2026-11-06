@@ -19,7 +19,6 @@ defmodule TowerWeb.DB.BurstProtectorTest do
   defp event_attrs do
     %{
       id: UUIDv7.generate(),
-      similarity_id: 1,
       datetime: DateTime.utc_now(),
       level: :error,
       kind: :error,

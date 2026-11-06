@@ -23,7 +23,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
           level: :error,
           kind: :error,
@@ -64,7 +63,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2024-03-15 10:30:00Z],
           level: :error,
           kind: :error,
@@ -76,7 +74,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, _event2} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 2,
           datetime: ~U[2024-03-14 09:00:00Z],
           level: :warning,
           kind: :throw,
@@ -115,7 +112,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 3,
           datetime: ~U[2024-03-15 10:30:00Z],
           level: :error,
           kind: :error,
@@ -158,7 +154,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 4,
           datetime: ~U[2024-03-15 10:30:00Z],
           level: :error,
           kind: :error,
@@ -189,7 +184,6 @@ defmodule TowerWeb.Live.Occurrences.ShowTest do
       {:ok, %{event: event}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
-          similarity_id: 1,
           datetime: ~U[2024-03-15 10:30:00Z],
           level: :error,
           kind: :message,
