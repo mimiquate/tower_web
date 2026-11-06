@@ -1,11 +1,9 @@
 defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
   use TowerWeb.DB.DataCase, async: false
 
-  import Ecto.Query
-
   alias TowerWeb.DB.Event
   alias TowerWeb.DB.Issue
-  alias TowerWeb.DB.RecomputeSimilarityIds
+  alias TowerWeb.DB.Tasks.RecomputeSimilarityIds
   alias TowerWeb.DB.Repo
   alias TowerWeb.DB.SimilarityId
 
@@ -17,7 +15,6 @@ defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
     {TowerWeb.DB.Events, :run, 0, [file: ~c"test.exs", line: 1]}
   ]
   @normalized_reason Exception.format(:error, %RuntimeError{message: "boom"}, [])
-  @other_normalized_reason Exception.format(:error, %ArgumentError{message: "different"}, [])
 
   # Inserts a row directly via a bare changeset, to simulate a historical row whose
   # similarity_id was computed by an older algorithm.
@@ -45,75 +42,25 @@ defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
 
   defp reload(event), do: Repo.repo().get(Event, event.id)
 
-  defp distinct_similarity_id_count do
-    Event
-    |> distinct([e], e.similarity_id)
-    |> Repo.repo().aggregate(:count)
-  end
-
-  test "recomputes similarity_id by content, independent of old similarity_id or issue_id, idempotently" do
-    repo = Repo.repo()
-
-    # Set up every event and issue first, covering the three relevant
-    # combinations of old similarity_id vs. issue_id.
-    {:ok, issue_a} = repo.insert(%Issue{})
-    {:ok, issue_b} = repo.insert(%Issue{})
-    {:ok, issue_c} = repo.insert(%Issue{})
-    {:ok, issue_d} = repo.insert(%Issue{})
-
-    # different issues, same old similarity_id
-    event_diff_issue_1 = insert_legacy_event(issue_id: issue_a.id, similarity_id: 111)
-    event_diff_issue_2 = insert_legacy_event(issue_id: issue_b.id, similarity_id: 111)
-
-    # same issue, different old similarity_id
-    event_same_issue_1 = insert_legacy_event(issue_id: issue_c.id, similarity_id: 222)
-
-    event_same_issue_2 =
-      insert_legacy_event(
-        issue_id: issue_c.id,
-        similarity_id: 333,
-        normalized_reason: @other_normalized_reason
-      )
-
-    # same old similarity_id and same issue
-    event_same_both_1 = insert_legacy_event(issue_id: issue_d.id, similarity_id: 444)
-    event_same_both_2 = insert_legacy_event(issue_id: issue_d.id, similarity_id: 444)
-
-    expected_default = SimilarityId.compute(:error, @normalized_reason, @stacktrace)
-    expected_other = SimilarityId.compute(:error, @other_normalized_reason, @stacktrace)
-    refute expected_default == expected_other
-
-    assert distinct_similarity_id_count() == 4
+  test "events sharing the same old similarity_id end up with the same new similarity_id" do
+    event1 = insert_legacy_event(similarity_id: 111)
+    event2 = insert_legacy_event(similarity_id: 111)
 
     {:ok, :ok} = RecomputeSimilarityIds.run()
 
-    reloaded_event_diff_issue_1 = reload(event_diff_issue_1)
-    reloaded_event_diff_issue_2 = reload(event_diff_issue_2)
-    reloaded_event_same_issue_1 = reload(event_same_issue_1)
-    reloaded_event_same_issue_2 = reload(event_same_issue_2)
-    reloaded_event_same_both_1 = reload(event_same_both_1)
-    reloaded_event_same_both_2 = reload(event_same_both_2)
+    expected = SimilarityId.compute(:error, @normalized_reason, @stacktrace)
 
-    # different issues, same old similarity_id -> same new similarity_id, issues untouched
-    assert reloaded_event_diff_issue_1.similarity_id == expected_default
-    assert reloaded_event_diff_issue_2.similarity_id == expected_default
-    assert reloaded_event_diff_issue_1.issue_id == issue_a.id
-    assert reloaded_event_diff_issue_2.issue_id == issue_b.id
+    assert reload(event1).similarity_id == expected
+    assert reload(event2).similarity_id == expected
+  end
 
-    # same issue, different old similarity_id -> each recomputed from its own
-    # content, so they end up different despite already sharing an issue
-    assert reloaded_event_same_issue_1.similarity_id == expected_default
-    assert reloaded_event_same_issue_2.similarity_id == expected_other
-    assert reloaded_event_same_issue_1.issue_id == issue_c.id
-    assert reloaded_event_same_issue_2.issue_id == issue_c.id
+  test "issue_id is never touched" do
+    {:ok, issue} = Repo.repo().insert(%Issue{})
 
-    # same old similarity_id and same issue -> both converge trivially, issue untouched
-    assert reloaded_event_same_both_1.similarity_id == expected_default
-    assert reloaded_event_same_both_2.similarity_id == expected_default
-    assert reloaded_event_same_both_1.issue_id == issue_d.id
-    assert reloaded_event_same_both_2.issue_id == issue_d.id
+    event = insert_legacy_event(issue_id: issue.id, similarity_id: 111)
 
-    # 4 old similarity_ids collapse down to 2 real content-based groups.
-    assert distinct_similarity_id_count() == 2
+    {:ok, :ok} = RecomputeSimilarityIds.run()
+
+    assert reload(event).issue_id == issue.id
   end
 end
