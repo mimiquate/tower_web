@@ -1,4 +1,4 @@
-defmodule TowerWeb.DB.RecomputeSimilarityIds do
+defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIds do
   @moduledoc """
   Recomputes `similarity_id` for every `tower_web_events` row using the
   current grouping algorithm.
