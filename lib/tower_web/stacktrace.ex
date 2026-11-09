@@ -1,4 +1,4 @@
-defmodule TowerWeb.DB.Stacktrace do
+defmodule TowerWeb.Stacktrace do
   @moduledoc """
   Stacktrace-frame logic and display formatting, shared between grouping
   (`TowerWeb.DB.SimilarityId`) and the dashboard UI (`TowerWeb.CoreComponents`).

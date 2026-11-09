@@ -6,7 +6,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.Selection
-  alias TowerWeb.DB.Stacktrace
+  alias TowerWeb.Stacktrace
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do

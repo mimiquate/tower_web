@@ -7,7 +7,7 @@ defmodule TowerWeb.CoreComponents do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
-  alias TowerWeb.DB.Stacktrace
+  alias TowerWeb.Stacktrace
 
   attr(:class, :string, default: "size-4")
 
