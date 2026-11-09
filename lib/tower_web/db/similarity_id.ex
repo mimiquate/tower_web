@@ -2,14 +2,17 @@ defmodule TowerWeb.DB.SimilarityId do
   @moduledoc """
   Computes the grouping key used to bucket events into issues.
 
-  Keys on kind/exception-module plus the closest host-app stacktrace line
-  (module, function, arity, file, line) - no message/reason content at all.
+  Keys on kind/exception-module plus a stacktrace line (module, function, arity,
+  file, line) - no message/reason content at all. The line used is the closest
+  host-app frame if one can be identified; otherwise it falls back to the first
+  frame regardless of which application it belongs to, or is omitted entirely if
+  the stacktrace has no resolvable frame at all.
   """
 
   alias TowerWeb.DB.StacktraceFrame
 
   def compute(kind, normalized_reason, stacktrace) do
-    kind |> components(normalized_reason, stacktrace) |> :erlang.phash2()
+    components(kind, normalized_reason, stacktrace) |> :erlang.phash2()
   end
 
   def components(kind, normalized_reason, stacktrace) do

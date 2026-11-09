@@ -23,7 +23,8 @@ defmodule TowerWeb.DB.SimilarityIdTest do
 
     normalized_exit = Exception.format(:exit, "boom", [])
 
-    assert SimilarityId.components(:exit, normalized_exit, stacktrace) == {:exit, TowerWeb.DB.Events, :run, 1, ~c"test.exs", 10}
+    assert SimilarityId.components(:exit, normalized_exit, stacktrace) ==
+             {:exit, TowerWeb.DB.Events, :run, 1, ~c"test.exs", 10}
   end
 
   test "uses the event kind and host app frame for non-error events" do
