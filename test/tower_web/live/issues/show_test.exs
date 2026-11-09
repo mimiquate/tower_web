@@ -17,11 +17,11 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           similarity_id: 2,
           datetime: DateTime.add(now, -5, :day),
           level: :warning,
-          kind: :throw,
-          reason: "First occurrence message"
+          kind: :error,
+          reason: %RuntimeError{message: "First occurrence message"}
         })
 
-      {:ok, _latest_event} =
+      {:ok, %{event: _}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
@@ -31,14 +31,14 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           reason: %RuntimeError{message: "Latest error message"}
         })
 
-      {:ok, _old_event} =
+      {:ok, %{event: _}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
           datetime: DateTime.add(now, -45, :day),
           level: :error,
           kind: :error,
-          reason: "Old occurrence outside chart range"
+          reason: %RuntimeError{message: "Old occurrence outside chart range"}
         })
 
       {:ok, _other_issue_event} =
@@ -48,7 +48,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           datetime: DateTime.add(now, -1, :day),
           level: :error,
           kind: :error,
-          reason: "Unrelated issue message"
+          reason: %ArgumentError{message: "Unrelated issue message"}
         })
 
       socket = %Phoenix.LiveView.Socket{assigns: %{flash: %{}, __changed__: %{}}}
@@ -105,7 +105,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           similarity_id: 2,
           datetime: ~U[2024-03-15 12:30:00Z],
           level: :error,
-          kind: :message,
+          kind: :throw,
           reason: "Unrelated occurrence"
         })
 

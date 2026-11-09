@@ -15,7 +15,7 @@ defmodule TowerWeb.DB.SimilarityIdTest do
              {"RuntimeError", TowerWeb.DB.Events, :run, 1, ~c"test.exs", 10}
   end
 
-  test "uses the exception module for :error events without a stacktrace frame" do
+  test "non-:error kinds use the kind atom directly, plus the host-app frame" do
     stacktrace = [
       {:some_library_module, :internal_fun, 2, [file: ~c"lib.ex", line: 5]},
       {TowerWeb.DB.Events, :run, 1, [file: ~c"test.exs", line: 10]}
@@ -27,13 +27,13 @@ defmodule TowerWeb.DB.SimilarityIdTest do
              {:exit, TowerWeb.DB.Events, :run, 1, ~c"test.exs", 10}
   end
 
-  test "uses the event kind and host app frame for non-error events" do
+  test "non-:error kinds collapse to just the kind atom when there's no stacktrace frame" do
     normalized_throw = Exception.format(:throw, "boom", [])
 
     assert SimilarityId.components(:throw, normalized_throw, nil) == {:throw}
   end
 
-  test "uses only the event kind for non-error events without a stacktrace frame" do
+  test ":error kind collapses to just the exception module name when there's no stacktrace frame" do
     normalized_reason = Exception.format(:error, %RuntimeError{message: "boom"}, [])
 
     assert SimilarityId.components(:error, normalized_reason, nil) == {"RuntimeError"}

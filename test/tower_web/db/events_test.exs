@@ -20,7 +20,11 @@ defmodule TowerWeb.DB.EventsTest do
       assert event.level == :error
       assert event.kind == :error
       assert event.reason == %RuntimeError{message: "Something went wrong"}
-      assert event.similarity_id == 12345
+
+      normalized_reason = Exception.format(:error, attrs.reason, [])
+
+      assert event.similarity_id ==
+               TowerWeb.DB.SimilarityId.compute(:error, normalized_reason, [])
     end
 
     test "returns error when other fields are missing, even with a valid similarity_id" do
@@ -490,7 +494,7 @@ defmodule TowerWeb.DB.EventsTest do
       from = ~U[2026-05-08 09:00:00.000000Z]
       to = ~U[2026-05-08 12:00:00.000000Z]
 
-      {:ok, _} =
+      {:ok, %{event: event1}} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 1,
@@ -526,7 +530,7 @@ defmodule TowerWeb.DB.EventsTest do
         )
 
       assert length(events) == 1
-      assert hd(events).similarity_id == 1
+      assert hd(events).id == event1.id
     end
 
     test "returns only the selected fields" do
@@ -663,7 +667,7 @@ defmodule TowerWeb.DB.EventsTest do
           similarity_id: 2,
           datetime: ~U[2026-04-16 12:00:00.000000Z],
           level: :warning,
-          kind: :message,
+          kind: :throw,
           reason: "issue 2, only event"
         })
 

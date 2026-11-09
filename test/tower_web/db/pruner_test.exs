@@ -56,7 +56,12 @@ defmodule TowerWeb.DB.PrunerTest do
     e2 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -200, :second))
     e3 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -100, :second))
     e4 = insert_event(similarity_id: 1, datetime: now)
-    other = insert_event(similarity_id: 2, datetime: DateTime.add(now, -500, :second))
+    other =
+      insert_event(
+        similarity_id: 2,
+        reason: %ArgumentError{message: "different issue"},
+        datetime: DateTime.add(now, -500, :second)
+      )
 
     prune(max_size_per_issue: 2, max_age: {999_999_999, :seconds})
 
@@ -70,8 +75,20 @@ defmodule TowerWeb.DB.PrunerTest do
     now = DateTime.utc_now()
 
     e1 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -300, :second))
-    e2 = insert_event(similarity_id: 2, datetime: DateTime.add(now, -200, :second))
-    e3 = insert_event(similarity_id: 2, datetime: now)
+
+    e2 =
+      insert_event(
+        similarity_id: 2,
+        reason: %ArgumentError{message: "different issue"},
+        datetime: DateTime.add(now, -200, :second)
+      )
+
+    e3 =
+      insert_event(
+        similarity_id: 2,
+        reason: %ArgumentError{message: "different issue"},
+        datetime: now
+      )
 
     issue_id_1 = Events.get_event(e1.id).issue_id
     issue_id_2 = Events.get_event(e2.id).issue_id

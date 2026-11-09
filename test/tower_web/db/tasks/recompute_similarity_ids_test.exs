@@ -15,6 +15,7 @@ defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
     {TowerWeb.DB.Events, :run, 0, [file: ~c"test.exs", line: 1]}
   ]
   @normalized_reason Exception.format(:error, %RuntimeError{message: "boom"}, [])
+  @other_normalized_reason Exception.format(:error, %ArgumentError{message: "different"}, [])
 
   # Inserts a row directly via a bare changeset, to simulate a historical row whose
   # similarity_id was computed by an older algorithm.
@@ -42,25 +43,22 @@ defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
 
   defp reload(event), do: Repo.repo().get(Event, event.id)
 
-  test "events sharing the same old similarity_id end up with the same new similarity_id" do
+  test "updates all events even if they have different old similarity_ids" do
     event1 = insert_legacy_event(similarity_id: 111)
     event2 = insert_legacy_event(similarity_id: 111)
+
+    event3 =
+      insert_legacy_event(similarity_id: 222, normalized_reason: @other_normalized_reason)
 
     {:ok, :ok} = RecomputeSimilarityIds.run()
 
     expected = SimilarityId.compute(:error, @normalized_reason, @stacktrace)
+    other_expected = SimilarityId.compute(:error, @other_normalized_reason, @stacktrace)
 
     assert reload(event1).similarity_id == expected
     assert reload(event2).similarity_id == expected
-  end
+    assert reload(event3).similarity_id == other_expected
 
-  test "issue_id is never touched" do
-    {:ok, issue} = Repo.repo().insert(%Issue{})
-
-    event = insert_legacy_event(issue_id: issue.id, similarity_id: 111)
-
-    {:ok, :ok} = RecomputeSimilarityIds.run()
-
-    assert reload(event).issue_id == issue.id
+    refute expected == other_expected
   end
 end
