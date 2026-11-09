@@ -19,16 +19,17 @@ defmodule TowerWeb.Stacktrace do
   end
 
   @doc """
-  Picks the closest frame belonging to `host_otp_app`, falling back to the first
+  Picks the closest frame belonging to the host app, falling back to the first
   frame otherwise. Anonymous-function frames (3-tuples) are filtered out first, since
   neither `host_app_entry?/2` nor MFA formatting can handle that shape.
   """
-  def pick_frame(stacktrace, host_otp_app) when is_list(stacktrace) do
+  def pick_frame(stacktrace) when is_list(stacktrace) do
     frames = Enum.filter(stacktrace, &match?({_, _, _, _}, &1))
+    host_otp_app = host_otp_app()
     Enum.find(frames, &host_app_entry?(&1, host_otp_app)) || List.first(frames)
   end
 
-  def pick_frame(_stacktrace, _host_otp_app), do: nil
+  def pick_frame(_stacktrace), do: nil
 
   defp host_app_entry?(_entry, nil), do: false
 
@@ -44,11 +45,11 @@ defmodule TowerWeb.Stacktrace do
   def normalize_arity(arity) when is_integer(arity), do: arity
 
   @doc """
-  Formats the closest `host_otp_app` frame (or the first frame otherwise) for
+  Formats the closest host-app frame (or the first frame otherwise) for
   display, e.g. "MyApp.Worker.perform/1".
   """
-  def pick_and_format_last_stacktrace_frame(stacktrace, host_otp_app \\ nil) do
-    stacktrace |> pick_frame(host_otp_app) |> format_mfa_entry()
+  def pick_and_format_last_stacktrace_frame(stacktrace) do
+    stacktrace |> pick_frame() |> format_mfa_entry()
   end
 
   defp format_mfa_entry(nil), do: nil

@@ -724,14 +724,13 @@ defmodule TowerWeb.CoreComponents do
   end
 
   attr(:stacktrace, :any, required: true)
-  attr(:host_otp_app, :atom, required: true)
 
   def last_stacktrace_line(assigns) do
     assigns =
       assign(
         assigns,
         :line,
-        Stacktrace.pick_and_format_last_stacktrace_frame(assigns.stacktrace, assigns.host_otp_app)
+        Stacktrace.pick_and_format_last_stacktrace_frame(assigns.stacktrace)
       )
 
     ~H"""

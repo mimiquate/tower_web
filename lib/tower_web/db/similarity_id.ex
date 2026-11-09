@@ -20,7 +20,7 @@ defmodule TowerWeb.DB.SimilarityId do
   end
 
   defp build(kind_or_module, stacktrace) do
-    case Stacktrace.pick_frame(stacktrace, Stacktrace.host_otp_app()) do
+    case Stacktrace.pick_frame(stacktrace) do
       nil ->
         {kind_or_module}
 

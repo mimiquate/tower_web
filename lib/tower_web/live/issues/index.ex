@@ -6,7 +6,6 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.Selection
-  alias TowerWeb.Stacktrace
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -26,8 +25,7 @@ defmodule TowerWeb.Live.Issues.Index do
        show_delete_modal: false,
        show_merge_modal: false,
        datetime_range_options: Filters.datetime_range_options(),
-       datetime_range_menu_open: false,
-       host_otp_app: Stacktrace.host_otp_app()
+       datetime_range_menu_open: false
      )}
   end
 
@@ -207,7 +205,7 @@ defmodule TowerWeb.Live.Issues.Index do
               }
             />
             <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
-            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} host_otp_app={@host_otp_app} />
+            <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} />
           </div>
         </td>
         <td class="py-3 pl-6">
