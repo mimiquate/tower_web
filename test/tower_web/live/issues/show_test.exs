@@ -21,7 +21,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           reason: %RuntimeError{message: "First occurrence message"}
         })
 
-      {:ok, %{event: _}} =
+      {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
@@ -31,7 +31,7 @@ defmodule TowerWeb.Live.Issues.ShowTest do
           reason: %RuntimeError{message: "Latest error message"}
         })
 
-      {:ok, %{event: _}} =
+      {:ok, _} =
         Events.create_event_for_issue(%{
           id: UUIDv7.generate(),
           similarity_id: 2,
