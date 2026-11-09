@@ -63,7 +63,7 @@ defmodule TowerWeb.DB.IssuesTest do
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
           kind: :error,
-          reason: %RuntimeError{message: "Database connection failed"},
+          reason: %RuntimeError{message: "Database connection failed"}
         })
 
       {:ok, _} =

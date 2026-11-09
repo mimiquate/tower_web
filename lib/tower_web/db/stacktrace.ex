@@ -47,7 +47,7 @@ defmodule TowerWeb.DB.Stacktrace do
   Formats the closest `host_otp_app` frame (or the first frame otherwise) for
   display, e.g. "MyApp.Worker.perform/1".
   """
-  def last_stacktrace_line(stacktrace, host_otp_app \\ nil) do
+  def pick_and_format_last_stacktrace_frame(stacktrace, host_otp_app \\ nil) do
     stacktrace |> pick_frame(host_otp_app) |> format_mfa_entry()
   end
 

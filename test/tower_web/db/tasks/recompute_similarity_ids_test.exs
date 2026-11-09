@@ -2,7 +2,6 @@ defmodule TowerWeb.DB.Tasks.RecomputeSimilarityIdsTest do
   use TowerWeb.DB.DataCase, async: false
 
   alias TowerWeb.DB.Event
-  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Tasks.RecomputeSimilarityIds
   alias TowerWeb.DB.Repo
   alias TowerWeb.DB.SimilarityId

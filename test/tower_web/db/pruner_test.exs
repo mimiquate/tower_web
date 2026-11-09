@@ -56,6 +56,7 @@ defmodule TowerWeb.DB.PrunerTest do
     e2 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -200, :second))
     e3 = insert_event(similarity_id: 1, datetime: DateTime.add(now, -100, :second))
     e4 = insert_event(similarity_id: 1, datetime: now)
+
     other =
       insert_event(
         similarity_id: 2,

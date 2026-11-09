@@ -731,7 +731,7 @@ defmodule TowerWeb.CoreComponents do
       assign(
         assigns,
         :line,
-        Stacktrace.last_stacktrace_line(assigns.stacktrace, assigns.host_otp_app)
+        Stacktrace.pick_and_format_last_stacktrace_frame(assigns.stacktrace, assigns.host_otp_app)
       )
 
     ~H"""
