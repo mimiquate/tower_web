@@ -550,7 +550,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
-          reason: %RuntimeError{message: "Second issue"}
+          reason: %ArgumentError{message: "Second issue"}
         })
 
       events = Events.list_events(preload_issue?: true)
@@ -590,7 +590,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
-          reason: %RuntimeError{message: "Second issue"}
+          reason: %ArgumentError{message: "Second issue"}
         })
 
       {:ok, %{event: event3}} =
@@ -600,7 +600,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -3, :hour),
           kind: :error,
           level: :error,
-          reason: %RuntimeError{message: "Third issue"}
+          reason: %ArithmeticError{message: "Third issue"}
         })
 
       events = Events.list_events(preload_issue?: true)

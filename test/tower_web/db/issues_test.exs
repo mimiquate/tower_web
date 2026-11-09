@@ -62,8 +62,8 @@ defmodule TowerWeb.DB.IssuesTest do
           similarity_id: 1,
           datetime: ~U[2026-05-08 10:00:00.000000Z],
           level: :error,
-          kind: :message,
-          reason: "Database connection failed"
+          kind: :error,
+          reason: %RuntimeError{message: "Database connection failed"}
         })
 
       {:ok, _} =
@@ -112,7 +112,7 @@ defmodule TowerWeb.DB.IssuesTest do
           datetime: ~U[2026-05-08 12:00:00.000000Z],
           level: :error,
           kind: :error,
-          reason: %RuntimeError{message: "error C"}
+          reason: %ArithmeticError{message: "error C"}
         })
 
       page_1 = Issues.list_issues(limit: 2, offset: 0)
@@ -150,7 +150,7 @@ defmodule TowerWeb.DB.IssuesTest do
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :error,
           kind: :error,
-          reason: %RuntimeError{message: "error C"}
+          reason: %ArithmeticError{message: "error C"}
         })
 
       issues = Issues.list_issues()
@@ -343,7 +343,7 @@ defmodule TowerWeb.DB.IssuesTest do
           datetime: ~U[2026-05-08 11:00:00.000000Z],
           level: :error,
           kind: :error,
-          reason: %RuntimeError{message: "source issue event"}
+          reason: %ArithmeticError{message: "source issue event"}
         })
 
       {:ok, %{event: untouched_event}} =
@@ -470,7 +470,7 @@ defmodule TowerWeb.DB.IssuesTest do
           datetime: ~U[2026-05-08 12:00:00.000000Z],
           level: :error,
           kind: :error,
-          reason: %RuntimeError{message: "first occurrence"}
+          reason: %ArgumentError{message: "first occurrence"}
         })
 
       {:ok, _} =

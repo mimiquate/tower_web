@@ -358,7 +358,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime: ~U[2024-03-15 11:00:00Z],
           kind: :error,
           level: :error,
-          reason: "Unrelated error"
+          reason: %ArgumentError{message: "Unrelated error"}
         })
 
       socket = socket_with_issues()
