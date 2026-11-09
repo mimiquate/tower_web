@@ -7,7 +7,7 @@ defmodule TowerWeb.CoreComponents do
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Level
   alias TowerWeb.Live.Pagination
-  alias TowerWeb.Live.StacktraceFormatter
+  alias TowerWeb.DB.Stacktrace
 
   attr(:class, :string, default: "size-4")
 
@@ -731,7 +731,7 @@ defmodule TowerWeb.CoreComponents do
       assign(
         assigns,
         :line,
-        StacktraceFormatter.last_stacktrace_line(assigns.stacktrace, assigns.host_otp_app)
+        Stacktrace.last_stacktrace_line(assigns.stacktrace, assigns.host_otp_app)
       )
 
     ~H"""

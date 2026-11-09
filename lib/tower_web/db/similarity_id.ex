@@ -9,7 +9,7 @@ defmodule TowerWeb.DB.SimilarityId do
   the stacktrace has no resolvable frame at all.
   """
 
-  alias TowerWeb.DB.StacktraceFrame
+  alias TowerWeb.DB.Stacktrace
 
   def compute(kind, normalized_reason, stacktrace) do
     components(kind, normalized_reason, stacktrace) |> :erlang.phash2()
@@ -20,7 +20,7 @@ defmodule TowerWeb.DB.SimilarityId do
   end
 
   defp build(kind_or_module, stacktrace) do
-    case StacktraceFrame.pick_frame(stacktrace, StacktraceFrame.host_otp_app()) do
+    case Stacktrace.pick_frame(stacktrace, Stacktrace.host_otp_app()) do
       nil ->
         {kind_or_module}
 
@@ -29,7 +29,7 @@ defmodule TowerWeb.DB.SimilarityId do
           kind_or_module,
           module,
           function,
-          StacktraceFrame.normalize_arity(arity_or_args),
+          Stacktrace.normalize_arity(arity_or_args),
           opts[:file],
           opts[:line]
         }

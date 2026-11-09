@@ -6,7 +6,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.Selection
-  alias TowerWeb.DB.StacktraceFrame
+  alias TowerWeb.DB.Stacktrace
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -25,7 +25,7 @@ defmodule TowerWeb.Live.Occurrences.Index do
        selected_occurrences_ids: MapSet.new(),
        show_delete_modal: false,
        show_unmerge_modal: false,
-       host_otp_app: StacktraceFrame.host_otp_app()
+       host_otp_app: Stacktrace.host_otp_app()
      )}
   end
 

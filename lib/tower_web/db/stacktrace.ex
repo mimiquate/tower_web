@@ -1,7 +1,7 @@
-defmodule TowerWeb.DB.StacktraceFrame do
+defmodule TowerWeb.DB.Stacktrace do
   @moduledoc """
-  Core stacktrace-frame logic shared between grouping (`TowerWeb.DB.SimilarityId`)
-  and display (`TowerWeb.Live.StacktraceFormatter`) - no UI concerns here.
+  Stacktrace-frame logic and display formatting, shared between grouping
+  (`TowerWeb.DB.SimilarityId`) and the dashboard UI (`TowerWeb.CoreComponents`).
   """
 
   def host_otp_app do
@@ -42,4 +42,18 @@ defmodule TowerWeb.DB.StacktraceFrame do
   """
   def normalize_arity(arity_or_args) when is_list(arity_or_args), do: length(arity_or_args)
   def normalize_arity(arity) when is_integer(arity), do: arity
+
+  @doc """
+  Formats the closest `host_otp_app` frame (or the first frame otherwise) for
+  display, e.g. "MyApp.Worker.perform/1".
+  """
+  def last_stacktrace_line(stacktrace, host_otp_app \\ nil) do
+    stacktrace |> pick_frame(host_otp_app) |> format_mfa_entry()
+  end
+
+  defp format_mfa_entry(nil), do: nil
+
+  defp format_mfa_entry({module, function, arity_or_args, _location}) do
+    Exception.format_mfa(module, function, normalize_arity(arity_or_args))
+  end
 end

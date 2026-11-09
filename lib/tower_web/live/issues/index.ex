@@ -6,7 +6,7 @@ defmodule TowerWeb.Live.Issues.Index do
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
   alias TowerWeb.Live.Selection
-  alias TowerWeb.DB.StacktraceFrame
+  alias TowerWeb.DB.Stacktrace
 
   @impl Phoenix.LiveView
   def mount(_params, session, socket) do
@@ -27,7 +27,7 @@ defmodule TowerWeb.Live.Issues.Index do
        show_merge_modal: false,
        datetime_range_options: Filters.datetime_range_options(),
        datetime_range_menu_open: false,
-       host_otp_app: StacktraceFrame.host_otp_app()
+       host_otp_app: Stacktrace.host_otp_app()
      )}
   end
 
