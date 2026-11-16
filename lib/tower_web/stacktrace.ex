@@ -28,8 +28,6 @@ defmodule TowerWeb.Stacktrace do
 
   def pick_frame(_stacktrace), do: nil
 
-  defp host_app_entry?(_entry, nil), do: false
-
   defp host_app_entry?({module, _function, _arity_or_args, _location}, host_otp_app) do
     match?({:ok, ^host_otp_app}, :application.get_application(module))
   end
