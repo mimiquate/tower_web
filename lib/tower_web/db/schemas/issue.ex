@@ -6,6 +6,8 @@ defmodule TowerWeb.DB.Issue do
 
   alias TowerWeb.DB.Event
 
+  @primary_key {:id, UUIDv7.Type, autogenerate: true}
+
   schema "tower_web_issues" do
     field(:count_events, :integer, virtual: true)
     field(:state, Ecto.Enum, values: [:unresolved, :resolved], default: :unresolved)

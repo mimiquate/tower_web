@@ -97,10 +97,7 @@ defmodule TowerWeb.Live.Filters do
   end
 
   def valid_issue_id?(id) do
-    case Integer.parse(id) do
-      {_int, ""} -> true
-      _ -> false
-    end
+    match?({:ok, _}, Ecto.UUID.dump(id))
   end
 
   def parse_issue_ids(""), do: []
@@ -118,7 +115,7 @@ defmodule TowerWeb.Live.Filters do
     issue_ids_string
     |> String.split(",")
     |> Enum.map(&String.trim/1)
-    |> Enum.all?(&(&1 =~ ~r/^\d+$/))
+    |> Enum.all?(&valid_issue_id?/1)
   end
 
   def compact_filters(filters) do

@@ -1,7 +1,7 @@
-defmodule TowerWeb.DB.BackfillIssueIdsTest do
+defmodule TowerWeb.DB.Tasks.BackfillIssueIdsTest do
   use TowerWeb.DB.DataCase, async: false
 
-  alias TowerWeb.DB.BackfillIssueIds
+  alias TowerWeb.DB.Tasks.BackfillIssueIds
   alias TowerWeb.DB.Event
   alias TowerWeb.DB.Events
   alias TowerWeb.DB.Repo

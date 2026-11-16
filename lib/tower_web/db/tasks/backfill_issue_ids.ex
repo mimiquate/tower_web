@@ -1,4 +1,4 @@
-defmodule TowerWeb.DB.BackfillIssueIds do
+defmodule TowerWeb.DB.Tasks.BackfillIssueIds do
   @moduledoc """
   Backfills `issue_id` on `tower_web_events` rows that don't have one yet.
 

@@ -38,7 +38,6 @@ defmodule TowerWeb.DB.Issues do
   def get_issue(id, opts \\ []) do
     repo = Repo.repo()
     recent_occurrences_limit = Keyword.get(opts, :recent_occurrences_limit)
-    id = to_integer(id)
 
     case list_issues(filters: [id: id], limit: 1) do
       [] ->
@@ -137,9 +136,6 @@ defmodule TowerWeb.DB.Issues do
     result
   end
 
-  defp to_integer(id) when is_integer(id), do: id
-  defp to_integer(id) when is_binary(id), do: String.to_integer(id)
-
   defp filter_where(filters) do
     Enum.reduce(filters, dynamic(true), fn
       {:search, value}, dynamic when value != "" ->
@@ -154,8 +150,7 @@ defmodule TowerWeb.DB.Issues do
         matching_ids = from(e in Event, where: e.level == ^value, select: e.issue_id)
         dynamic([i], ^dynamic and i.id in subquery(matching_ids))
 
-      {:id, value}, dynamic
-      when is_binary(value) or is_list(value) or is_integer(value) ->
+      {:id, value}, dynamic when is_binary(value) or is_list(value) ->
         value = List.wrap(value)
         dynamic([i], ^dynamic and i.id in ^value)
 

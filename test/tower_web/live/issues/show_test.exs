@@ -195,7 +195,8 @@ defmodule TowerWeb.Live.Issues.ShowTest do
         redirected: nil
       }
 
-      {:ok, updated_socket} = Show.mount(%{"id" => "999999"}, %{"base_path" => "/tower"}, socket)
+      {:ok, updated_socket} =
+        Show.mount(%{"id" => UUIDv7.generate()}, %{"base_path" => "/tower"}, socket)
 
       assert updated_socket.redirected == {:live, :redirect, %{to: "/tower/issues", kind: :push}}
       assert updated_socket.assigns.flash["error"] == "Issue not found"

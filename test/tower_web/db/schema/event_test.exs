@@ -5,10 +5,12 @@ defmodule TowerWeb.DB.EventTest do
 
   describe "changeset/2" do
     test "valid with required fields" do
+      issue_id = UUIDv7.generate()
+
       attrs = %{
         id: UUIDv7.generate(),
         similarity_id: 12345,
-        issue_id: 12345,
+        issue_id: issue_id,
         datetime: ~U[2026-04-16 12:00:00.000000Z],
         level: :error,
         kind: :error,
@@ -23,14 +25,14 @@ defmodule TowerWeb.DB.EventTest do
       assert changeset.changes.kind == :error
       assert changeset.changes.reason == %{message: "Something went wrong"}
       assert changeset.changes.similarity_id == 12345
-      assert changeset.changes.issue_id == 12345
+      assert changeset.changes.issue_id == issue_id
     end
 
     test "accepts request_data" do
       attrs = %{
         id: UUIDv7.generate(),
         similarity_id: 12345,
-        issue_id: 12345,
+        issue_id: UUIDv7.generate(),
         datetime: ~U[2026-04-16 12:00:00.000000Z],
         level: :error,
         kind: :error,

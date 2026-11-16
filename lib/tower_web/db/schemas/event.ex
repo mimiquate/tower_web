@@ -22,7 +22,7 @@ defmodule TowerWeb.DB.Event do
     field(:metadata, TowerWeb.DB.Types.Term)
     field(:request_data, :map)
 
-    belongs_to(:issue, Issue, foreign_key: :issue_id, type: :integer)
+    belongs_to(:issue, Issue, foreign_key: :issue_id, type: UUIDv7.Type)
 
     timestamps(type: :utc_datetime_usec)
   end
