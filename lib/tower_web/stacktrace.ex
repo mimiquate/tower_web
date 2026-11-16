@@ -5,16 +5,13 @@ defmodule TowerWeb.Stacktrace do
   """
 
   def host_otp_app do
-    case Application.fetch_env(:tower_web, :otp_app) do
-      {:ok, otp_app} when is_atom(otp_app) ->
+    case Application.fetch_env!(:tower_web, :otp_app) do
+      otp_app when is_atom(otp_app) ->
         otp_app
 
-      {:ok, other} ->
+      other ->
         raise ArgumentError,
               "expected :tower_web, :otp_app to be an atom, got: #{inspect(other)}"
-
-      :error ->
-        nil
     end
   end
 
