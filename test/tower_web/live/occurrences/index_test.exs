@@ -451,7 +451,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -30, :minute),
           kind: :error,
           level: :error,
-          reason: "30 minutes ago"
+          reason: %RuntimeError{message: "30 minutes ago"}
         })
 
       {:ok, _} =
@@ -461,7 +461,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
-          reason: "2 hours ago"
+          reason: %RuntimeError{message: "2 hours ago"}
         })
 
       {:ok, _} =
@@ -471,7 +471,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -3, :day),
           kind: :error,
           level: :error,
-          reason: "3 days ago"
+          reason: %RuntimeError{message: "3 days ago"}
         })
 
       {:ok, _} =
@@ -481,7 +481,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: DateTime.add(now, -10, :day),
           kind: :error,
           level: :error,
-          reason: "10 days ago"
+          reason: %RuntimeError{message: "10 days ago"}
         })
 
       events = Events.list_events(preload_issue?: true)
@@ -755,7 +755,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :error,
           level: :error,
-          reason: "Some error"
+          reason: %RuntimeError{message: "Some error"}
         })
 
       events = Events.list_events(preload_issue?: true)
@@ -776,7 +776,7 @@ defmodule TowerWeb.Live.Occurrences.IndexTest do
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :error,
           level: :error,
-          reason: "Some error"
+          reason: %RuntimeError{message: "Some error"}
         })
 
       events = Events.list_events(preload_issue?: true)

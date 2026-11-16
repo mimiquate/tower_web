@@ -13,7 +13,7 @@ defmodule TowerWeb.DB.EventTest do
         datetime: ~U[2026-04-16 12:00:00.000000Z],
         level: :error,
         kind: :error,
-        reason: %{message: "Something went wrong"}
+        reason: %RuntimeError{message: "Something went wrong"}
       }
 
       changeset = Event.changeset(%Event{}, attrs)
@@ -22,12 +22,10 @@ defmodule TowerWeb.DB.EventTest do
       assert changeset.changes.datetime == ~U[2026-04-16 12:00:00.000000Z]
       assert changeset.changes.level == :error
       assert changeset.changes.kind == :error
-      assert changeset.changes.reason == %{message: "Something went wrong"}
-
-      normalized_reason = Exception.format(:error, attrs.reason, [])
+      assert changeset.changes.reason == %RuntimeError{message: "Something went wrong"}
 
       assert changeset.changes.similarity_id ==
-               TowerWeb.DB.SimilarityId.compute(:error, normalized_reason, [])
+               TowerWeb.DB.SimilarityId.compute(:error, attrs.reason, [])
 
       assert changeset.changes.issue_id == issue_id
     end
