@@ -59,13 +59,13 @@ defmodule TowerWeb.DB.Event do
 
   defp put_similarity_id(changeset) do
     kind = get_field(changeset, :kind)
-    normalized_reason = get_field(changeset, :normalized_reason)
+    reason = get_field(changeset, :reason)
     stacktrace = get_field(changeset, :stacktrace) || []
 
     put_change(
       changeset,
       :similarity_id,
-      TowerWeb.DB.SimilarityId.compute(kind, normalized_reason, stacktrace)
+      TowerWeb.DB.SimilarityId.compute(kind, reason, stacktrace)
     )
   end
 

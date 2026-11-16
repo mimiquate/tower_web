@@ -36,6 +36,10 @@ defmodule TowerWeb.DB.SimilarityId do
     end
   end
 
+  defp kind_or_module(:error, reason) when is_exception(reason) do
+    inspect(reason.__struct__)
+  end
+
   defp kind_or_module(:error, normalized_reason) when is_binary(normalized_reason) do
     # Exception.format/3 always normalizes :error reasons into an exception struct
     # first, so the rendered banner is always "** (Module) ...".
@@ -43,5 +47,5 @@ defmodule TowerWeb.DB.SimilarityId do
     module_name
   end
 
-  defp kind_or_module(kind, _normalized_reason), do: kind
+  defp kind_or_module(kind, _reason_or_normalized_reason), do: kind
 end
