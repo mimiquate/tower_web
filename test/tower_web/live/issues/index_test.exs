@@ -152,7 +152,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime: DateTime.add(now, -30, :minute),
           kind: :error,
           level: :error,
-          reason: "30 minutes ago"
+          reason: %RuntimeError{message: "30 minutes ago"}
         })
 
       {:ok, _} =
@@ -162,7 +162,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime: DateTime.add(now, -2, :hour),
           kind: :error,
           level: :error,
-          reason: "2 hours ago"
+          reason: %RuntimeError{message: "2 hours ago"}
         })
 
       socket = socket_with_issues()
@@ -338,7 +338,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime: ~U[2024-03-15 10:00:00Z],
           kind: :error,
           level: :error,
-          reason: "Some error"
+          reason: %RuntimeError{message: "Some error"}
         })
 
       {:ok, _} =
@@ -348,7 +348,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime: ~U[2024-03-15 10:30:00Z],
           kind: :error,
           level: :error,
-          reason: "Some error, second occurrence"
+          reason: %RuntimeError{message: "Some error, second occurrence"}
         })
 
       {:ok, %{event: kept_event}} =
@@ -358,7 +358,7 @@ defmodule TowerWeb.Live.Issues.IndexTest do
           datetime: ~U[2024-03-15 11:00:00Z],
           kind: :error,
           level: :error,
-          reason: "Unrelated error"
+          reason: %ArgumentError{message: "Unrelated error"}
         })
 
       socket = socket_with_issues()
