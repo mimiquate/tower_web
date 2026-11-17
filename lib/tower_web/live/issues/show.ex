@@ -2,6 +2,7 @@ defmodule TowerWeb.Live.Issues.Show do
   use TowerWeb.Web, :live_view
 
   alias TowerWeb.DB.Events
+  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
   alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
@@ -56,7 +57,9 @@ defmodule TowerWeb.Live.Issues.Show do
              occurrences_base_path: "#{base_path}/occurrences",
              show_delete_modal: false,
              reason_expanded: false,
-             dropdown_open: false
+             dropdown_open: false,
+             mute_dropdown_open: false,
+             mute_custom_open: false
            )}
       end
     else
@@ -128,13 +131,136 @@ defmodule TowerWeb.Live.Issues.Show do
     {:noreply, assign(socket, reason_expanded: !socket.assigns.reason_expanded)}
   end
 
+  def handle_event("toggle_mute_dropdown", _params, socket) do
+    {:noreply, assign(socket, mute_dropdown_open: !socket.assigns.mute_dropdown_open)}
+  end
+
+  def handle_event("close_mute_dropdown", _params, socket) do
+    {:noreply, assign(socket, mute_dropdown_open: false, mute_custom_open: false)}
+  end
+
+  def handle_event("toggle_mute_custom", _params, socket) do
+    {:noreply, assign(socket, mute_custom_open: !socket.assigns.mute_custom_open)}
+  end
+
+  def handle_event("mute_issue", %{"amount" => amount, "unit" => unit}, socket) do
+    case parse_mute_duration(amount, unit) do
+      {:ok, seconds} ->
+        issue = mute_issue_for(socket.assigns.issue, seconds)
+
+        {:noreply,
+         assign(socket, issue: issue, mute_dropdown_open: false, mute_custom_open: false)}
+
+      :error ->
+        Process.send_after(self(), :clear_flash, 3000)
+        {:noreply, put_flash(socket, :error, "Enter a valid duration")}
+    end
+  end
+
+  def handle_event("unmute_issue", _params, socket) do
+    {:ok, _issue} = Issues.update_issue(socket.assigns.issue, %{muted_until: nil})
+    issue = %{socket.assigns.issue | muted_until: nil}
+
+    {:noreply, assign(socket, issue: issue, mute_dropdown_open: false)}
+  end
+
+  @impl Phoenix.LiveView
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
+    <.flash_messages flash={@flash} />
+
     <div class="pt-6 px-10 pb-10">
       <div class="flex justify-between mb-4">
         <.back_button navigate={@back_path} />
         <div class="flex gap-2">
+          <div class="relative" phx-click-away="close_mute_dropdown">
+            <button
+              type="button"
+              phx-click="toggle_mute_dropdown"
+              class="flex items-center justify-between w-[180px] h-8 px-2 font-inter text-sm font-normal whitespace-nowrap bg-tower-level-bg text-white"
+            >
+              <span class="flex items-center gap-2">
+                <.mute_badge muted={Issue.muted?(@issue)} />
+              </span>
+              <.chevron_down_icon class="size-4" />
+            </button>
+
+            <div :if={@mute_dropdown_open} class="absolute z-10 right-0 w-[180px] bg-tower-bg border border-tower-line-color">
+              <div :if={Issue.muted?(@issue)} class="flex flex-col gap-2 p-2">
+                <span class="font-inter text-xs text-tower-text-secondary">
+                  Muted until {DatetimeFormatter.format_date(@issue.muted_until)} {DatetimeFormatter.format_time(@issue.muted_until)}
+                </span>
+                <button
+                  type="button"
+                  phx-click="unmute_issue"
+                  class="flex items-center gap-1 w-full text-left px-2 py-1.5 font-inter text-sm text-white whitespace-nowrap hover:bg-tower-line-color"
+                >
+                  <.bell_icon class="size-4" /> Unmute now
+                </button>
+              </div>
+
+              <div :if={!Issue.muted?(@issue)}>
+                <button
+                  :for={{label, amount, unit} <- mute_duration_presets()}
+                  type="button"
+                  phx-click="mute_issue"
+                  phx-value-amount={amount}
+                  phx-value-unit={unit}
+                  class="flex items-center gap-1 w-full text-left px-2 py-1.5 font-inter text-sm text-white whitespace-nowrap hover:bg-tower-line-color"
+                >
+                  <.bell_slash_icon class="size-4" /> {label}
+                </button>
+
+                <div class="relative">
+                  <button
+                    type="button"
+                    phx-click="toggle_mute_custom"
+                    class="flex items-center justify-between gap-2 w-full text-left px-2 py-1.5 font-inter text-sm text-white whitespace-nowrap hover:bg-tower-line-color"
+                  >
+                    Custom...
+                    <.chevron_down_icon class={"size-[14px] -rotate-90#{if @mute_custom_open, do: " rotate-0", else: ""}"} />
+                  </button>
+
+                  <form
+                    :if={@mute_custom_open}
+                    novalidate
+                    phx-submit="mute_issue"
+                    class="absolute left-full top-0 ml-1 z-10 flex flex-col gap-3 p-3 min-w-max bg-tower-bg border border-tower-line-color"
+                  >
+                    <div class="flex items-end gap-2">
+                      <label class="flex flex-col gap-1">
+                        <span class="font-inter font-light text-xs text-tower-text-secondary">Amount</span>
+                        <input
+                          type="number"
+                          name="amount"
+                          min="1"
+                          value="1"
+                          class="font-inter font-light text-sm text-white bg-transparent border border-tower-line-color py-1.5 px-2 outline-none focus:border-tower-active w-[80px]"
+                        />
+                      </label>
+                      <select
+                        name="unit"
+                        class="font-inter font-light text-sm text-white bg-tower-bg border border-tower-line-color py-1.5 px-2 outline-none"
+                      >
+                        <option value="minutes">Minutes</option>
+                        <option value="hours">Hours</option>
+                        <option value="days">Days</option>
+                      </select>
+                    </div>
+                    <button type="submit" class="font-inter font-light text-sm text-white bg-tower-line-color hover:bg-tower-active py-1 px-2 cursor-pointer">
+                      Apply
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="relative" phx-click-away="close_dropdown">
             <button
               type="button"
@@ -253,6 +379,36 @@ defmodule TowerWeb.Live.Issues.Show do
     </div>
     """
   end
+
+  defp mute_duration_presets do
+    [
+      {"Mute for 30 minutes", 30, "minutes"},
+      {"Mute for 1 hour", 1, "hours"},
+      {"Mute for 24 hours", 24, "hours"},
+      {"Mute for 7 days", 7, "days"}
+    ]
+  end
+
+  defp mute_issue_for(issue, seconds) do
+    muted_until = DateTime.add(DateTime.utc_now(), seconds, :second)
+    {:ok, _issue} = Issues.update_issue(issue, %{muted_until: muted_until})
+    %{issue | muted_until: muted_until}
+  end
+
+  defp parse_mute_duration(amount, unit) do
+    with {amount, ""} <- Integer.parse(amount),
+         true <- amount > 0,
+         seconds when not is_nil(seconds) <- unit_to_seconds(amount, unit) do
+      {:ok, seconds}
+    else
+      _ -> :error
+    end
+  end
+
+  defp unit_to_seconds(amount, "minutes"), do: amount * 60
+  defp unit_to_seconds(amount, "hours"), do: amount * 3600
+  defp unit_to_seconds(amount, "days"), do: amount * 86_400
+  defp unit_to_seconds(_amount, _unit), do: nil
 
   @min_chart_range_us 15 * 60 * 1_000_000
   @max_chart_range_us 30 * 24 * 60 * 60 * 1_000_000
