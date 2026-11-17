@@ -222,7 +222,9 @@ defmodule TowerWeb.Live.Issues.Show do
                     phx-click="toggle_mute_custom"
                     class="flex items-center justify-between gap-2 w-full text-left px-2 py-1.5 font-inter text-sm text-white whitespace-nowrap hover:bg-tower-line-color"
                   >
-                    Custom...
+                    <span class="flex items-center gap-1">
+                      <.bell_slash_icon class="size-4" /> Custom...
+                    </span>
                     <.chevron_down_icon class={"size-[14px] -rotate-90#{if @mute_custom_open, do: " rotate-0", else: ""}"} />
                   </button>
 

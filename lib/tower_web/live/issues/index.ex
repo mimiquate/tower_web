@@ -1,7 +1,9 @@
 defmodule TowerWeb.Live.Issues.Index do
   use TowerWeb.Web, :live_view
 
+  alias TowerWeb.DB.Issue
   alias TowerWeb.DB.Issues
+  alias TowerWeb.Live.DatetimeFormatter
   alias TowerWeb.Live.Filters
   alias TowerWeb.Live.Pagination
   alias TowerWeb.Live.Paths
@@ -187,24 +189,32 @@ defmodule TowerWeb.Live.Issues.Index do
         </td>
         <td class="py-3 pl-6 max-w-0">
           <div class="flex flex-col overflow-hidden">
-            <.id_link
-              id={issue.id}
-              navigate={
-                Paths.show_path(
-                  @issues_base_path,
-                  issue.id,
-                  [
-                    search: @search_query,
-                    level: @selected_level,
-                    datetime_range: @datetime_range_param,
-                      datetime_range_from: @datetime_range_from,
-                      datetime_range_to: @datetime_range_to,
-                    issue_ids: @issue_ids_filtered
-                  ],
-                  %{page: @page}
-                )
-              }
-            />
+            <div class="flex items-center gap-1">
+              <.id_link
+                id={issue.id}
+                navigate={
+                  Paths.show_path(
+                    @issues_base_path,
+                    issue.id,
+                    [
+                      search: @search_query,
+                      level: @selected_level,
+                      datetime_range: @datetime_range_param,
+                        datetime_range_from: @datetime_range_from,
+                        datetime_range_to: @datetime_range_to,
+                      issue_ids: @issue_ids_filtered
+                    ],
+                    %{page: @page}
+                  )
+                }
+              />
+              <span
+                :if={Issue.muted?(issue)}
+                title={"Muted until #{DatetimeFormatter.format_date(issue.muted_until)} #{DatetimeFormatter.format_time(issue.muted_until)}"}
+              >
+                <.bell_slash_icon class="size-4 text-tower-text-secondary" />
+              </span>
+            </div>
             <span class="text-sm text-tower-text-secondary line-clamp-1">{issue.last_event.normalized_reason}</span>
             <.last_stacktrace_line stacktrace={issue.last_event.stacktrace} host_otp_app={@host_otp_app} />
           </div>
