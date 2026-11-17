@@ -74,6 +74,35 @@ defmodule TowerWeb.Live.Issues.ShowTest do
 
       # Verify unrelated issue is NOT displayed
       refute html =~ "Unrelated issue message"
+
+      refute html =~ "The chart is not displayed because there are more than 500 occurrences."
+      assert html =~ "<polyline"
+    end
+
+    test "shows a warning instead of the chart when show_chart is false" do
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: DateTime.utc_now() |> DateTime.truncate(:second),
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "Some error"}
+        })
+
+      socket = %Phoenix.LiveView.Socket{assigns: %{flash: %{}, __changed__: %{}}}
+      issue_id = to_string(event.issue_id)
+
+      {:ok, socket} = Show.mount(%{"id" => issue_id}, %{"base_path" => "/tower"}, socket)
+      {:noreply, socket} = Show.handle_params(%{}, "/tower/issues/#{issue_id}", socket)
+
+      over_limit_issue = %{socket.assigns.issue | count_events: 600}
+      over_limit_assigns = %{socket.assigns | issue: over_limit_issue, show_chart: false}
+
+      html = render_component(&Show.render/1, over_limit_assigns)
+
+      assert html =~ "The chart is not displayed because there are more than 500 occurrences."
+      refute html =~ "<polyline"
     end
   end
 

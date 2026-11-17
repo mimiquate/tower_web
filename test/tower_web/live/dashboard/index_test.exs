@@ -33,6 +33,33 @@ defmodule TowerWeb.Live.Dashboard.IndexTest do
       assert html =~ "3"
       assert html =~ "Total Occurrences"
       assert html =~ "7"
+      assert html =~ "<polyline"
+      refute html =~ "The chart is not displayed because there are more than"
+    end
+
+    test "shows a warning instead of the chart when show_chart is false" do
+      html =
+        render_component(&Dashboard.render/1, %{
+          total_errors: 3,
+          total_occurrences: 600,
+          show_chart: false,
+          occurrences_chart_max_events: 500,
+          chart_datetimes: [],
+          chart_datetime_range: Filters.datetime_range("last_7d"),
+          search_query: "",
+          selected_level: nil,
+          levels: Level.levels(),
+          datetime_range_options: Filters.datetime_range_options(),
+          datetime_range_param: "",
+          datetime_range_from: "",
+          datetime_range_to: "",
+          datetime_range_menu_open: false,
+          datetime_range_custom_open: false,
+          flash: %{}
+        })
+
+      assert html =~ "The chart is not displayed because there are more than 500 occurrences."
+      refute html =~ "<polyline"
     end
   end
 

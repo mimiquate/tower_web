@@ -51,6 +51,7 @@ defmodule TowerWeb.Live.Issues.Show do
              show_chart: show_chart,
              chart_datetimes: chart_datetimes,
              chart_datetime_range: chart_datetime_range,
+             occurrences_chart_max_events: @occurrences_chart_max_events,
              base_path: base_path,
              issues_base_path: issues_base_path,
              occurrences_base_path: "#{base_path}/occurrences",
@@ -216,6 +217,14 @@ defmodule TowerWeb.Live.Issues.Show do
 
       <div :if={@show_chart} class="mb-6">
         <.occurrences_chart datetimes={@chart_datetimes} datetime_range={@chart_datetime_range} />
+      </div>
+
+      <div :if={!@show_chart} class="border border-gray-400/40 bg-gray-400/10 p-4 mb-6 flex items-center gap-3">
+        <.info_icon class="size-6 text-gray-400 flex-shrink-0" />
+        <div class="border-l border-gray-400/40 h-10"></div>
+        <p class="text-sm font-medium text-white">
+          The chart is not displayed because there are more than {@occurrences_chart_max_events} occurrences.
+        </p>
       </div>
 
       <div class="border border-tower-line-color p-6">
