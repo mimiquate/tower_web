@@ -73,8 +73,11 @@ defmodule TowerWeb.DB.Events do
     |> Multi.run(:issue, fn _repo, _changes ->
       Issues.find_or_create_issue(similarity_id)
     end)
-    |> Multi.insert(:event, fn %{issue: issue} ->
-      Event.changeset(%Event{}, Map.put(attrs, :issue_id, issue.id))
+    |> Multi.insert(:event, fn %{issue: %{issue: issue, reopened?: reopened?}} ->
+      Event.changeset(
+        %Event{},
+        Map.merge(attrs, %{issue_id: issue.id, reopened: reopened?})
+      )
     end)
     |> repo.transact()
   end
