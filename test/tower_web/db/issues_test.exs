@@ -371,6 +371,48 @@ defmodule TowerWeb.DB.IssuesTest do
       assert TowerWeb.DB.TestRepo.get(Issue, source_event.issue_id) == nil
       assert TowerWeb.DB.TestRepo.get(Issue, target_event.issue_id) != nil
     end
+
+    test "resets reopened to false on events moved into the target issue" do
+      {:ok, %{event: target_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "target issue event"}
+        })
+
+      {:ok, %{event: source_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "source issue event"}
+        })
+
+      {:ok, _} = Issues.update_issue(Issues.get_issue(source_event.issue_id), %{state: :resolved})
+
+      {:ok, %{event: reopening_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 2,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "reopening source issue event"}
+        })
+
+      assert reopening_event.reopened == true
+
+      assert Issues.merge_issues(target_event.issue_id, [source_event.issue_id]) == {2, nil}
+
+      events = Events.list_events() |> Map.new(&{&1.id, &1})
+
+      assert events[reopening_event.id].reopened == false
+    end
   end
 
   describe "find_or_create_issue/2 (via Events.create_event_for_issue/2)" do

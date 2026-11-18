@@ -729,5 +729,69 @@ defmodule TowerWeb.DB.EventsTest do
       # issue B is now empty, so it must be deleted
       assert Issues.get_issue(old_issue_b_id) == nil
     end
+
+    test "resets reopened to false on the unmerged events" do
+      {:ok, %{event: first_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      {:ok, _} = Issues.update_issue(Issues.get_issue(first_event.issue_id), %{state: :resolved})
+
+      {:ok, %{event: reopening_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "reopening occurrence"}
+        })
+
+      assert reopening_event.reopened == true
+
+      assert Events.unmerge_events([reopening_event.id]) == {1, nil}
+
+      assert Events.get_event(reopening_event.id).reopened == false
+    end
+  end
+
+  describe "issue_reopened?/1" do
+    test "is false for the first event, then true for the event that reopens a resolved issue" do
+      {:ok, %{event: first_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 10:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "first occurrence"}
+        })
+
+      assert first_event.reopened == false
+      assert Events.issue_reopened?(first_event.id) == false
+
+      issue = Issues.get_issue(first_event.issue_id)
+      {:ok, _resolved_issue} = Issues.update_issue(issue, %{state: :resolved})
+
+      {:ok, %{event: reopening_event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 11:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "second occurrence"}
+        })
+
+      assert reopening_event.reopened == true
+      assert Events.issue_reopened?(reopening_event.id) == true
+      assert Issues.get_issue(first_event.issue_id).state == :unresolved
+    end
   end
 end
