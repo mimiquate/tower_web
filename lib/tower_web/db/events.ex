@@ -143,7 +143,7 @@ defmodule TowerWeb.DB.Events do
         {count, _} =
           Event
           |> where([e], e.id in ^ids)
-          |> repo.update_all(set: [issue_id: new_issue.id])
+          |> repo.update_all(set: [issue_id: new_issue.id, reopened: false])
 
         delete_issues_if_empty(old_issue_ids)
 
