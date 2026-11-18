@@ -64,6 +64,13 @@ defmodule TowerWeb.DB.Events do
     Repo.repo().get(Event, id)
   end
 
+  def issue_reopened?(id) do
+    case get_event(id) do
+      %Event{reopened: reopened} -> reopened
+      nil -> false
+    end
+  end
+
   def create_event_for_issue(attrs) do
     repo = Repo.repo()
     changeset = Event.changeset(%Event{}, attrs)
