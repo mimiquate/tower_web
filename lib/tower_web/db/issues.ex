@@ -61,6 +61,23 @@ defmodule TowerWeb.DB.Issues do
     |> repo.aggregate(:count)
   end
 
+  def issue_muted?(similarity_id) when is_integer(similarity_id) do
+    repo = Repo.repo()
+
+    case Event
+         |> where([e], e.similarity_id == ^similarity_id)
+         |> order_by([e], desc: e.datetime)
+         |> select([e], e.issue_id)
+         |> limit(1)
+         |> repo.one() do
+      nil ->
+        false
+
+      issue_id ->
+        Issue.muted?(repo.get(Issue, issue_id))
+    end
+  end
+
   def find_or_create_issue(similarity_id) when is_integer(similarity_id) do
     repo = Repo.repo()
 
