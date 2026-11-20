@@ -405,13 +405,13 @@ defmodule TowerWeb.DB.IssuesTest do
           reason: %RuntimeError{message: "reopening source issue event"}
         })
 
-      assert reopening_event.reopened == true
+      assert reopening_event.issue_reopened == true
 
       assert Issues.merge_issues(target_event.issue_id, [source_event.issue_id]) == {2, nil}
 
       events = Events.list_events() |> Map.new(&{&1.id, &1})
 
-      assert events[reopening_event.id].reopened == false
+      assert events[reopening_event.id].issue_reopened == false
     end
   end
 

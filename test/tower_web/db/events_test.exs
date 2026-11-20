@@ -753,11 +753,11 @@ defmodule TowerWeb.DB.EventsTest do
           reason: %RuntimeError{message: "reopening occurrence"}
         })
 
-      assert reopening_event.reopened == true
+      assert reopening_event.issue_reopened == true
 
       assert Events.unmerge_events([reopening_event.id]) == {1, nil}
 
-      assert Events.get_event(reopening_event.id).reopened == false
+      assert Events.get_event(reopening_event.id).issue_reopened == false
     end
   end
 
@@ -773,7 +773,7 @@ defmodule TowerWeb.DB.EventsTest do
           reason: %RuntimeError{message: "first occurrence"}
         })
 
-      assert first_event.reopened == false
+      assert first_event.issue_reopened == false
       assert Events.issue_reopened?(first_event.id) == false
 
       issue = Issues.get_issue(first_event.issue_id)
@@ -789,7 +789,7 @@ defmodule TowerWeb.DB.EventsTest do
           reason: %RuntimeError{message: "second occurrence"}
         })
 
-      assert reopening_event.reopened == true
+      assert reopening_event.issue_reopened == true
       assert Events.issue_reopened?(reopening_event.id) == true
       assert Issues.get_issue(first_event.issue_id).state == :unresolved
     end

@@ -21,7 +21,7 @@ defmodule TowerWeb.DB.Event do
     field(:stacktrace, TowerWeb.DB.Types.Term)
     field(:metadata, TowerWeb.DB.Types.Term)
     field(:request_data, :map)
-    field(:reopened, :boolean, default: false)
+    field(:issue_reopened, :boolean, default: false)
 
     belongs_to(:issue, Issue, foreign_key: :issue_id, type: UUIDv7.Type)
 
@@ -41,7 +41,7 @@ defmodule TowerWeb.DB.Event do
       :stacktrace,
       :metadata,
       :request_data,
-      :reopened
+      :issue_reopened
     ])
     |> validate_required([:id, :similarity_id, :datetime, :level, :kind, :reason])
     |> put_normalized_reason()

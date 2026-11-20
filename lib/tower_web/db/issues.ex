@@ -145,7 +145,7 @@ defmodule TowerWeb.DB.Issues do
         events_moved =
           Event
           |> where([e], e.issue_id in ^source_ids)
-          |> repo.update_all(set: [issue_id: target_id, reopened: false])
+          |> repo.update_all(set: [issue_id: target_id, issue_reopened: false])
 
         Issue |> where([i], i.id in ^source_ids) |> repo.delete_all()
 

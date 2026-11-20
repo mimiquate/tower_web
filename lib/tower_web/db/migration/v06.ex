@@ -5,13 +5,13 @@ defmodule TowerWeb.DB.Migration.V06 do
 
   def up do
     alter table(:tower_web_events) do
-      add(:reopened, :boolean, null: false, default: false)
+      add(:issue_reopened, :boolean, null: false, default: false)
     end
   end
 
   def down do
     alter table(:tower_web_events) do
-      remove(:reopened)
+      remove(:issue_reopened)
     end
   end
 end

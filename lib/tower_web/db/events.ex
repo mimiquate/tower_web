@@ -66,7 +66,7 @@ defmodule TowerWeb.DB.Events do
 
   def issue_reopened?(id) do
     case get_event(id) do
-      %Event{reopened: reopened} -> reopened
+      %Event{issue_reopened: issue_reopened} -> issue_reopened
       nil -> false
     end
   end
@@ -83,7 +83,7 @@ defmodule TowerWeb.DB.Events do
     |> Multi.insert(:event, fn %{issue: %{issue: issue, reopened?: reopened?}} ->
       Event.changeset(
         %Event{},
-        Map.merge(attrs, %{issue_id: issue.id, reopened: reopened?})
+        Map.merge(attrs, %{issue_id: issue.id, issue_reopened: reopened?})
       )
     end)
     |> repo.transact()
@@ -150,7 +150,7 @@ defmodule TowerWeb.DB.Events do
         {count, _} =
           Event
           |> where([e], e.id in ^ids)
-          |> repo.update_all(set: [issue_id: new_issue.id, reopened: false])
+          |> repo.update_all(set: [issue_id: new_issue.id, issue_reopened: false])
 
         delete_issues_if_empty(old_issue_ids)
 
