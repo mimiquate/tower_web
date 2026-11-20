@@ -11,6 +11,7 @@ defmodule TowerWeb.DB.Issue do
   schema "tower_web_issues" do
     field(:count_events, :integer, virtual: true)
     field(:state, Ecto.Enum, values: [:unresolved, :resolved], default: :unresolved)
+    field(:muted_until, :utc_datetime_usec)
 
     has_one(:first_event, Event, foreign_key: :issue_id)
     has_one(:last_event, Event, foreign_key: :issue_id)
@@ -20,8 +21,14 @@ defmodule TowerWeb.DB.Issue do
 
   def changeset(issue, attrs) do
     issue
-    |> cast(attrs, [:state])
+    |> cast(attrs, [:state, :muted_until])
     |> validate_required([:state])
+  end
+
+  def muted?(%__MODULE__{muted_until: nil}), do: false
+
+  def muted?(%__MODULE__{muted_until: muted_until}) do
+    DateTime.compare(muted_until, DateTime.utc_now()) == :gt
   end
 
   def first_event_query do
