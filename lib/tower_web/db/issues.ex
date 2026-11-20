@@ -88,19 +88,21 @@ defmodule TowerWeb.DB.Issues do
          |> limit(1)
          |> repo.one() do
       nil ->
-        %Issue{}
-        |> Issue.changeset(%{state: :unresolved})
-        |> repo.insert()
+        with {:ok, issue} <-
+               %Issue{} |> Issue.changeset(%{state: :unresolved}) |> repo.insert() do
+          {:ok, %{issue: issue, reopened?: false}}
+        end
 
       issue_id ->
         case repo.get(Issue, issue_id) do
           %Issue{state: :resolved} = issue ->
-            issue
-            |> Issue.changeset(%{state: :unresolved})
-            |> repo.update()
+            with {:ok, issue} <-
+                   issue |> Issue.changeset(%{state: :unresolved}) |> repo.update() do
+              {:ok, %{issue: issue, reopened?: true}}
+            end
 
           %Issue{} = issue ->
-            {:ok, issue}
+            {:ok, %{issue: issue, reopened?: false}}
         end
     end
   end
@@ -143,7 +145,7 @@ defmodule TowerWeb.DB.Issues do
         events_moved =
           Event
           |> where([e], e.issue_id in ^source_ids)
-          |> repo.update_all(set: [issue_id: target_id])
+          |> repo.update_all(set: [issue_id: target_id, issue_reopened: false])
 
         Issue |> where([i], i.id in ^source_ids) |> repo.delete_all()
 
