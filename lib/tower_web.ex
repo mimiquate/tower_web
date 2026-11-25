@@ -43,4 +43,16 @@ defmodule TowerWeb do
   def issue_muted?(similarity_id) do
     TowerWeb.DB.Issues.issue_muted?(similarity_id)
   end
+
+  @doc """
+  Returns whether the event with the given id caused its issue to transition from
+  `:resolved` back to `:unresolved` (i.e. the event reopened a previously resolved
+  issue).
+
+  Returns `false` both when there's no event with this id, and when the event didn't
+  reopen its issue.
+  """
+  def issue_reopened?(event_id) do
+    TowerWeb.DB.Events.issue_reopened?(event_id)
+  end
 end

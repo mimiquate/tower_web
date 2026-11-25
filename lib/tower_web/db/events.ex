@@ -64,6 +64,13 @@ defmodule TowerWeb.DB.Events do
     Repo.repo().get(Event, id)
   end
 
+  def issue_reopened?(id) do
+    case get_event(id) do
+      %Event{issue_reopened: issue_reopened} -> issue_reopened
+      nil -> false
+    end
+  end
+
   def create_event_for_issue(attrs) do
     repo = Repo.repo()
     changeset = Event.changeset(%Event{}, attrs)
@@ -73,8 +80,11 @@ defmodule TowerWeb.DB.Events do
     |> Multi.run(:issue, fn _repo, _changes ->
       Issues.find_or_create_issue(similarity_id)
     end)
-    |> Multi.insert(:event, fn %{issue: issue} ->
-      Event.changeset(%Event{}, Map.put(attrs, :issue_id, issue.id))
+    |> Multi.insert(:event, fn %{issue: %{issue: issue, reopened?: reopened?}} ->
+      Event.changeset(
+        %Event{},
+        Map.merge(attrs, %{issue_id: issue.id, issue_reopened: reopened?})
+      )
     end)
     |> repo.transact()
   end
@@ -140,7 +150,7 @@ defmodule TowerWeb.DB.Events do
         {count, _} =
           Event
           |> where([e], e.id in ^ids)
-          |> repo.update_all(set: [issue_id: new_issue.id])
+          |> repo.update_all(set: [issue_id: new_issue.id, issue_reopened: false])
 
         delete_issues_if_empty(old_issue_ids)
 
