@@ -188,6 +188,105 @@ defmodule TowerWeb.Live.Issues.ShowTest do
     end
   end
 
+  describe "mute issue" do
+    test "mutes the issue until today's date plus the given duration, and closes the dropdown" do
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Some error"
+        })
+
+      issue = Issues.get_issue(event.issue_id)
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{
+          issue: issue,
+          mute_dropdown_open: true,
+          mute_custom_open: true,
+          flash: %{},
+          __changed__: %{}
+        },
+        redirected: nil
+      }
+
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+      expected_muted_until = DateTime.add(now, 3 * 24 * 60 * 60, :second)
+
+      {:noreply, updated_socket} =
+        Show.handle_event("mute_issue", %{"amount" => "3", "unit" => "days"}, socket)
+
+      assert DateTime.truncate(updated_socket.assigns.issue.muted_until, :second) ==
+               expected_muted_until
+
+      assert updated_socket.assigns.mute_dropdown_open == false
+      assert updated_socket.assigns.mute_custom_open == false
+      assert Issues.get_issue(event.issue_id).muted_until != nil
+    end
+
+    test "shows an error flash and leaves the issue unmuted when the duration is invalid" do
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Some error"
+        })
+
+      issue = Issues.get_issue(event.issue_id)
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{
+          issue: issue,
+          mute_dropdown_open: true,
+          mute_custom_open: true,
+          flash: %{},
+          __changed__: %{}
+        },
+        redirected: nil
+      }
+
+      {:noreply, updated_socket} =
+        Show.handle_event("mute_issue", %{"amount" => ".", "unit" => "minutes"}, socket)
+
+      assert Phoenix.Flash.get(updated_socket.assigns.flash, :error) == "Enter a valid duration"
+      assert updated_socket.assigns.issue.muted_until == nil
+      assert Issues.get_issue(event.issue_id).muted_until == nil
+    end
+
+    test "unmutes the issue and closes the dropdown" do
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2024-03-15 10:30:00Z],
+          level: :error,
+          kind: :message,
+          reason: "Some error"
+        })
+
+      issue = Issues.get_issue(event.issue_id)
+      muted_until = DateTime.add(DateTime.utc_now(), 3600, :second)
+      {:ok, muted_issue} = Issues.update_issue(issue, %{muted_until: muted_until})
+
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{issue: muted_issue, mute_dropdown_open: true, flash: %{}, __changed__: %{}},
+        redirected: nil
+      }
+
+      {:noreply, updated_socket} = Show.handle_event("unmute_issue", %{}, socket)
+
+      assert updated_socket.assigns.issue.muted_until == nil
+      assert updated_socket.assigns.mute_dropdown_open == false
+      assert Issues.get_issue(event.issue_id).muted_until == nil
+    end
+  end
+
   describe "issue not found" do
     test "redirects to list page with error flash when issue does not exist" do
       socket = %Phoenix.LiveView.Socket{

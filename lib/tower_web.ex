@@ -33,4 +33,14 @@ defmodule TowerWeb do
       :error -> nil
     end
   end
+
+  @doc """
+  Returns whether the issue grouping the given `similarity_id` is currently muted.
+
+  Returns `false` both when no issue exists yet for that `similarity_id`, and when
+  the issue exists but isn't currently muted.
+  """
+  def issue_muted?(similarity_id) do
+    TowerWeb.DB.Issues.issue_muted?(similarity_id)
+  end
 end

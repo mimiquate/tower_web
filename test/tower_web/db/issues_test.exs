@@ -512,4 +512,49 @@ defmodule TowerWeb.DB.IssuesTest do
       assert issue.last_event.normalized_reason =~ "later occurrence"
     end
   end
+
+  describe "issue_muted?/1" do
+    test "returns false when no issue exists yet for the similarity_id" do
+      refute Issues.issue_muted?(999)
+    end
+
+    test "returns false when the issue exists but isn't muted" do
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "occurrence"}
+        })
+
+      issue = Issues.get_issue(event.issue_id)
+      expired_muted_until = DateTime.add(DateTime.utc_now(), -30, :day)
+      {:ok, _} = Issues.update_issue(issue, %{muted_until: expired_muted_until})
+
+      refute Issues.issue_muted?(1)
+    end
+
+    test "returns true when the issue's mute hasn't expired yet" do
+      {:ok, %{event: event}} =
+        Events.create_event_for_issue(%{
+          id: UUIDv7.generate(),
+          similarity_id: 1,
+          datetime: ~U[2026-05-08 12:00:00.000000Z],
+          level: :error,
+          kind: :error,
+          reason: %RuntimeError{message: "occurrence"}
+        })
+
+      # muted_until is still nil at this point, so the issue isn't muted yet.
+      refute Issues.issue_muted?(1)
+
+      issue = Issues.get_issue(event.issue_id)
+      active_muted_until = DateTime.add(DateTime.utc_now(), 30, :day)
+      {:ok, _} = Issues.update_issue(issue, %{muted_until: active_muted_until})
+
+      assert Issues.issue_muted?(1)
+    end
+  end
 end
